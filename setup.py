@@ -9,26 +9,6 @@ import os
 from setuptools import setup, find_packages
 from setuptools import setup, Extension
 
-try:
-    from Cython.Distutils import build_ext
-except ImportError:
-    use_cython = False
-else:
-    use_cython = True
-
-cmdclass = {}
-ext_modules = []
-
-if use_cython:
-    ext_modules += [
-        Extension("bubblebuster.bubblebuster", ["bubblebuster/bubblebuster.pyx"]),
-    ]
-    cmdclass.update({'build_ext': build_ext})
-else:
-    ext_modules += [
-        Extension("bubblebuster.bubblebuster", ["bubblebuster/bubblebuster.c"]),
-    ]
-
 long_description = str("Bubblebuster is a Python Library for detecting water box bubbles " 
     + "in structural files used in molecular simulations, by partitioning the system's "
     + "periodic box into a cubic grid. The atom density of each cube is compared against "
@@ -55,6 +35,4 @@ setup(
     platforms=['Linux',
                 'Unix',],
     python_requires=">=3.6",          
-    cmdclass=cmdclass,
-    ext_modules=ext_modules,
 )
