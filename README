@@ -1,0 +1,65 @@
+
+                    ╭━━╮╱╱╱╭╮╱╭╮╱╭╮╱╱╱╭━━╮╱╱╱╱╱╱╭╮
+                    ┃╭╮┃╱╱╱┃┃╱┃┃╱┃┃╱╱╱┃╭╮┃╱╱╱╱╱╭╯╰╮
+                    ┃╰╯╰┳╮╭┫╰━┫╰━┫┃╭━━┫╰╯╰┳╮╭┳━┻╮╭╋━━┳━╮
+                    ┃╭━╮┃┃┃┃╭╮┃╭╮┃┃┃┃━┫╭━╮┃┃┃┃━━┫┃┃┃━┫╭╯
+                    ┃╰━╯┃╰╯┃╰╯┃╰╯┃╰┫┃━┫╰━╯┃╰╯┣━━┃╰┫┃━┫┃
+                    ╰━━━┻━━┻━━┻━━┻━┻━━┻━━━┻━━┻━━┻━┻━━┻╯                                                             
+
+                                 ********
+                             *****      *****
+                          ****              ****
+                       ****\\                  ****
+                    ****    \\                    ****
+                  ***        \\                      ***
+                ***     ......\\...................    ***
+               ***      .......\\........H.....H...     ***
+              ***       ........\\........\.../....      ***
+             ***           ......\\........C=C.....       ***
+            ***             ......\\....../...\....        ***
+            **              .......\\....H.....H...         **
+            **              ........\\.............         **
+            **             ..........\\............         **
+            **            ............\\...........         **
+            **          ...............\\..........         **
+            **          ................\\.........         **
+            ***         .................\\........        ***
+             ***        ..................\\.......       ***
+              ***       ...................\\......      ***
+               ***                          \\          ***
+                ***                          \\        ***
+                   ****                       \\   ****                    
+                      ****                      ****
+                         ****               ****      
+                            *****       *****    
+                                *********
+# Bubblebuster 
+
+Bubblebuster is a Python Library for detecting water box bubbles in structural 
+files used in molecular simulations. 
+
+## Installation
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install bubblebuster.
+
+```bash
+pip install bubblebuster 
+```
+
+## Usage
+
+```python
+import bubblebuster
+
+structure_box_properties = bubblebuster.periodic_box_properties(
+    "trypsin_benzamidine.pdb", #system's structural filename
+    "triclinic" #system's periodic box type
+)
+
+# Returns True if the system's water box has a bubble
+structure_box_properties.has_bubble 
+
+```
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
