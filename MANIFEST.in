@@ -1,0 +1,4 @@
+include bubblebuster.toml
+include *.md
+include LICENSE
+recursive-include tests test*.py
