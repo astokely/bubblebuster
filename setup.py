@@ -6,7 +6,6 @@ files used in molecular simulations.
 
 import sys
 import os
-from setuptools import find_packages
 from setuptools import setup, find_packages
 from setuptools import setup, Extension
 
@@ -51,11 +50,7 @@ setup(
     keywords='molecular dynamics water box periodic',
     url='https://github.com/astokely/bubblebuster',
     long_description=long_description,
-    include_package_data=True,
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
-    project_dir={'': 'bubblebuster'},
-    packages=find_packages(where='bubblebuster'),
+    packages=find_packages(),
     install_requires=["numpy", "pytest", "nptyping", "mdtraj", "cython"],              
     platforms=['Linux',
                 'Unix',],
