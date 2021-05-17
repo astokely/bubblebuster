@@ -5,7 +5,7 @@ bubblebuster.toml
 setup.cfg
 setup.py
 bubblebuster/__init__.py
-bubblebuster/bubblebuster.py
+bubblebuster/bubblebuster.c
 bubblebuster.egg-info/PKG-INFO
 bubblebuster.egg-info/SOURCES.txt
 bubblebuster.egg-info/dependency_links.txt

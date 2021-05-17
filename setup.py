@@ -6,8 +6,8 @@ files used in molecular simulations.
 
 import sys
 import os
-from setuptools import setup, find_packages
-from setuptools import setup, Extension
+from setuptools import setup, find_packages, Extension
+from Cython.Build import cythonize
 
 long_description = str("Bubblebuster is a Python Library for detecting water box bubbles " 
     + "in structural files used in molecular simulations, by partitioning the system's "
@@ -35,4 +35,5 @@ setup(
     platforms=['Linux',
                 'Unix',],
     python_requires=">=3.6",          
+    ext_modules = cythonize("bubblebuster/bubblebuster.pyx")
 )
