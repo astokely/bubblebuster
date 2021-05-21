@@ -16,7 +16,7 @@ def tmp_test_files_dir(
 @pytest.fixture(scope="session")
 def tryp_ben():
     default = bubblebuster.periodic_box_properties(
-        os.getcwd() + "/trypsin_benzamidine.pdb",
+        "trypsin_benzamidine.pdb",
     )
     return default
 
@@ -25,7 +25,7 @@ def tryp_ben_with_box_vectors(
         tryp_ben_box_vectors
         ):
     box_vectors = bubblebuster.periodic_box_properties(
-        os.getcwd() + "/trypsin_benzamidine.pdb",
+        "trypsin_benzamidine.pdb",
         box_vectors=tryp_ben_box_vectors
     )
     return box_vectors
@@ -33,7 +33,7 @@ def tryp_ben_with_box_vectors(
 @pytest.fixture(scope="session")
 def tryp_ben_bubble():
     bubble = bubblebuster.periodic_box_properties(
-        os.getcwd() + "/trypsin_benzamidine_bubble.pdb",
+        "trypsin_benzamidine_bubble.pdb",
     )
     return bubble 
 
@@ -42,7 +42,7 @@ def tryp_ben_bubble_with_box_vectors(
         tryp_ben_bubble,
         ):
     bubble_box_vectors = bubblebuster.periodic_box_properties(
-        os.getcwd() + "/trypsin_benzamidine_bubble.pdb",
+        "trypsin_benzamidine_bubble.pdb",
         box_vectors=tryp_ben_bubble.box_vectors
     )
     return bubble_box_vectors 
@@ -50,7 +50,7 @@ def tryp_ben_bubble_with_box_vectors(
 @pytest.fixture(scope="session")
 def tryp_ben_bubble_mesh2():
     bubble = bubblebuster.periodic_box_properties(
-        os.getcwd() + "/trypsin_benzamidine_bubble.pdb",
+        "trypsin_benzamidine_bubble.pdb",
         mesh=2.0
     )
     return bubble 
@@ -58,14 +58,14 @@ def tryp_ben_bubble_mesh2():
 @pytest.fixture(scope="session")
 def cyclodextrin():
     cyclodex = bubblebuster.periodic_box_properties(
-        os.getcwd() + "/1-butanol.pdb",
+        "1-butanol.pdb",
     )
     return cyclodex 
 
 @pytest.fixture(scope="session")
 def cyclodextrin_with_box_vectors(cyclodextrin):
     box_vectors = bubblebuster.periodic_box_properties(
-        os.getcwd() + "/1-butanol.pdb",
+        "1-butanol.pdb",
         box_vectors=cyclodextrin.box_vectors
     )
     return box_vectors 
