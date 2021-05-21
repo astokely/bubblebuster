@@ -1,1 +1,6 @@
 cython
+numpy 
+pytest
+nptyping
+mdtraj
+
