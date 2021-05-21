@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pytest
-import bubblebuster.bubblebuster
+import bubblebuster
 
 @pytest.mark.tryp_ben
 def test_tryp_ben_num_atoms(
