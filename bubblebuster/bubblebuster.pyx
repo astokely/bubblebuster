@@ -1093,6 +1093,15 @@ def get_box_type(
     if sum(off_diagonals) == 0:
         return "cubic"
     return "triclinic"
+
+def load_mdtraj_trajectory(
+        structure_file: str,
+        topology_file: Optional[str] = '', 
+        ) -> Trajectory:
+    if topology_file == '':
+        return md.load(structure_file)
+    return md.load(structure_file, top=topology_file)
+        
     
     
 def periodic_box_properties(
@@ -1172,10 +1181,10 @@ def periodic_box_properties(
         cutoff=cutoff,
         mesh=mesh,
     )
-    if topology_file:
-        trajectory = md.load(structure_file, top=topology_file)
-    else:
-        trajectory = md.load(structure_file)
+    trajectory = load_mdtraj_trajectory(
+        structure_file, 
+        topology_file = topology_file
+    )
     if box_vectors is not None:
         box_info.box_vectors = box_vectors
     else:

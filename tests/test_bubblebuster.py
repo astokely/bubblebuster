@@ -117,6 +117,13 @@ def test_tryp_ben_mean_cube_atom_density(
     assert tryp_ben.mean_cube_atom_density == \
         tryp_ben_mean_cube_atom_density
 
+@pytest.mark.structure_with_topology_file
+def test_tryp_ben_with_topology_fie():
+    assert bubblebuster.periodic_box_properties(
+        "trypsin_benzamidine.inpcrd",
+        topology_file="trypsin_benzamidine_topology_test.pdb"
+    )
+
 @pytest.mark.tryp_ben_with_box_vectors
 def test_tryp_ben_with_box_vectors_volume(
         tryp_ben_with_box_vectors,
