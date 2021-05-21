@@ -30,10 +30,11 @@ setup(
     keywords='molecular dynamics water box periodic',
     url='https://github.com/astokely/bubblebuster',
     long_description=long_description,
-    packages=find_packages(),
+    #packages=find_packages(),
+    packages=['bubblebuster', 'tests']
     install_requires=["numpy", "pytest", "nptyping", "mdtraj", "cython"],              
     platforms=['Linux',
                 'Unix',],
-    python_requires=">=3.6",          
+    python_requires=">=3.8",          
     ext_modules = cythonize("bubblebuster/bubblebuster.pyx")
 )
