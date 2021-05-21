@@ -36,7 +36,6 @@ import mdtraj.core.topology as Topology
 from collections import namedtuple
 from itertools import product 
 from typing import List, Dict, Union, Any, Tuple, Optional, NamedTuple
-from nptyping import NDArray
 
 class CubeInfo(object):
     """
@@ -83,7 +82,7 @@ class CubeInfo(object):
     def __init__(
             self,
             index: Optional[int] = None,
-            bounds: Optional[NDArray] = None,
+            bounds: Optional[np.ndarray] = None,
             volume: Optional[float] = None,
             atom_density: Optional[float] = None,
             number_of_atoms: Optional[int] = None,
@@ -217,14 +216,14 @@ class BoxInfo(object):
     def __init__(
             self,
             box_type: Optional[str] = None,
-            box_vectors: Optional[NDArray] = None,
-            dimensions: Optional[NDArray] = None,
+            box_vectors: Optional[np.ndarray] = None,
+            dimensions: Optional[np.ndarray] = None,
             volume: Optional[float] = None,
             atom_density: Optional[float] = None,
             number_of_atoms: Optional[int] = None,
             cubic_partition: Optional[List[CubeInfo]] = None,
             mean_cube_atom_density: Optional[float] = None,
-            cubic_partition_bounds: Optional[NDArray] = None,
+            cubic_partition_bounds: Optional[np.ndarray] = None,
             has_bubble: Optional[bool] = False,
             cutoff: Optional[float] = 0.5,
             mesh: Optional[float] = 1.0, 
@@ -246,7 +245,7 @@ class BoxInfo(object):
 
 def get_box_vectors(
         trajectory: Trajectory,
-        ) -> NDArray:
+        ) -> np.ndarray:
     """
     Returns the box vectors of a mdtraj trajectory's water box.
 
@@ -263,19 +262,37 @@ def get_box_vectors(
 
     """
     return trajectory.unitcell_vectors[0]
+
+def get_periodic_box_volume(
+        box_vectors: np.ndarray
+        ) -> np.ndarray:
+    """
+    Returns the volume of the system's periodic box.
+
+    Parameters
+    ----------
+    box_vectors : ndarray 
+        Box vector matrix. 
+
+    Returns
+    -------
+    : ndarray
+        Volume of the system's periodic box. 
+    """
+    a, b, c = box_vectors
+    return abs(np.dot(a, np.cross(b, c)))
         
 def get_box_vector_dimensions(
-        trajectory: Trajectory,
-        ) -> NDArray:
+        box_vectors: np.ndarray,
+        ) -> np.ndarray:
     """
     Returns the magnitude of the trajectory's period box unit 
     vectors: a, b, and c.
 
     Parameters
     ----------
-    trajectory : mdtraj.core.trajectory
-        mdtraj trajectory object that holds the molecular system of
-        interest's structural information.    
+    box_vectors : ndarray 
+        Box vector matrix. 
 
     Returns
     -------
@@ -283,7 +300,6 @@ def get_box_vector_dimensions(
         Magnitude of the trajectory's period box unit vectors: a, b, and c.
 
     """
-    box_vectors = get_box_vectors(trajectory)
     a, b, c = md.utils.box_vectors_to_lengths_and_angles(
         *box_vectors
     )[:3]
@@ -291,7 +307,7 @@ def get_box_vector_dimensions(
 
 def get_coordinates(
         trajectory: Trajectory,
-        ) -> NDArray:
+        ) -> np.ndarray:
     """
     Returns the cartesian coordinates of each atom in the trajectory's
     first frame.
@@ -315,8 +331,8 @@ def get_coordinates(
     ]
 
 def pbc_scale_factor(
-        box_vector_dimensions: NDArray,
-        atom_coordinates: NDArray,
+        box_vector_dimensions: np.ndarray,
+        atom_coordinates: np.ndarray,
         coordinate_component_index: int, 
         ) -> float:
     """
@@ -356,10 +372,10 @@ def pbc_scale_factor(
         )
 
 def apply_pbc_to_triclinic_coordinates(
-        box_vector_dimensions: NDArray,
-        atom_coordinates: NDArray,
-        box_vectors: NDArray,
-        ) -> NDArray:
+        box_vector_dimensions: np.ndarray,
+        atom_coordinates: np.ndarray,
+        box_vectors: np.ndarray,
+        ) -> np.ndarray:
     """
     Wraps the coordinates of an atom in a system with a triclinic
     water box. Each coordinate component is wrapped according to the 
@@ -400,10 +416,10 @@ def apply_pbc_to_triclinic_coordinates(
     return atom_coordinates
 
 def apply_pbc_to_cubic_coordinates(
-        box_vector_dimensions: NDArray,
-        atom_coordinates: NDArray,
-        box_vectors: NDArray,
-        ) -> NDArray:
+        box_vector_dimensions: np.ndarray,
+        atom_coordinates: np.ndarray,
+        box_vectors: np.ndarray,
+        ) -> np.ndarray:
     """
     Wraps the coordinates of an atom in a system with a cubic 
     water box. Each coordinate component is wrapped according to the 
@@ -443,11 +459,11 @@ def apply_pbc_to_cubic_coordinates(
     return atom_coordinates
 
 def apply_pbc_to_coordinates(
-        box_vector_dimensions: NDArray,
-        atom_coordinates: NDArray,
-        box_vectors: NDArray,
+        box_vector_dimensions: np.ndarray,
+        atom_coordinates: np.ndarray,
+        box_vectors: np.ndarray,
         box_type: str,
-        ) -> NDArray:
+        ) -> np.ndarray:
     """
     Wraps the coordinates of an atom in a system with periodic
     boundary conditions. If the system has a cubic water box,
@@ -509,13 +525,12 @@ def apply_pbc(
 
     """
 
+    box_vectors = box_info.box_vectors
     box_vector_dimensions = get_box_vector_dimensions(
-        trajectory
+        box_vectors
     )
-    box_vectors = get_box_vectors(trajectory)
     box_info.dimensions = box_vector_dimensions
-    box_info.volume = trajectory.unitcell_volumes[0] 
-    box_info.box_vectors = box_vectors
+    box_info.volume = get_periodic_box_volume(box_vectors) 
     coordinates = get_coordinates(trajectory)
     for atom_coordinates in coordinates:
         apply_pbc_to_coordinates(
@@ -569,7 +584,7 @@ def wrap_structure(
     return wrap_structure(trajectory, box_info)
 
 def coordinate_bounds(
-        coordinates: NDArray,
+        coordinates: np.ndarray,
         ) -> NamedTuple:
     """
     x, y, and z upper and lower bounds for an array of cartesian
@@ -626,7 +641,7 @@ def construct_partition(
         minimum: float,
         maximum: float,
         num_subintervals: int,
-        ) -> NDArray:
+        ) -> np.ndarray:
     """
     Constructs an interval partition by dividing the interval with 
     bounds defined by the minimum and maxium parameters into evenly
@@ -698,7 +713,7 @@ def num_subintervals(
 def construct_cubic_partition(
         coordinate_bounds: NamedTuple,
         box_info: BoxInfo,
-        ) -> NDArray:
+        ) -> np.ndarray:
     """
     Constructs the cubic partition that is used to calculate local atom
     densities throughout the system. The properties of each cube in the
@@ -766,7 +781,7 @@ def construct_cubic_partition(
     
 def in_subinterval(
         val: float,
-        subinterval_bounds: NDArray,
+        subinterval_bounds: np.ndarray,
         ) -> bool:
     """
     Checks to see if an individual component of an atom's coordinate
@@ -796,8 +811,8 @@ def in_subinterval(
     return False
 
 def atom_in_cube(
-        atom_coordinates: NDArray,
-        cube: NDArray,
+        atom_coordinates: np.ndarray,
+        cube: np.ndarray,
         ) -> bool:
     """
     Checks to see if an atom's coordinates are in the cube specified
@@ -837,8 +852,8 @@ def atom_in_cube(
     return False
 
 def num_atoms_per_cube(
-        cubic_partition: NDArray,
-        coordinates: NDArray,
+        cubic_partition: np.ndarray,
+        coordinates: np.ndarray,
         ) -> Dict:
     """
     Returns a dictionary containing the number of atoms located in 
@@ -885,8 +900,8 @@ def num_atoms_per_cube(
     return num_atoms_per_cube_dict
 
 def cube_volumes(
-        cubic_partition: NDArray,
-        ) -> NDArray:
+        cubic_partition: np.ndarray,
+        ) -> np.ndarray:
     """
     Returns a 1D numpy array containing the volume of each cube in the 
     cubic partition.
@@ -926,8 +941,8 @@ def cube_volumes(
     ])
 
 def atom_density_per_cube(
-        cubic_partition: NDArray,
-        coordinates: NDArray,
+        cubic_partition: np.ndarray,
+        coordinates: np.ndarray,
         box_info: BoxInfo,
         ) -> Dict:
     """
@@ -1046,10 +1061,43 @@ def check_for_bubbles(
         return True
     else:
         return False
+
+def get_box_type(
+        box_vectors: np.ndarray,
+        ) -> str:
+    """
+    Returns the system's type of periodic box. The type of 
+    periodic box can be determined by examining the box vector
+    matrix. Box vectors for cubic boxes will form a diagonal
+    matrix, while box vectors for triclinic boxes will not.
+    Using this property, the box type is determined by looking
+    at all of the box vector matrix's off diagonal elements. If
+    any of them are non-zero, then the box is triclinic. Otherwise,
+    the system's periodic box is cubic.
+
+    Parameters
+    ----------
+    box_vectors : ndarray
+        Box vectors of the system's water box.
+
+    Returns
+    -------
+    : str
+        System's type of periodic box.
+
+    """
+    off_diagonals = [
+        int(box_vectors[i][j]) for i in range(3) 
+            for j in range(3) if i != j
+        ]
+    if sum(off_diagonals) == 0:
+        return "cubic"
+    return "triclinic"
+    
     
 def periodic_box_properties(
         structure_file: str,
-        box_type: str,
+        box_vectors: Optional[np.ndarray] = None,
         mesh: Optional[float] = 1.5,
         cutoff: Optional[float] = 0.5,
         topology_file: Optional[str] = '', 
@@ -1078,14 +1126,16 @@ def periodic_box_properties(
         contain topology information and do not need to be accompanied 
         by a topology file. 
 
-    box_type : str
-        Type of periodic box the system has. As of right now, only
-        triclinic and cubic boxes are supported.
-
     mesh : float, optional
         Legnth of the cubes' sides in the cubic partition. Decreasing 
         this value will lead to increased accuracy, but will
         significantly increase the calculation time. Defaults to 1.5.
+
+    box_vectors : ndarray, optional
+        Box vectors that define the system's periodic box. If they are
+        not provided, the box vectors are extracted from the system's
+        mdtraj Trajectory object.
+
     cutoff : float, optional
         Cutoff value used to determine if the system's water box has a 
         bubble. If any cube in the partition has a atom density less 
@@ -1121,12 +1171,16 @@ def periodic_box_properties(
     box_info = BoxInfo(
         cutoff=cutoff,
         mesh=mesh,
-        box_type=box_type
     )
     if topology_file:
-        trajectory = md.load(structure_file, topology_file)
+        trajectory = md.load(structure_file, top=topology_file)
     else:
         trajectory = md.load(structure_file)
+    if box_vectors is not None:
+        box_info.box_vectors = box_vectors
+    else:
+        box_info.box_vectors = get_box_vectors(trajectory) 
+    box_info.box_type = get_box_type(box_info.box_vectors)
     trajectory.center_coordinates()
     wrap_structure(trajectory, box_info)
     topology = trajectory.topology

@@ -17,23 +17,40 @@ def tmp_test_files_dir(
 def tryp_ben():
     default = bubblebuster.periodic_box_properties(
         "trypsin_benzamidine.pdb",
-        "triclinic", 
     )
     return default
+
+@pytest.fixture(scope="session")
+def tryp_ben_with_box_vectors(
+        tryp_ben_box_vectors
+        ):
+    box_vectors = bubblebuster.periodic_box_properties(
+        "trypsin_benzamidine.pdb",
+        box_vectors=tryp_ben_box_vectors
+    )
+    return box_vectors
 
 @pytest.fixture(scope="session")
 def tryp_ben_bubble():
     bubble = bubblebuster.periodic_box_properties(
         "trypsin_benzamidine_bubble.pdb",
-        "triclinic",
     )
     return bubble 
+
+@pytest.fixture(scope="session")
+def tryp_ben_bubble_with_box_vectors(
+        tryp_ben_bubble,
+        ):
+    bubble_box_vectors = bubblebuster.periodic_box_properties(
+        "trypsin_benzamidine_bubble.pdb",
+        box_vectors=tryp_ben_bubble.box_vectors
+    )
+    return bubble_box_vectors 
 
 @pytest.fixture(scope="session")
 def tryp_ben_bubble_mesh2():
     bubble = bubblebuster.periodic_box_properties(
         "trypsin_benzamidine_bubble.pdb",
-        "triclinic",
         mesh=2.0
     )
     return bubble 
@@ -42,9 +59,16 @@ def tryp_ben_bubble_mesh2():
 def cyclodextrin():
     cyclodex = bubblebuster.periodic_box_properties(
         "1-butanol.pdb",
-        "cubic",
     )
     return cyclodex 
+
+@pytest.fixture(scope="session")
+def cyclodextrin_with_box_vectors(cyclodextrin):
+    box_vectors = bubblebuster.periodic_box_properties(
+        "1-butanol.pdb",
+        box_vectors=cyclodextrin.box_vectors
+    )
+    return box_vectors 
 
 
 @pytest.fixture
@@ -98,7 +122,7 @@ def tryp_ben_box_vectors():
 def tryp_ben_dimensions():
     return np.array([6.4913, 6.4913, 6.4913], dtype=np.float32)
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def tryp_ben_volume():
     return np.float32(210.56819)
 
@@ -139,7 +163,7 @@ def tryp_ben_mesh():
 def tryp_ben_cutoff():
     return 0.5 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def tryp_ben_box_vectors():
     return np.array([
         [6.4913, 0., 0.],
@@ -152,7 +176,7 @@ def tryp_ben_dimensions():
     return np.array([6.4913, 6.4913, 6.4913], dtype=np.float32)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def tryp_ben_cube_atom_densities():
     return [
         np.float64(107.80814976278407),
@@ -257,7 +281,7 @@ def tryp_ben_cube_atom_densities():
         np.float64(98.30963436518195),
     ]
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def tryp_ben_cube_volumes():
     return [
         np.float64(2.105592207077851),
@@ -369,7 +393,6 @@ def tryp_ben_save_wrapped_structure(
     save_wrapped_structure = \
         bubblebuster.periodic_box_properties(
             "trypsin_benzamidine.pdb",
-            "triclinic", 
             wrapped_structure_filename = \
             str(tmp_test_files_dir 
                 / "trypsin_benzamidine_wrapped.pdb"
@@ -710,7 +733,7 @@ def tryp_ben_bubble_mesh2_cube_volumes():
         np.float64(4.385858822859054),
     ]
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def cyclodextrin_cube_volumes():
     return [
         np.float64(1.8936947499841996),
@@ -742,7 +765,7 @@ def cyclodextrin_cube_volumes():
         np.float64(1.8936947499842),
     ]
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def cyclodextrin_cube_atom_densities():
     return [
         np.float64(95.58034630529033),
@@ -773,3 +796,7 @@ def cyclodextrin_cube_atom_densities():
         np.float64(103.5013694797619),
         np.float64(96.63648272855319),
     ]
+
+@pytest.fixture(scope="session")
+def cyclodextrin_box_type():
+    return "cubic"

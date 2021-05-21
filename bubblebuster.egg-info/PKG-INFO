@@ -1,6 +1,6 @@
 Metadata-Version: 1.2
 Name: bubblebuster
-Version: 1.2
+Version: 1.0
 Summary: A Python Library for detecting water box bubbles in structural files used in molecular simulations.
 Home-page: https://github.com/astokely/bubblebuster
 Author: Andy Stokely
