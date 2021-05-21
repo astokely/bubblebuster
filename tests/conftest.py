@@ -1,7 +1,7 @@
 import pytest
 import shutil
 import os
-import bubblebuster
+import bubblebuster.bubblebuster
 import numpy as np
 
 @pytest.fixture(scope="session")
