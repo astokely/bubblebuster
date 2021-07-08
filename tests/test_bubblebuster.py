@@ -12,6 +12,54 @@ def test_tryp_ben_num_atoms(
         tryp_ben_num_atoms 
 
 @pytest.mark.tryp_ben
+def test_tryp_cubic_partition_residue_names(
+        tryp_ben,
+        tryp_ben_cubic_partition_residue_names 
+    ):
+    cube_residue_names = [
+        cube.residue_names for cube 
+        in tryp_ben.cubic_partition
+    ]
+    assert cube_residue_names == \
+        tryp_ben_cubic_partition_residue_names 
+
+@pytest.mark.tryp_ben
+def test_tryp_cubic_partition_elements(
+        tryp_ben,
+        tryp_ben_cubic_partition_elements 
+    ):
+    cube_elements = [
+        cube.elements for cube 
+        in tryp_ben.cubic_partition
+    ]
+    assert cube_elements == \
+        tryp_ben_cubic_partition_elements 
+
+@pytest.mark.tryp_ben
+def test_tryp_cubic_partition_atom_names(
+        tryp_ben,
+        tryp_ben_cubic_partition_atom_names 
+    ):
+    cube_atom_names = [
+        cube.atom_names for cube 
+        in tryp_ben.cubic_partition
+    ]
+    assert cube_atom_names == \
+        tryp_ben_cubic_partition_atom_names 
+
+@pytest.mark.tryp_ben
+def test_tryp_cubic_partition_atom_indices(
+        tryp_ben,
+        tryp_ben_cubic_partition_atom_indices 
+    ):
+    cube_atom_indices = [
+        cube.atom_indices for cube 
+        in tryp_ben.cubic_partition
+    ]
+    assert cube_atom_indices == \
+        tryp_ben_cubic_partition_atom_indices 
+
+@pytest.mark.tryp_ben
 def test_tryp_ben_volume(
         tryp_ben,
         tryp_ben_volume
@@ -255,6 +303,20 @@ def test_tryp_ben_bubble_mesh2_has_bubble(
         tryp_ben_bubble_mesh2,
         ):
     assert tryp_ben_bubble_mesh2.has_bubble == False 
+
+@pytest.mark.oversized_box_vectors
+def test_tryp_ben_oversized_box_vectors_std_mesh_has_bubble(
+        tryp_ben_oversized_box_vectors_std_mesh,
+        ):
+    assert tryp_ben_oversized_box_vectors_std_mesh.has_bubble \
+        == False 
+
+@pytest.mark.oversized_box_vectors
+def test_tryp_ben_oversized_box_vectors_small_mesh_has_bubble(
+        tryp_ben_oversized_box_vectors_small_mesh,
+        ):
+    assert tryp_ben_oversized_box_vectors_small_mesh.has_bubble \
+        == True 
 
 @pytest.mark.cubic_box
 def test_cyclodextrin_cube_volumes(

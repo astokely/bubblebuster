@@ -59,6 +59,15 @@ class CubeInfo(object):
         the total number of atoms in the cube by the cube's volume.
     number_of_atoms : int, optional 
         Total number of atoms in the cube.
+    atom_indices : list, optional 
+        Indices of atoms in cube with respect to the system's mdtraj 
+        Topology object.
+    elements : list, optional 
+        Element symbols for atoms cube.
+    atom_names : list, optional
+        Names of atoms in cube.
+    residue_names : list, optional
+        Names of residues that atoms in cube are part of.
     
     Attributes
     ----------
@@ -75,7 +84,17 @@ class CubeInfo(object):
     atom_density : float, optional 
         The cube's atom density, which is calculated by dividing
         the total number of atoms in the cube by the cube's volume.
-    number_of_atoms : int, optional 
+    number_of_atoms : list, optional 
+        Number of atoms in cube.
+    atom_indices : list, optional 
+        Indices of atoms in cube with respect to the system's mdtraj 
+        Topology object.
+    elements : list, optional 
+        Element symbols for atoms cube.
+    atom_names : list, optional
+        Names of atoms in cube.
+    residue_names : list, optional
+        Names of residues that atoms in cube are part of.
         Total number of atoms in the cube.
 
     """
@@ -86,12 +105,20 @@ class CubeInfo(object):
             volume: Optional[float] = None,
             atom_density: Optional[float] = None,
             number_of_atoms: Optional[int] = None,
+            atom_indices: Optional[List] = None,
+            elements: Optional[List[str]] = None,
+            atom_names: Optional[List] = None,
+            residue_names: Optional[List] = None,
             ) -> None:
         self.index = index
         self.bounds = bounds
         self.volume = volume
         self.number_of_atoms = number_of_atoms
         self.atom_density = atom_density
+        self.atom_indices = atom_indices
+        self.elements = elements
+        self.atom_names = atom_names
+        self.residue_names = residue_names
 
 
 class BoxInfo(object):
@@ -706,7 +733,7 @@ def num_subintervals(
         and a mesh defined by the BoxInfo object's mesh attribute.
     """
     return ceil(
-        (abs(lower_bound) + abs(upper_bound)) / box_info.mesh
+        (upper_bound - lower_bound) / box_info.mesh
     )
     
 
@@ -773,7 +800,7 @@ def construct_cubic_partition(
         *np.array([xpart, ypart, zpart], dtype=object)
     )))
     cube_info_objs_list = [
-        CubeInfo(index=index, bounds=cube) for index, cube
+        CubeInfo(index=index, bounds=cube, atom_indices = []) for index, cube
         in enumerate(cubic_partition)
     ]
     setattr(box_info, "cubic_partition", cube_info_objs_list)
@@ -851,53 +878,57 @@ def atom_in_cube(
         return True
     return False
 
-def num_atoms_per_cube(
+def set_cubic_partition_atom_properties(
         cubic_partition: np.ndarray,
         coordinates: np.ndarray,
-        ) -> Dict:
+        topology: mdtraj.core.Topology 
+        ) -> None:
     """
-    Returns a dictionary containing the number of atoms located in 
-    each cube. The names of the cubes ("cube" + str(index)) serve as the
-    dictionary and the number of atoms in each cube serve as the values.
+    Sets the number_of_atoms, elements, atom_names,
+    residue_names, and atom_indices attributes for a 
+    CubeInfo object
 
     Parameters
     ----------
-    cubic_partition : ndarray
-        3D numpy array of the x, y, and z bounds that define the cubes
-        in the periodic box cubic partition. The array format is shown
-        below. 
-
-        (((cube 0 x lower bound, cube 0 x upper bound),
-          (cube 0 y lower bound, cube 0 y upper bound), 
-          (cube 0 z lower bound, cube 0 z upper bound))
-             .  . .   .     .     .   . .   .     .
-             .  . .   .     .     .   . .   .     .
-             .  . .   .     .     .   . .   .     .
-         ((cube n x lower bound, cube n x upper bound),
-          (cube n y lower bound, cube n y upper bound), 
-          (cube n z lower bound, cube n z upper bound)))
-
-        , where n is the number of cubes in the partition
-
+    cubic_partition : list
+        cubic_partition attribute of the BoxInfo class
+        which is a list of CubeInfo objects.
     coordinates : ndarray
         Numpy array of the system's atomic coordinates.
 
+    topology  : mdtraj.core.topology
+        mdtraj topology object which holds important
+        information about the system's atoms, residues,
+        chains, and elements.
     Returns
     -------
-    num_atoms_per_cube_dict : dict
-        Dictionary containing the number of atoms located in each cube.
-        The names of the cubes ('cube' + index) serve as the dictionary 
-        and the number of atoms in each cube serve as the values.
+    : None
 
     """
-    num_atoms_per_cube_dict = {
-        cube_index : 0 for cube_index in range(len(cubic_partition))
-    }
+    for cube in cubic_partition:
+        cube.number_of_atoms = 0
+        cube.atom_indices = []
+        cube.elements = []
+        cube.atom_names = []
+        cube.residue_names = []
+    atoms = [atom for atom in topology.atoms]
     for index, atom_coordinates in enumerate(coordinates):
-        for cube_index, cube in enumerate(cubic_partition):
-            if atom_in_cube(atom_coordinates, cube):
-                num_atoms_per_cube_dict[cube_index] += 1    
-    return num_atoms_per_cube_dict
+        for cube in cubic_partition:
+            if atom_in_cube(atom_coordinates, cube.bounds):
+                cube.atom_indices.append(index)
+                cube.elements.append(
+                    atoms[index].element.symbol
+                )
+                cube.atom_names.append(
+                    atoms[index].name
+                )
+                cube.atom_names.append(
+                    atoms[index].name
+                )
+                cube.residue_names.append(
+                    atoms[index].residue.name
+                )
+                cube.number_of_atoms += 1    
 
 def cube_volumes(
         cubic_partition: np.ndarray,
@@ -944,6 +975,7 @@ def atom_density_per_cube(
         cubic_partition: np.ndarray,
         coordinates: np.ndarray,
         box_info: BoxInfo,
+        topology: mdtraj.core.Topology
         ) -> Dict:
     """
     Returns a dictionary containing the atom density for each cube.
@@ -978,6 +1010,11 @@ def atom_density_per_cube(
         number_of_atoms attributes for each CubeInfo object in BoxInfo's
         cubic_partition attribute, which is a list of CubeInfo objects. 
 
+    topology  : mdtraj.core.topology
+        mdtraj topology object which holds important
+        information about the system's atoms, residues,
+        chains, and elements.
+
     Returns
     -------
     atom_density_per_cube_dict : dict
@@ -985,19 +1022,19 @@ def atom_density_per_cube(
 
 
     """
-    atoms_per_cube = num_atoms_per_cube(
-        cubic_partition, coordinates,
+    set_cubic_partition_atom_properties(
+        box_info.cubic_partition, 
+        coordinates, 
+        topology
     )
     volumes = cube_volumes(cubic_partition)
     atom_density_per_cube_dict = {}
-    for cube_index, num_atoms in atoms_per_cube.items():
-        box_info.cubic_partition[cube_index].atom_density = \
-            atom_density_per_cube_dict[cube_index] = \
-                num_atoms / volumes[cube_index]
-        box_info.cubic_partition[cube_index].volume = \
-            volumes[cube_index]
-        box_info.cubic_partition[cube_index].number_of_atoms = \
-            num_atoms
+    for cube in box_info.cubic_partition:
+        box_info.cubic_partition[cube.index].atom_density = \
+            atom_density_per_cube_dict[cube.index] = \
+                cube.number_of_atoms / volumes[cube.index]
+        box_info.cubic_partition[cube.index].volume = \
+            volumes[cube.index]
     return atom_density_per_cube_dict
 
 def mean_atom_density_per_cube(
@@ -1205,7 +1242,8 @@ def periodic_box_properties(
     atom_density = atom_density_per_cube(
         cubic_partition,
         coordinates, 
-        box_info
+        box_info, 
+        topology
     )
     mean_atom_density = mean_atom_density_per_cube(atom_density) 
     box_info.mean_cube_atom_density = mean_atom_density
