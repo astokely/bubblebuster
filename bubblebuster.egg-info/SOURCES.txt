@@ -1,0 +1,14 @@
+LICENSE
+MANIFEST.in
+README
+bubblebuster.toml
+setup.cfg
+setup.py
+bubblebuster/__init__.py
+bubblebuster/bubblebuster.c
+bubblebuster.egg-info/PKG-INFO
+bubblebuster.egg-info/SOURCES.txt
+bubblebuster.egg-info/dependency_links.txt
+bubblebuster.egg-info/requires.txt
+bubblebuster.egg-info/top_level.txt
+tests/test_bubblebuster.py
