@@ -997,51 +997,6 @@ static CYTHON_INLINE int __Pyx_PyObject_SetAttrStr(PyObject* obj, PyObject* attr
 #define __Pyx_PyObject_SetAttrStr(o,n,v) PyObject_SetAttr(o,n,v)
 #endif
 
-/* GetItemInt.proto */
-#define __Pyx_GetItemInt(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
-    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
-    __Pyx_GetItemInt_Fast(o, (Py_ssize_t)i, is_list, wraparound, boundscheck) :\
-    (is_list ? (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL) :\
-               __Pyx_GetItemInt_Generic(o, to_py_func(i))))
-#define __Pyx_GetItemInt_List(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
-    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
-    __Pyx_GetItemInt_List_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
-    (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL))
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
-                                                              int wraparound, int boundscheck);
-#define __Pyx_GetItemInt_Tuple(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
-    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
-    __Pyx_GetItemInt_Tuple_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
-    (PyErr_SetString(PyExc_IndexError, "tuple index out of range"), (PyObject*)NULL))
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
-                                                              int wraparound, int boundscheck);
-static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j);
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
-                                                     int is_list, int wraparound, int boundscheck);
-
-/* RaiseTooManyValuesToUnpack.proto */
-static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected);
-
-/* RaiseNeedMoreValuesToUnpack.proto */
-static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index);
-
-/* IterFinish.proto */
-static CYTHON_INLINE int __Pyx_IterFinish(void);
-
-/* UnpackItemEndCheck.proto */
-static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected);
-
-/* py_abs.proto */
-#if CYTHON_USE_PYLONG_INTERNALS
-static PyObject *__Pyx_PyLong_AbsNeg(PyObject *num);
-#define __Pyx_PyNumber_Absolute(x)\
-    ((likely(PyLong_CheckExact(x))) ?\
-         (likely(Py_SIZE(x) >= 0) ? (Py_INCREF(x), (x)) : __Pyx_PyLong_AbsNeg(x)) :\
-         PyNumber_Absolute(x))
-#else
-#define __Pyx_PyNumber_Absolute(x)  PyNumber_Absolute(x)
-#endif
-
 /* PyDictVersioning.proto */
 #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_TYPE_SLOTS
 #define __PYX_DICT_VERSION_INIT  ((PY_UINT64_T) -1)
@@ -1089,6 +1044,20 @@ static PyObject *__Pyx__GetModuleGlobalName(PyObject *name, PY_UINT64_T *dict_ve
 static CYTHON_INLINE PyObject *__Pyx__GetModuleGlobalName(PyObject *name);
 #endif
 
+/* PyObjectCall.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
+#else
+#define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
+#endif
+
+/* PyCFunctionFastCall.proto */
+#if CYTHON_FAST_PYCCALL
+static CYTHON_INLINE PyObject *__Pyx_PyCFunction_FastCall(PyObject *func, PyObject **args, Py_ssize_t nargs);
+#else
+#define __Pyx_PyCFunction_FastCall(func, args, nargs)  (assert(0), NULL)
+#endif
+
 /* PyFunctionFastCall.proto */
 #if CYTHON_FAST_PYCALL
 #define __Pyx_PyFunction_FastCall(func, args, nargs)\
@@ -1114,26 +1083,6 @@ static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, 
 #endif // CYTHON_FAST_PYCALL
 #endif
 
-/* PyCFunctionFastCall.proto */
-#if CYTHON_FAST_PYCCALL
-static CYTHON_INLINE PyObject *__Pyx_PyCFunction_FastCall(PyObject *func, PyObject **args, Py_ssize_t nargs);
-#else
-#define __Pyx_PyCFunction_FastCall(func, args, nargs)  (assert(0), NULL)
-#endif
-
-/* PyObjectCall.proto */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
-#else
-#define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
-#endif
-
-/* SliceObject.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyObject_GetSlice(
-        PyObject* obj, Py_ssize_t cstart, Py_ssize_t cstop,
-        PyObject** py_start, PyObject** py_stop, PyObject** py_slice,
-        int has_cstart, int has_cstop, int wraparound);
-
 /* PyObjectCall2Args.proto */
 static CYTHON_UNUSED PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2);
 
@@ -1145,12 +1094,71 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject
 /* PyObjectCallOneArg.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
 
+/* PyIntBinop.proto */
+#if !CYTHON_COMPILING_IN_PYPY
+static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, long intval, int inplace, int zerodivision_check);
+#else
+#define __Pyx_PyInt_AddObjC(op1, op2, intval, inplace, zerodivision_check)\
+    (inplace ? PyNumber_InPlaceAdd(op1, op2) : PyNumber_Add(op1, op2))
+#endif
+
+/* GetItemInt.proto */
+#define __Pyx_GetItemInt(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_GetItemInt_Fast(o, (Py_ssize_t)i, is_list, wraparound, boundscheck) :\
+    (is_list ? (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL) :\
+               __Pyx_GetItemInt_Generic(o, to_py_func(i))))
+#define __Pyx_GetItemInt_List(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_GetItemInt_List_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
+    (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL))
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
+                                                              int wraparound, int boundscheck);
+#define __Pyx_GetItemInt_Tuple(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_GetItemInt_Tuple_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
+    (PyErr_SetString(PyExc_IndexError, "tuple index out of range"), (PyObject*)NULL))
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
+                                                              int wraparound, int boundscheck);
+static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j);
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
+                                                     int is_list, int wraparound, int boundscheck);
+
 /* ObjectGetItem.proto */
 #if CYTHON_USE_TYPE_SLOTS
 static CYTHON_INLINE PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject* key);
 #else
 #define __Pyx_PyObject_GetItem(obj, key)  PyObject_GetItem(obj, key)
 #endif
+
+/* RaiseTooManyValuesToUnpack.proto */
+static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected);
+
+/* RaiseNeedMoreValuesToUnpack.proto */
+static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index);
+
+/* IterFinish.proto */
+static CYTHON_INLINE int __Pyx_IterFinish(void);
+
+/* UnpackItemEndCheck.proto */
+static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected);
+
+/* py_abs.proto */
+#if CYTHON_USE_PYLONG_INTERNALS
+static PyObject *__Pyx_PyLong_AbsNeg(PyObject *num);
+#define __Pyx_PyNumber_Absolute(x)\
+    ((likely(PyLong_CheckExact(x))) ?\
+         (likely(Py_SIZE(x) >= 0) ? (Py_INCREF(x), (x)) : __Pyx_PyLong_AbsNeg(x)) :\
+         PyNumber_Absolute(x))
+#else
+#define __Pyx_PyNumber_Absolute(x)  PyNumber_Absolute(x)
+#endif
+
+/* SliceObject.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_GetSlice(
+        PyObject* obj, Py_ssize_t cstart, Py_ssize_t cstop,
+        PyObject** py_start, PyObject** py_stop, PyObject** py_slice,
+        int has_cstart, int has_cstop, int wraparound);
 
 /* SetItemInt.proto */
 #define __Pyx_SetItemInt(o, i, v, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
@@ -1209,16 +1217,22 @@ static PyObject* __Pyx_PyFloat_EqObjC(PyObject *op1, PyObject *op2, double float
     (PyObject_RichCompare(op1, op2, Py_EQ))
     #endif
 
-/* PyIntBinop.proto */
-#if !CYTHON_COMPILING_IN_PYPY
-static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, long intval, int inplace, int zerodivision_check);
+/* ListAppend.proto */
+#if CYTHON_USE_PYLIST_INTERNALS && CYTHON_ASSUME_SAFE_MACROS
+static CYTHON_INLINE int __Pyx_PyList_Append(PyObject* list, PyObject* x) {
+    PyListObject* L = (PyListObject*) list;
+    Py_ssize_t len = Py_SIZE(list);
+    if (likely(L->allocated > len) & likely(len > (L->allocated >> 1))) {
+        Py_INCREF(x);
+        PyList_SET_ITEM(list, len, x);
+        __Pyx_SET_SIZE(list, len + 1);
+        return 0;
+    }
+    return PyList_Append(list, x);
+}
 #else
-#define __Pyx_PyInt_AddObjC(op1, op2, intval, inplace, zerodivision_check)\
-    (inplace ? PyNumber_InPlaceAdd(op1, op2) : PyNumber_Add(op1, op2))
+#define __Pyx_PyList_Append(L,x) PyList_Append(L,x)
 #endif
-
-/* PyIntCompare.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyInt_EqObjC(PyObject *op1, PyObject *op2, long intval, long inplace);
 
 /* PyObjectCallNoArg.proto */
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -1226,6 +1240,17 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func);
 #else
 #define __Pyx_PyObject_CallNoArg(func) __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL)
 #endif
+
+/* PyIntCompare.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyInt_EqObjC(PyObject *op1, PyObject *op2, long intval, long inplace);
+
+/* PyFloatBinop.proto */
+#if !CYTHON_COMPILING_IN_PYPY
+static PyObject* __Pyx_PyFloat_DivideObjC(PyObject *op1, PyObject *op2, double floatval, int inplace, int zerodivision_check);
+#else
+#define __Pyx_PyFloat_DivideObjC(op1, op2, floatval, inplace, zerodivision_check)\
+    ((inplace ? __Pyx_PyNumber_InPlaceDivide(op1, op2) : __Pyx_PyNumber_Divide(op1, op2)))
+    #endif
 
 /* Import.proto */
 static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level);
@@ -1235,6 +1260,17 @@ static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name);
 
 /* CalculateMetaclass.proto */
 static PyObject *__Pyx_CalculateMetaclass(PyTypeObject *metaclass, PyObject *bases);
+
+/* SetNameInClass.proto */
+#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030500A1
+#define __Pyx_SetNameInClass(ns, name, value)\
+    (likely(PyDict_CheckExact(ns)) ? _PyDict_SetItem_KnownHash(ns, name, value, ((PyASCIIObject *) name)->hash) : PyObject_SetItem(ns, name, value))
+#elif CYTHON_COMPILING_IN_CPYTHON
+#define __Pyx_SetNameInClass(ns, name, value)\
+    (likely(PyDict_CheckExact(ns)) ? PyDict_SetItem(ns, name, value) : PyObject_SetItem(ns, name, value))
+#else
+#define __Pyx_SetNameInClass(ns, name, value)  PyObject_SetItem(ns, name, value)
+#endif
 
 /* FetchCommonType.proto */
 static PyTypeObject* __Pyx_FetchCommonType(PyTypeObject* type);
@@ -1299,22 +1335,14 @@ static PyObject *__Pyx_CyFunction_New(PyMethodDef *ml,
                                       PyObject *module, PyObject *globals,
                                       PyObject* code);
 
-/* SetNameInClass.proto */
-#if CYTHON_COMPILING_IN_CPYTHON && PY_VERSION_HEX >= 0x030500A1
-#define __Pyx_SetNameInClass(ns, name, value)\
-    (likely(PyDict_CheckExact(ns)) ? _PyDict_SetItem_KnownHash(ns, name, value, ((PyASCIIObject *) name)->hash) : PyObject_SetItem(ns, name, value))
-#elif CYTHON_COMPILING_IN_CPYTHON
-#define __Pyx_SetNameInClass(ns, name, value)\
-    (likely(PyDict_CheckExact(ns)) ? PyDict_SetItem(ns, name, value) : PyObject_SetItem(ns, name, value))
-#else
-#define __Pyx_SetNameInClass(ns, name, value)  PyObject_SetItem(ns, name, value)
-#endif
-
 /* Py3ClassCreate.proto */
 static PyObject *__Pyx_Py3MetaclassPrepare(PyObject *metaclass, PyObject *bases, PyObject *name, PyObject *qualname,
                                            PyObject *mkw, PyObject *modname, PyObject *doc);
 static PyObject *__Pyx_Py3ClassCreate(PyObject *metaclass, PyObject *name, PyObject *bases, PyObject *dict,
                                       PyObject *mkw, int calculate_metaclass, int allow_py2_metaclass);
+
+/* CyFunctionClassCell.proto */
+static int __Pyx_CyFunction_InitClassCell(PyObject *cyfunctions, PyObject *classobj);
 
 /* PyThreadStateGet.proto */
 #if CYTHON_FAST_THREAD_STATE
@@ -1419,6 +1447,8 @@ int __pyx_module_is_main_bubblebuster__bubblebuster = 0;
 
 /* Implementation of 'bubblebuster.bubblebuster' */
 static PyObject *__pyx_builtin_object;
+static PyObject *__pyx_builtin_property;
+static PyObject *__pyx_builtin_super;
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_reversed;
 static PyObject *__pyx_builtin_round;
@@ -1432,6 +1462,7 @@ static const char __pyx_k_c[] = "c";
 static const char __pyx_k_i[] = "i";
 static const char __pyx_k_j[] = "j";
 static const char __pyx_k_k[] = "k";
+static const char __pyx_k_v[] = "v";
 static const char __pyx_k_x[] = "x";
 static const char __pyx_k_y[] = "y";
 static const char __pyx_k_z[] = "z";
@@ -1440,15 +1471,25 @@ static const char __pyx_k_np[] = "np";
 static const char __pyx_k_nx[] = "nx";
 static const char __pyx_k_ny[] = "ny";
 static const char __pyx_k_nz[] = "nz";
+static const char __pyx_k_wx[] = "wx";
+static const char __pyx_k_wy[] = "wy";
+static const char __pyx_k_wz[] = "wz";
 static const char __pyx_k__10[] = "";
+static const char __pyx_k_all[] = "__all__";
+static const char __pyx_k_cls[] = "cls";
 static const char __pyx_k_doc[] = "__doc__";
 static const char __pyx_k_dot[] = "dot";
+static const char __pyx_k_int[] = "int";
 static const char __pyx_k_max[] = "max";
 static const char __pyx_k_min[] = "min";
+static const char __pyx_k_new[] = "__new__";
 static const char __pyx_k_sum[] = "sum";
 static const char __pyx_k_top[] = "top";
+static const char __pyx_k_val[] = "val";
 static const char __pyx_k_xyz[] = "xyz";
 static const char __pyx_k_Dict[] = "Dict";
+static const char __pyx_k_args[] = "args";
+static const char __pyx_k_attr[] = "attr";
 static const char __pyx_k_ceil[] = "ceil";
 static const char __pyx_k_init[] = "__init__";
 static const char __pyx_k_load[] = "load";
@@ -1458,37 +1499,46 @@ static const char __pyx_k_mesh[] = "mesh";
 static const char __pyx_k_name[] = "__name__";
 static const char __pyx_k_self[] = "self";
 static const char __pyx_k_test[] = "__test__";
+static const char __pyx_k_x_lb[] = "x_lb";
+static const char __pyx_k_y_lb[] = "y_lb";
+static const char __pyx_k_z_lb[] = "z_lb";
 static const char __pyx_k_Tuple[] = "Tuple";
 static const char __pyx_k_array[] = "array";
+static const char __pyx_k_class[] = "__class__";
 static const char __pyx_k_cross[] = "cross";
 static const char __pyx_k_cubic[] = "cubic";
 static const char __pyx_k_delta[] = "delta";
 static const char __pyx_k_dtype[] = "dtype";
 static const char __pyx_k_empty[] = "empty";
 static const char __pyx_k_floor[] = "floor";
+static const char __pyx_k_items[] = "items";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_range[] = "range";
 static const char __pyx_k_round[] = "round";
+static const char __pyx_k_slots[] = "__slots__";
+static const char __pyx_k_super[] = "super";
 static const char __pyx_k_utils[] = "utils";
 static const char __pyx_k_zeros[] = "zeros";
 static const char __pyx_k_bounds[] = "bounds";
 static const char __pyx_k_coords[] = "coords";
 static const char __pyx_k_cutoff[] = "cutoff";
 static const char __pyx_k_import[] = "__import__";
+static const char __pyx_k_kwargs[] = "kwargs";
 static const char __pyx_k_mdtraj[] = "mdtraj";
 static const char __pyx_k_module[] = "__module__";
 static const char __pyx_k_object[] = "object";
 static const char __pyx_k_return[] = "return";
+static const char __pyx_k_setter[] = "setter";
 static const char __pyx_k_typing[] = "typing";
-static const char __pyx_k_volume[] = "volume";
-static const char __pyx_k_BoxInfo[] = "BoxInfo";
 static const char __pyx_k_float64[] = "float64";
 static const char __pyx_k_n_atoms[] = "n_atoms";
 static const char __pyx_k_ndarray[] = "ndarray";
 static const char __pyx_k_prepare[] = "__prepare__";
+static const char __pyx_k_setattr[] = "__setattr__";
 static const char __pyx_k_Optional[] = "Optional";
-static const char __pyx_k_box_info[] = "box_info";
 static const char __pyx_k_box_type[] = "box_type";
+static const char __pyx_k_get_mesh[] = "get_mesh";
+static const char __pyx_k_property[] = "property";
 static const char __pyx_k_qualname[] = "__qualname__";
 static const char __pyx_k_reversed[] = "reversed";
 static const char __pyx_k_save_pdb[] = "save_pdb";
@@ -1499,79 +1549,94 @@ static const char __pyx_k_metaclass[] = "__metaclass__";
 static const char __pyx_k_npacoords[] = "npacoords";
 static const char __pyx_k_triclinic[] = "triclinic";
 static const char __pyx_k_Trajectory[] = "Trajectory";
-static const char __pyx_k_dimensions[] = "dimensions";
+static const char __pyx_k_cube_index[] = "cube_index";
+static const char __pyx_k_properties[] = "properties";
 static const char __pyx_k_trajectory[] = "trajectory";
 static const char __pyx_k_box_vectors[] = "box_vectors";
 static const char __pyx_k_coordinates[] = "coordinates";
+static const char __pyx_k_cube_bounds[] = "cube_bounds";
+static const char __pyx_k_empty_cubes[] = "empty_cubes";
 static const char __pyx_k_hash_widths[] = "hash_widths";
 static const char __pyx_k_lower_bound[] = "lower_bound";
 static const char __pyx_k_upper_bound[] = "upper_bound";
-static const char __pyx_k_atom_density[] = "atom_density";
 static const char __pyx_k_get_box_type[] = "get_box_type";
 static const char __pyx_k_scale_factor[] = "scale_factor";
+static const char __pyx_k_empty_cubes_2[] = "_empty_cubes";
 static const char __pyx_k_off_diagonals[] = "off_diagonals";
+static const char __pyx_k_setattr_calls[] = "__setattr_calls__";
 static const char __pyx_k_topology_file[] = "topology_file";
-static const char __pyx_k_BoxInfo___init[] = "BoxInfo.__init__";
+static const char __pyx_k_box_dimensions[] = "box_dimensions";
 static const char __pyx_k_structure_file[] = "structure_file";
 static const char __pyx_k_wrap_structure[] = "wrap_structure";
 static const char __pyx_k_cubic_partition[] = "cubic_partition";
 static const char __pyx_k_get_box_vectors[] = "get_box_vectors";
 static const char __pyx_k_get_coordinates[] = "get_coordinates";
-static const char __pyx_k_number_of_atoms[] = "number_of_atoms";
+static const char __pyx_k_get_cube_bounds[] = "get_cube_bounds";
+static const char __pyx_k_get_empty_cubes[] = "get_empty_cubes";
 static const char __pyx_k_atom_coordinates[] = "atom_coordinates";
 static const char __pyx_k_num_subintervals[] = "num_subintervals";
 static const char __pyx_k_pbc_scale_factor[] = "pbc_scale_factor";
 static const char __pyx_k_unitcell_vectors[] = "unitcell_vectors";
 static const char __pyx_k_coordinate_bounds[] = "coordinate_bounds";
+static const char __pyx_k_get_cube_bounds_2[] = "__get_cube_bounds";
+static const char __pyx_k_WaterBoxProperties[] = "WaterBoxProperties";
 static const char __pyx_k_center_coordinates[] = "center_coordinates";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
+static const char __pyx_k_get_box_dimensions[] = "get_box_dimensions";
 static const char __pyx_k_num_x_subintervals[] = "num_x_subintervals";
 static const char __pyx_k_num_y_subintervals[] = "num_y_subintervals";
 static const char __pyx_k_num_z_subintervals[] = "num_z_subintervals";
 static const char __pyx_k_get_cubic_partition[] = "get_cubic_partition";
 static const char __pyx_k_wrapped_coordinates[] = "wrapped_coordinates";
 static const char __pyx_k_get_num_subintervals[] = "get_num_subintervals";
-static const char __pyx_k_box_vector_dimensions[] = "box_vector_dimensions";
+static const char __pyx_k_water_box_properties[] = "water_box_properties";
 static const char __pyx_k_coordinates_transpose[] = "coordinates_transpose";
 static const char __pyx_k_unwrapped_coordinates[] = "unwrapped_coordinates";
-static const char __pyx_k_cubic_partition_bounds[] = "cubic_partition_bounds";
 static const char __pyx_k_load_mdtraj_trajectory[] = "load_mdtraj_trajectory";
 static const char __pyx_k_mdtraj_core_trajectory[] = "mdtraj.core.trajectory";
 static const char __pyx_k_get_periodic_box_volume[] = "get_periodic_box_volume";
-static const char __pyx_k_periodic_box_properties[] = "periodic_box_properties";
+static const char __pyx_k_WaterBoxProperties___new[] = "WaterBoxProperties.__new__";
 static const char __pyx_k_apply_pbc_to_coordinates[] = "apply_pbc_to_coordinates";
+static const char __pyx_k_WaterBoxProperties___init[] = "WaterBoxProperties.__init__";
 static const char __pyx_k_bubblebuster_bubblebuster[] = "bubblebuster.bubblebuster";
-static const char __pyx_k_get_box_vector_dimensions[] = "get_box_vector_dimensions";
 static const char __pyx_k_coordinate_component_index[] = "coordinate_component_index";
 static const char __pyx_k_wrapped_structure_filename[] = "wrapped_structure_filename";
+static const char __pyx_k_WaterBoxProperties___setattr[] = "WaterBoxProperties.__setattr__";
 static const char __pyx_k_bubblebuster_bubblebuster_pyx[] = "bubblebuster/bubblebuster.pyx";
 static const char __pyx_k_get_cubic_partition_occupancy[] = "get_cubic_partition_occupancy";
+static const char __pyx_k_WaterBoxProperties_empty_cubes[] = "WaterBoxProperties.empty_cubes";
 static const char __pyx_k_apply_pbc_to_cubic_coordinates[] = "apply_pbc_to_cubic_coordinates";
-static const char __pyx_k_Holds_the_water_box_properties_p[] = "Holds the water box properties pertinent to checking\n    the box for bubbles.\n\n    Parameters\n    ----------\n    box_type : str, optional\n        The type of box the water box is. If the water box is a\n        cubic box, box_type is set to 'cubic'. Else,\n        box_type is set to triclinic.\n    box_vectors : ndarray, optional\n        Vectors that define the shape and size of the water box\n        in nanometers. To convert to angstroms, multiply each vector\n        by 10.\n    dimensions : ndarray, optional\n        1D numpy array containing the magnitudes of the box's\n        unit vectors. The first elment is the magnitude of the\n        unit vector a, which lies on the x-plane. The second\n        element is the magnitude of the unit vector b, which lies\n        on the y-plane. The third element is the magnitude of the\n        unit vector c, which lies on the z-plane.\n    volume : float, optional\n        Volume of the water box.\n    cubic_partition : dict\n        Dictionary of the number of atoms in each cube. If a cube has zero\n        atoms, then the cube is part of a water bubble.\n    atom_density : float, optional\n        Water box's atom density, which calculated by dividing the\n        total number of atoms in the box by it's volume.\n    number_of_atoms : int, optional\n        Total number of atoms in the water box.\n    cubic_partition_bounds : ndarray, optional\n        Numpy array containing the x, y, and z bounds of each cube in\n        the box's cubic partition.\n    mesh : float, optional\n        Length of cube's sides in the box's cubic partition. A smaller\n        mesh will increase the bubble calculation's confidence at the\n        price of significantly decreasing the calculation's speed. Due\n        to this accuracy/performance tradeoff, the mesh value must be\n        chosen carefully, especially if a large number of water\n        box's have to be checked for bubbles.\n\n    Attributes\n    ----------\n    box_type"" : str\n        The type of box the water box is. If the water box is a\n        cubic box, box_type is set to 'cubic'. Else,\n        box_type is set to triclinic.\n    box_vectors : ndarray\n        Vectors that define the shape and size of the water box\n        in nanometers. To convert to angstroms, multiply each vector\n        by 10.\n    dimensions : ndarray\n        1D numpy array containing the magnitudes of the box's\n        unit vectors. The first elment is the magnitude of the\n        unit vector a, which lies on the x-plane. The second\n        element is the magnitude of the unit vector b, which lies\n        on the y-plane. The third element is the magnitude of the\n        unit vector c, which lies on the z-plane.\n    volume : float\n        Volume of the water box.\n    atom_density : float\n        Water box's atom density, which calculated by dividing the\n        total number of atoms in the box by it's volume.\n    number_of_atoms : int\n        Total number of atoms in the water box.\n    cubic_partition : dict\n        Dictionary of the number of atoms in each cube. If a cube has zero\n        atoms, then the cube is part of a water bubble.\n    cubic_partition_bounds : ndarray, optional\n        Numpy array containing the x, y, and z bounds of each cube in\n        the box's cubic partition.\n    mesh : float, optional\n        Length of cube's sides in the box's cubic partition. A smaller\n        mesh will increase the bubble calculation's confidence and the\n        price of significantly decreasing the calculation's speed. Due\n        to this accuracy/performance tradeoff, the mesh value must be\n        choosen vary carefully, especially if a large number of water\n        box's have to be checked for bubbles.\n\n    ";
+static const char __pyx_k_WaterBoxProperties__get_cube_bo[] = "_WaterBoxProperties__get_cube_bounds";
+static const char __pyx_k_WaterBoxProperties___get_cube_bo[] = "WaterBoxProperties.__get_cube_bounds";
 static const char __pyx_k_apply_pbc_to_triclinic_coordinat[] = "apply_pbc_to_triclinic_coordinates";
 static const char __pyx_k_box_vectors_to_lengths_and_angle[] = "box_vectors_to_lengths_and_angles";
-static PyObject *__pyx_n_s_BoxInfo;
-static PyObject *__pyx_n_s_BoxInfo___init;
 static PyObject *__pyx_n_s_Dict;
-static PyObject *__pyx_kp_s_Holds_the_water_box_properties_p;
 static PyObject *__pyx_n_s_Optional;
 static PyObject *__pyx_n_s_T;
 static PyObject *__pyx_n_s_Trajectory;
 static PyObject *__pyx_n_s_Tuple;
+static PyObject *__pyx_n_s_WaterBoxProperties;
+static PyObject *__pyx_n_s_WaterBoxProperties___get_cube_bo;
+static PyObject *__pyx_n_s_WaterBoxProperties___init;
+static PyObject *__pyx_n_s_WaterBoxProperties___new;
+static PyObject *__pyx_n_s_WaterBoxProperties___setattr;
+static PyObject *__pyx_n_s_WaterBoxProperties__get_cube_bo;
+static PyObject *__pyx_n_s_WaterBoxProperties_empty_cubes;
 static PyObject *__pyx_kp_s__10;
 static PyObject *__pyx_n_s_a;
+static PyObject *__pyx_n_s_all;
 static PyObject *__pyx_n_s_apply_pbc;
 static PyObject *__pyx_n_s_apply_pbc_to_coordinates;
 static PyObject *__pyx_n_s_apply_pbc_to_cubic_coordinates;
 static PyObject *__pyx_n_s_apply_pbc_to_triclinic_coordinat;
+static PyObject *__pyx_n_s_args;
 static PyObject *__pyx_n_s_array;
 static PyObject *__pyx_n_s_atom_coordinates;
-static PyObject *__pyx_n_s_atom_density;
+static PyObject *__pyx_n_s_attr;
 static PyObject *__pyx_n_s_b;
 static PyObject *__pyx_n_s_bounds;
-static PyObject *__pyx_n_s_box_info;
+static PyObject *__pyx_n_s_box_dimensions;
 static PyObject *__pyx_n_s_box_type;
-static PyObject *__pyx_n_s_box_vector_dimensions;
 static PyObject *__pyx_n_s_box_vectors;
 static PyObject *__pyx_n_s_box_vectors_to_lengths_and_angle;
 static PyObject *__pyx_n_s_bubblebuster_bubblebuster;
@@ -1579,40 +1644,51 @@ static PyObject *__pyx_kp_s_bubblebuster_bubblebuster_pyx;
 static PyObject *__pyx_n_s_c;
 static PyObject *__pyx_n_s_ceil;
 static PyObject *__pyx_n_s_center_coordinates;
+static PyObject *__pyx_n_s_class;
 static PyObject *__pyx_n_s_cline_in_traceback;
+static PyObject *__pyx_n_s_cls;
 static PyObject *__pyx_n_s_coordinate_bounds;
 static PyObject *__pyx_n_s_coordinate_component_index;
 static PyObject *__pyx_n_s_coordinates;
 static PyObject *__pyx_n_s_coordinates_transpose;
 static PyObject *__pyx_n_s_coords;
 static PyObject *__pyx_n_s_cross;
+static PyObject *__pyx_n_s_cube_bounds;
 static PyObject *__pyx_n_s_cube_dict;
+static PyObject *__pyx_n_s_cube_index;
 static PyObject *__pyx_n_s_cubic;
 static PyObject *__pyx_n_s_cubic_partition;
-static PyObject *__pyx_n_s_cubic_partition_bounds;
 static PyObject *__pyx_n_s_cutoff;
 static PyObject *__pyx_n_s_delta;
-static PyObject *__pyx_n_s_dimensions;
 static PyObject *__pyx_n_s_doc;
 static PyObject *__pyx_n_s_dot;
 static PyObject *__pyx_n_s_dtype;
 static PyObject *__pyx_n_s_empty;
+static PyObject *__pyx_n_s_empty_cubes;
+static PyObject *__pyx_n_s_empty_cubes_2;
 static PyObject *__pyx_n_s_float64;
 static PyObject *__pyx_n_s_floor;
+static PyObject *__pyx_n_s_get_box_dimensions;
 static PyObject *__pyx_n_s_get_box_type;
-static PyObject *__pyx_n_s_get_box_vector_dimensions;
 static PyObject *__pyx_n_s_get_box_vectors;
 static PyObject *__pyx_n_s_get_coordinates;
+static PyObject *__pyx_n_s_get_cube_bounds;
+static PyObject *__pyx_n_s_get_cube_bounds_2;
 static PyObject *__pyx_n_s_get_cubic_partition;
 static PyObject *__pyx_n_s_get_cubic_partition_occupancy;
+static PyObject *__pyx_n_s_get_empty_cubes;
+static PyObject *__pyx_n_s_get_mesh;
 static PyObject *__pyx_n_s_get_num_subintervals;
 static PyObject *__pyx_n_s_get_periodic_box_volume;
 static PyObject *__pyx_n_s_hash_widths;
 static PyObject *__pyx_n_s_i;
 static PyObject *__pyx_n_s_import;
 static PyObject *__pyx_n_s_init;
+static PyObject *__pyx_n_u_int;
+static PyObject *__pyx_n_s_items;
 static PyObject *__pyx_n_s_j;
 static PyObject *__pyx_n_s_k;
+static PyObject *__pyx_n_s_kwargs;
 static PyObject *__pyx_n_s_load;
 static PyObject *__pyx_n_s_load_mdtraj_trajectory;
 static PyObject *__pyx_n_s_lower_bound;
@@ -1629,13 +1705,13 @@ static PyObject *__pyx_n_s_module;
 static PyObject *__pyx_n_s_n_atoms;
 static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_ndarray;
+static PyObject *__pyx_n_s_new;
 static PyObject *__pyx_n_s_np;
 static PyObject *__pyx_n_s_npacoords;
 static PyObject *__pyx_n_s_num_subintervals;
 static PyObject *__pyx_n_s_num_x_subintervals;
 static PyObject *__pyx_n_s_num_y_subintervals;
 static PyObject *__pyx_n_s_num_z_subintervals;
-static PyObject *__pyx_n_s_number_of_atoms;
 static PyObject *__pyx_n_s_numpy;
 static PyObject *__pyx_n_s_nx;
 static PyObject *__pyx_n_s_ny;
@@ -1643,8 +1719,9 @@ static PyObject *__pyx_n_s_nz;
 static PyObject *__pyx_n_s_object;
 static PyObject *__pyx_n_s_off_diagonals;
 static PyObject *__pyx_n_s_pbc_scale_factor;
-static PyObject *__pyx_n_s_periodic_box_properties;
 static PyObject *__pyx_n_s_prepare;
+static PyObject *__pyx_n_s_properties;
+static PyObject *__pyx_n_s_property;
 static PyObject *__pyx_n_s_qualname;
 static PyObject *__pyx_n_s_range;
 static PyObject *__pyx_n_s_return;
@@ -1653,8 +1730,13 @@ static PyObject *__pyx_n_s_round;
 static PyObject *__pyx_n_s_save_pdb;
 static PyObject *__pyx_n_s_scale_factor;
 static PyObject *__pyx_n_s_self;
+static PyObject *__pyx_n_s_setattr;
+static PyObject *__pyx_n_s_setattr_calls;
+static PyObject *__pyx_n_s_setter;
+static PyObject *__pyx_n_s_slots;
 static PyObject *__pyx_n_s_structure_file;
 static PyObject *__pyx_n_s_sum;
+static PyObject *__pyx_n_s_super;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_top;
 static PyObject *__pyx_n_s_topology;
@@ -1666,44 +1748,60 @@ static PyObject *__pyx_n_s_unitcell_vectors;
 static PyObject *__pyx_n_s_unwrapped_coordinates;
 static PyObject *__pyx_n_s_upper_bound;
 static PyObject *__pyx_n_s_utils;
-static PyObject *__pyx_n_s_volume;
+static PyObject *__pyx_n_s_v;
+static PyObject *__pyx_n_s_val;
+static PyObject *__pyx_n_s_water_box_properties;
 static PyObject *__pyx_n_s_wrap_structure;
 static PyObject *__pyx_n_s_wrapped_coordinates;
 static PyObject *__pyx_n_s_wrapped_structure_filename;
+static PyObject *__pyx_n_s_wx;
+static PyObject *__pyx_n_s_wy;
+static PyObject *__pyx_n_s_wz;
 static PyObject *__pyx_n_s_x;
+static PyObject *__pyx_n_s_x_lb;
 static PyObject *__pyx_n_s_xyz;
 static PyObject *__pyx_n_s_y;
+static PyObject *__pyx_n_s_y_lb;
 static PyObject *__pyx_n_s_z;
+static PyObject *__pyx_n_s_z_lb;
 static PyObject *__pyx_n_s_zeros;
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_7BoxInfo___init__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_box_type, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_dimensions, PyObject *__pyx_v_volume, PyObject *__pyx_v_atom_density, PyObject *__pyx_v_number_of_atoms, PyObject *__pyx_v_cubic_partition, PyObject *__pyx_v_cubic_partition_bounds, PyObject *__pyx_v_mesh); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties___new__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_cls, CYTHON_UNUSED PyObject *__pyx_v_args, CYTHON_UNUSED PyObject *__pyx_v_kwargs); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_2__init__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_mesh, PyObject *__pyx_v_cubic_partition, PyObject *__pyx_v_empty_cubes, PyObject *__pyx_v_bounds); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_4__setattr__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_attr, PyObject *__pyx_v_val); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_6__get_cube_bounds(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_cube_index); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_8empty_cubes(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_10empty_cubes(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_empty_cubes); /* proto */
 static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_get_box_vectors(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_trajectory); /* proto */
 static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensions(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_dimensions(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /* proto */
 static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_trajectory); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_8pbc_scale_factor(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vector_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_coordinate_component_index); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vector_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vector_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vector_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_type); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_box_info); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_box_info); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_8pbc_scale_factor(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_coordinate_component_index); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_type); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_box_type); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_box_type); /* proto */
 static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_20coordinate_bounds(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_22get_num_subintervals(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_info, double __pyx_v_lower_bound, double __pyx_v_upper_bound); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CYTHON_UNUSED PyObject *__pyx_self, CYTHON_UNUSED PyObject *__pyx_v_coordinate_bounds, PyObject *__pyx_v_num_x_subintervals, PyObject *__pyx_v_num_y_subintervals, PyObject *__pyx_v_num_z_subintervals, CYTHON_UNUSED PyObject *__pyx_v_box_info); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_26hash_widths(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bounds, PyObject *__pyx_v_delta); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_occupancy(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_num_x_subintervals, PyObject *__pyx_v_num_y_subintervals, PyObject *__pyx_v_num_z_subintervals, PyObject *__pyx_v_hash_widths, PyObject *__pyx_v_bounds, PyObject *__pyx_v_cubic_partition); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32load_mdtraj_trajectory(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_structure_file, PyObject *__pyx_v_topology_file); /* proto */
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_properties(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_structure_file, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_mesh, CYTHON_UNUSED PyObject *__pyx_v_cutoff, PyObject *__pyx_v_topology_file, PyObject *__pyx_v_wrapped_structure_filename); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_22get_num_subintervals(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_lower_bound, double __pyx_v_upper_bound, PyObject *__pyx_v_mesh); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_mesh(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bounds, PyObject *__pyx_v_num_subintervals); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_26get_cubic_partition(CYTHON_UNUSED PyObject *__pyx_self, CYTHON_UNUSED PyObject *__pyx_v_coordinate_bounds, PyObject *__pyx_v_num_x_subintervals, PyObject *__pyx_v_num_y_subintervals, PyObject *__pyx_v_num_z_subintervals); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28hash_widths(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bounds, PyObject *__pyx_v_delta); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_cubic_partition_occupancy(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_num_x_subintervals, PyObject *__pyx_v_num_y_subintervals, PyObject *__pyx_v_num_z_subintervals, PyObject *__pyx_v_hash_widths, PyObject *__pyx_v_bounds, PyObject *__pyx_v_cubic_partition); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32get_empty_cubes(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_cubic_partition); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34get_cube_bounds(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_water_box_properties, PyObject *__pyx_v_cube_index); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_36get_box_type(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_38load_mdtraj_trajectory(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_structure_file, PyObject *__pyx_v_topology_file); /* proto */
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_40water_box_properties(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_structure_file, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_mesh, CYTHON_UNUSED PyObject *__pyx_v_cutoff, PyObject *__pyx_v_topology_file, PyObject *__pyx_v_wrapped_structure_filename); /* proto */
 static PyObject *__pyx_float_0_0;
 static PyObject *__pyx_float_0_5;
-static PyObject *__pyx_float_1_0;
-static PyObject *__pyx_float_1_5;
+static PyObject *__pyx_float_10_0;
 static PyObject *__pyx_float_1eneg_7;
 static PyObject *__pyx_int_0;
 static PyObject *__pyx_int_1;
 static PyObject *__pyx_int_2;
 static PyObject *__pyx_int_3;
-static PyObject *__pyx_slice_;
+static PyObject *__pyx_tuple_;
+static PyObject *__pyx_slice__9;
 static PyObject *__pyx_tuple__2;
 static PyObject *__pyx_tuple__3;
 static PyObject *__pyx_tuple__4;
@@ -1711,75 +1809,252 @@ static PyObject *__pyx_tuple__5;
 static PyObject *__pyx_tuple__6;
 static PyObject *__pyx_tuple__7;
 static PyObject *__pyx_tuple__8;
-static PyObject *__pyx_tuple__9;
-static PyObject *__pyx_slice__12;
-static PyObject *__pyx_tuple__11;
+static PyObject *__pyx_slice__11;
+static PyObject *__pyx_tuple__12;
 static PyObject *__pyx_tuple__13;
 static PyObject *__pyx_tuple__14;
 static PyObject *__pyx_tuple__15;
 static PyObject *__pyx_tuple__16;
 static PyObject *__pyx_tuple__18;
-static PyObject *__pyx_tuple__19;
-static PyObject *__pyx_tuple__21;
-static PyObject *__pyx_tuple__23;
-static PyObject *__pyx_tuple__25;
-static PyObject *__pyx_tuple__27;
-static PyObject *__pyx_tuple__29;
-static PyObject *__pyx_tuple__31;
-static PyObject *__pyx_tuple__33;
-static PyObject *__pyx_tuple__35;
-static PyObject *__pyx_tuple__37;
-static PyObject *__pyx_tuple__39;
-static PyObject *__pyx_tuple__41;
-static PyObject *__pyx_tuple__43;
-static PyObject *__pyx_tuple__45;
-static PyObject *__pyx_tuple__47;
-static PyObject *__pyx_tuple__49;
-static PyObject *__pyx_tuple__51;
-static PyObject *__pyx_tuple__53;
+static PyObject *__pyx_tuple__20;
+static PyObject *__pyx_tuple__22;
+static PyObject *__pyx_tuple__24;
+static PyObject *__pyx_tuple__26;
+static PyObject *__pyx_tuple__28;
+static PyObject *__pyx_tuple__30;
+static PyObject *__pyx_tuple__32;
+static PyObject *__pyx_tuple__34;
+static PyObject *__pyx_tuple__36;
+static PyObject *__pyx_tuple__38;
+static PyObject *__pyx_tuple__40;
+static PyObject *__pyx_tuple__42;
+static PyObject *__pyx_tuple__44;
+static PyObject *__pyx_tuple__46;
+static PyObject *__pyx_tuple__48;
+static PyObject *__pyx_tuple__50;
+static PyObject *__pyx_tuple__52;
+static PyObject *__pyx_tuple__54;
+static PyObject *__pyx_tuple__56;
+static PyObject *__pyx_tuple__58;
+static PyObject *__pyx_tuple__60;
+static PyObject *__pyx_tuple__62;
+static PyObject *__pyx_tuple__64;
+static PyObject *__pyx_tuple__66;
+static PyObject *__pyx_tuple__68;
 static PyObject *__pyx_codeobj__17;
-static PyObject *__pyx_codeobj__20;
-static PyObject *__pyx_codeobj__22;
-static PyObject *__pyx_codeobj__24;
-static PyObject *__pyx_codeobj__26;
-static PyObject *__pyx_codeobj__28;
-static PyObject *__pyx_codeobj__30;
-static PyObject *__pyx_codeobj__32;
-static PyObject *__pyx_codeobj__34;
-static PyObject *__pyx_codeobj__36;
-static PyObject *__pyx_codeobj__38;
-static PyObject *__pyx_codeobj__40;
-static PyObject *__pyx_codeobj__42;
-static PyObject *__pyx_codeobj__44;
-static PyObject *__pyx_codeobj__46;
-static PyObject *__pyx_codeobj__48;
-static PyObject *__pyx_codeobj__50;
-static PyObject *__pyx_codeobj__52;
-static PyObject *__pyx_codeobj__54;
+static PyObject *__pyx_codeobj__19;
+static PyObject *__pyx_codeobj__21;
+static PyObject *__pyx_codeobj__23;
+static PyObject *__pyx_codeobj__25;
+static PyObject *__pyx_codeobj__27;
+static PyObject *__pyx_codeobj__29;
+static PyObject *__pyx_codeobj__31;
+static PyObject *__pyx_codeobj__33;
+static PyObject *__pyx_codeobj__35;
+static PyObject *__pyx_codeobj__37;
+static PyObject *__pyx_codeobj__39;
+static PyObject *__pyx_codeobj__41;
+static PyObject *__pyx_codeobj__43;
+static PyObject *__pyx_codeobj__45;
+static PyObject *__pyx_codeobj__47;
+static PyObject *__pyx_codeobj__49;
+static PyObject *__pyx_codeobj__51;
+static PyObject *__pyx_codeobj__53;
+static PyObject *__pyx_codeobj__55;
+static PyObject *__pyx_codeobj__57;
+static PyObject *__pyx_codeobj__59;
+static PyObject *__pyx_codeobj__61;
+static PyObject *__pyx_codeobj__63;
+static PyObject *__pyx_codeobj__65;
+static PyObject *__pyx_codeobj__67;
+static PyObject *__pyx_codeobj__69;
 /* Late includes */
 
-/* "bubblebuster/bubblebuster.pyx":118
- * 
- *     """
- *     def __init__(             # <<<<<<<<<<<<<<
- *             self,
- *             box_type: Optional[str] = None,
+/* "bubblebuster/bubblebuster.pyx":49
+ *     )
+ *     __setattr_calls__ = 0
+ *     def __new__(             # <<<<<<<<<<<<<<
+ *             cls,
+ *             *args,
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_7BoxInfo_1__init__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_7BoxInfo_1__init__ = {"__init__", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_7BoxInfo_1__init__, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_7BoxInfo_1__init__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_1__new__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_1__new__ = {"__new__", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_1__new__, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_1__new__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_cls = 0;
+  CYTHON_UNUSED PyObject *__pyx_v_args = 0;
+  CYTHON_UNUSED PyObject *__pyx_v_kwargs = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__new__ (wrapper)", 0);
+  __pyx_v_kwargs = PyDict_New(); if (unlikely(!__pyx_v_kwargs)) return NULL;
+  __Pyx_GOTREF(__pyx_v_kwargs);
+  if (PyTuple_GET_SIZE(__pyx_args) > 1) {
+    __pyx_v_args = PyTuple_GetSlice(__pyx_args, 1, PyTuple_GET_SIZE(__pyx_args));
+    if (unlikely(!__pyx_v_args)) {
+      __Pyx_DECREF(__pyx_v_kwargs); __pyx_v_kwargs = 0;
+      __Pyx_RefNannyFinishContext();
+      return NULL;
+    }
+    __Pyx_GOTREF(__pyx_v_args);
+  } else {
+    __pyx_v_args = __pyx_empty_tuple; __Pyx_INCREF(__pyx_empty_tuple);
+  }
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_cls,0};
+    PyObject* values[1] = {0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        default:
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cls)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+      }
+      if (unlikely(kw_args > 0)) {
+        const Py_ssize_t used_pos_args = (pos_args < 1) ? pos_args : 1;
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, __pyx_v_kwargs, values, used_pos_args, "__new__") < 0)) __PYX_ERR(0, 49, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) < 1) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+    }
+    __pyx_v_cls = values[0];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("__new__", 0, 1, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 49, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_DECREF(__pyx_v_args); __pyx_v_args = 0;
+  __Pyx_DECREF(__pyx_v_kwargs); __pyx_v_kwargs = 0;
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.__new__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties___new__(__pyx_self, __pyx_v_cls, __pyx_v_args, __pyx_v_kwargs);
+
+  /* function exit code */
+  __Pyx_XDECREF(__pyx_v_args);
+  __Pyx_XDECREF(__pyx_v_kwargs);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties___new__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_cls, CYTHON_UNUSED PyObject *__pyx_v_args, CYTHON_UNUSED PyObject *__pyx_v_kwargs) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("__new__", 0);
+
+  /* "bubblebuster/bubblebuster.pyx":54
+ *             **kwargs
+ *     ):
+ *         cls.__setattr_calls__ = 0             # <<<<<<<<<<<<<<
+ *         return super(WaterBoxProperties, cls).__new__(cls)
+ * 
+ */
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_cls, __pyx_n_s_setattr_calls, __pyx_int_0) < 0) __PYX_ERR(0, 54, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":55
+ *     ):
+ *         cls.__setattr_calls__ = 0
+ *         return super(WaterBoxProperties, cls).__new__(cls)             # <<<<<<<<<<<<<<
+ * 
+ *     def __init__(
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_WaterBoxProperties); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_GIVEREF(__pyx_t_2);
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_2);
+  __Pyx_INCREF(__pyx_v_cls);
+  __Pyx_GIVEREF(__pyx_v_cls);
+  PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_v_cls);
+  __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_super, __pyx_t_3, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_new); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = NULL;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_3))) {
+    __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_3);
+    if (likely(__pyx_t_2)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+      __Pyx_INCREF(__pyx_t_2);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_3, function);
+    }
+  }
+  __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_v_cls) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_v_cls);
+  __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* "bubblebuster/bubblebuster.pyx":49
+ *     )
+ *     __setattr_calls__ = 0
+ *     def __new__(             # <<<<<<<<<<<<<<
+ *             cls,
+ *             *args,
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.__new__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "bubblebuster/bubblebuster.pyx":57
+ *         return super(WaterBoxProperties, cls).__new__(cls)
+ * 
+ *     def __init__(             # <<<<<<<<<<<<<<
+ *             self,
+ *             box_vectors: np.ndarray,
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_3__init__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_3__init__ = {"__init__", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_3__init__, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_3__init__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_self = 0;
-  PyObject *__pyx_v_box_type = 0;
   PyObject *__pyx_v_box_vectors = 0;
-  PyObject *__pyx_v_dimensions = 0;
-  PyObject *__pyx_v_volume = 0;
-  PyObject *__pyx_v_atom_density = 0;
-  PyObject *__pyx_v_number_of_atoms = 0;
-  PyObject *__pyx_v_cubic_partition = 0;
-  PyObject *__pyx_v_cubic_partition_bounds = 0;
+  PyObject *__pyx_v_box_dimensions = 0;
   PyObject *__pyx_v_mesh = 0;
+  PyObject *__pyx_v_cubic_partition = 0;
+  PyObject *__pyx_v_empty_cubes = 0;
+  PyObject *__pyx_v_bounds = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -1787,91 +2062,12 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_7BoxInfo_1__init__(PyObj
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__init__ (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_self,&__pyx_n_s_box_type,&__pyx_n_s_box_vectors,&__pyx_n_s_dimensions,&__pyx_n_s_volume,&__pyx_n_s_atom_density,&__pyx_n_s_number_of_atoms,&__pyx_n_s_cubic_partition,&__pyx_n_s_cubic_partition_bounds,&__pyx_n_s_mesh,0};
-    PyObject* values[10] = {0,0,0,0,0,0,0,0,0,0};
-
-    /* "bubblebuster/bubblebuster.pyx":120
- *     def __init__(
- *             self,
- *             box_type: Optional[str] = None,             # <<<<<<<<<<<<<<
- *             box_vectors: Optional[np.ndarray] = None,
- *             dimensions: Optional[np.ndarray] = None,
- */
-    values[1] = ((PyObject *)((PyObject *)Py_None));
-
-    /* "bubblebuster/bubblebuster.pyx":121
- *             self,
- *             box_type: Optional[str] = None,
- *             box_vectors: Optional[np.ndarray] = None,             # <<<<<<<<<<<<<<
- *             dimensions: Optional[np.ndarray] = None,
- *             volume: Optional[float] = None,
- */
-    values[2] = ((PyObject *)((PyObject *)Py_None));
-
-    /* "bubblebuster/bubblebuster.pyx":122
- *             box_type: Optional[str] = None,
- *             box_vectors: Optional[np.ndarray] = None,
- *             dimensions: Optional[np.ndarray] = None,             # <<<<<<<<<<<<<<
- *             volume: Optional[float] = None,
- *             atom_density: Optional[float] = None,
- */
-    values[3] = ((PyObject *)((PyObject *)Py_None));
-
-    /* "bubblebuster/bubblebuster.pyx":123
- *             box_vectors: Optional[np.ndarray] = None,
- *             dimensions: Optional[np.ndarray] = None,
- *             volume: Optional[float] = None,             # <<<<<<<<<<<<<<
- *             atom_density: Optional[float] = None,
- *             number_of_atoms: Optional[int] = None,
- */
-    values[4] = ((PyObject *)((PyObject *)Py_None));
-
-    /* "bubblebuster/bubblebuster.pyx":124
- *             dimensions: Optional[np.ndarray] = None,
- *             volume: Optional[float] = None,
- *             atom_density: Optional[float] = None,             # <<<<<<<<<<<<<<
- *             number_of_atoms: Optional[int] = None,
- *             cubic_partition: Optional[Dict] = None,
- */
-    values[5] = ((PyObject *)((PyObject *)Py_None));
-
-    /* "bubblebuster/bubblebuster.pyx":125
- *             volume: Optional[float] = None,
- *             atom_density: Optional[float] = None,
- *             number_of_atoms: Optional[int] = None,             # <<<<<<<<<<<<<<
- *             cubic_partition: Optional[Dict] = None,
- *             cubic_partition_bounds: Optional[np.ndarray] = None,
- */
-    values[6] = ((PyObject *)((PyObject *)Py_None));
-
-    /* "bubblebuster/bubblebuster.pyx":126
- *             atom_density: Optional[float] = None,
- *             number_of_atoms: Optional[int] = None,
- *             cubic_partition: Optional[Dict] = None,             # <<<<<<<<<<<<<<
- *             cubic_partition_bounds: Optional[np.ndarray] = None,
- *             mesh: Optional[float] = 1.0,
- */
-    values[7] = ((PyObject *)((PyObject *)Py_None));
-
-    /* "bubblebuster/bubblebuster.pyx":127
- *             number_of_atoms: Optional[int] = None,
- *             cubic_partition: Optional[Dict] = None,
- *             cubic_partition_bounds: Optional[np.ndarray] = None,             # <<<<<<<<<<<<<<
- *             mesh: Optional[float] = 1.0,
- *     ) -> None:
- */
-    values[8] = ((PyObject *)((PyObject *)Py_None));
-    values[9] = ((PyObject *)((PyObject*)__pyx_float_1_0));
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_self,&__pyx_n_s_box_vectors,&__pyx_n_s_box_dimensions,&__pyx_n_s_mesh,&__pyx_n_s_cubic_partition,&__pyx_n_s_empty_cubes,&__pyx_n_s_bounds,0};
+    PyObject* values[7] = {0,0,0,0,0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
-        case 10: values[9] = PyTuple_GET_ITEM(__pyx_args, 9);
-        CYTHON_FALLTHROUGH;
-        case  9: values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
-        CYTHON_FALLTHROUGH;
-        case  8: values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
-        CYTHON_FALLTHROUGH;
         case  7: values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
         CYTHON_FALLTHROUGH;
         case  6: values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
@@ -1896,122 +2092,79 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_7BoxInfo_1__init__(PyObj
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_type);
-          if (value) { values[1] = value; kw_args--; }
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vectors)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__init__", 1, 7, 7, 1); __PYX_ERR(0, 57, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vectors);
-          if (value) { values[2] = value; kw_args--; }
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_dimensions)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__init__", 1, 7, 7, 2); __PYX_ERR(0, 57, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_dimensions);
-          if (value) { values[3] = value; kw_args--; }
+        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_mesh)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__init__", 1, 7, 7, 3); __PYX_ERR(0, 57, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_volume);
-          if (value) { values[4] = value; kw_args--; }
+        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cubic_partition)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__init__", 1, 7, 7, 4); __PYX_ERR(0, 57, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_atom_density);
-          if (value) { values[5] = value; kw_args--; }
+        if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_empty_cubes)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__init__", 1, 7, 7, 5); __PYX_ERR(0, 57, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_number_of_atoms);
-          if (value) { values[6] = value; kw_args--; }
-        }
-        CYTHON_FALLTHROUGH;
-        case  7:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cubic_partition);
-          if (value) { values[7] = value; kw_args--; }
-        }
-        CYTHON_FALLTHROUGH;
-        case  8:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cubic_partition_bounds);
-          if (value) { values[8] = value; kw_args--; }
-        }
-        CYTHON_FALLTHROUGH;
-        case  9:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_mesh);
-          if (value) { values[9] = value; kw_args--; }
+        if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_bounds)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__init__", 1, 7, 7, 6); __PYX_ERR(0, 57, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 118, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) __PYX_ERR(0, 57, __pyx_L3_error)
       }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 7) {
+      goto __pyx_L5_argtuple_error;
     } else {
-      switch (PyTuple_GET_SIZE(__pyx_args)) {
-        case 10: values[9] = PyTuple_GET_ITEM(__pyx_args, 9);
-        CYTHON_FALLTHROUGH;
-        case  9: values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
-        CYTHON_FALLTHROUGH;
-        case  8: values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
-        CYTHON_FALLTHROUGH;
-        case  7: values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
-        CYTHON_FALLTHROUGH;
-        case  6: values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
-        CYTHON_FALLTHROUGH;
-        case  5: values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
-        CYTHON_FALLTHROUGH;
-        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
-        CYTHON_FALLTHROUGH;
-        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
-        CYTHON_FALLTHROUGH;
-        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
-        CYTHON_FALLTHROUGH;
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        break;
-        default: goto __pyx_L5_argtuple_error;
-      }
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+      values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
+      values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
+      values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
     }
     __pyx_v_self = values[0];
-    __pyx_v_box_type = values[1];
-    __pyx_v_box_vectors = values[2];
-    __pyx_v_dimensions = values[3];
-    __pyx_v_volume = values[4];
-    __pyx_v_atom_density = values[5];
-    __pyx_v_number_of_atoms = values[6];
-    __pyx_v_cubic_partition = values[7];
-    __pyx_v_cubic_partition_bounds = values[8];
-    __pyx_v_mesh = values[9];
+    __pyx_v_box_vectors = values[1];
+    __pyx_v_box_dimensions = values[2];
+    __pyx_v_mesh = values[3];
+    __pyx_v_cubic_partition = values[4];
+    __pyx_v_empty_cubes = values[5];
+    __pyx_v_bounds = values[6];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 0, 1, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 118, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("__init__", 1, 7, 7, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 57, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("bubblebuster.bubblebuster.BoxInfo.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_7BoxInfo___init__(__pyx_self, __pyx_v_self, __pyx_v_box_type, __pyx_v_box_vectors, __pyx_v_dimensions, __pyx_v_volume, __pyx_v_atom_density, __pyx_v_number_of_atoms, __pyx_v_cubic_partition, __pyx_v_cubic_partition_bounds, __pyx_v_mesh);
-
-  /* "bubblebuster/bubblebuster.pyx":118
- * 
- *     """
- *     def __init__(             # <<<<<<<<<<<<<<
- *             self,
- *             box_type: Optional[str] = None,
- */
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_2__init__(__pyx_self, __pyx_v_self, __pyx_v_box_vectors, __pyx_v_box_dimensions, __pyx_v_mesh, __pyx_v_cubic_partition, __pyx_v_empty_cubes, __pyx_v_bounds);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_7BoxInfo___init__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_box_type, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_dimensions, PyObject *__pyx_v_volume, PyObject *__pyx_v_atom_density, PyObject *__pyx_v_number_of_atoms, PyObject *__pyx_v_cubic_partition, PyObject *__pyx_v_cubic_partition_bounds, PyObject *__pyx_v_mesh) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_2__init__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_mesh, PyObject *__pyx_v_cubic_partition, PyObject *__pyx_v_empty_cubes, PyObject *__pyx_v_bounds) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_lineno = 0;
@@ -2019,100 +2172,73 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_7BoxInfo___init__(CYTHON
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":130
- *             mesh: Optional[float] = 1.0,
+  /* "bubblebuster/bubblebuster.pyx":66
+ *             bounds: np.ndarray,
  *     ) -> None:
- *         self.box_type = box_type             # <<<<<<<<<<<<<<
- *         self.box_vectors = box_vectors
- *         self.dimensions = dimensions
- */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_box_type, __pyx_v_box_type) < 0) __PYX_ERR(0, 130, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":131
- *     ) -> None:
- *         self.box_type = box_type
  *         self.box_vectors = box_vectors             # <<<<<<<<<<<<<<
- *         self.dimensions = dimensions
- *         self.volume = volume
- */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_box_vectors, __pyx_v_box_vectors) < 0) __PYX_ERR(0, 131, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":132
- *         self.box_type = box_type
- *         self.box_vectors = box_vectors
- *         self.dimensions = dimensions             # <<<<<<<<<<<<<<
- *         self.volume = volume
- *         self.atom_density = atom_density
- */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_dimensions, __pyx_v_dimensions) < 0) __PYX_ERR(0, 132, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":133
- *         self.box_vectors = box_vectors
- *         self.dimensions = dimensions
- *         self.volume = volume             # <<<<<<<<<<<<<<
- *         self.atom_density = atom_density
- *         self.number_of_atoms = number_of_atoms
- */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_volume, __pyx_v_volume) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":134
- *         self.dimensions = dimensions
- *         self.volume = volume
- *         self.atom_density = atom_density             # <<<<<<<<<<<<<<
- *         self.number_of_atoms = number_of_atoms
- *         self.cubic_partition = cubic_partition
- */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_atom_density, __pyx_v_atom_density) < 0) __PYX_ERR(0, 134, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":135
- *         self.volume = volume
- *         self.atom_density = atom_density
- *         self.number_of_atoms = number_of_atoms             # <<<<<<<<<<<<<<
- *         self.cubic_partition = cubic_partition
- *         self.cubic_partition_bounds = \
- */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_number_of_atoms, __pyx_v_number_of_atoms) < 0) __PYX_ERR(0, 135, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":136
- *         self.atom_density = atom_density
- *         self.number_of_atoms = number_of_atoms
- *         self.cubic_partition = cubic_partition             # <<<<<<<<<<<<<<
- *         self.cubic_partition_bounds = \
- *             cubic_partition_bounds
- */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_cubic_partition, __pyx_v_cubic_partition) < 0) __PYX_ERR(0, 136, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":137
- *         self.number_of_atoms = number_of_atoms
- *         self.cubic_partition = cubic_partition
- *         self.cubic_partition_bounds = \             # <<<<<<<<<<<<<<
- *             cubic_partition_bounds
+ *         self.box_dimensions = box_dimensions
  *         self.mesh = mesh
  */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_cubic_partition_bounds, __pyx_v_cubic_partition_bounds) < 0) __PYX_ERR(0, 137, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_box_vectors, __pyx_v_box_vectors) < 0) __PYX_ERR(0, 66, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":139
- *         self.cubic_partition_bounds = \
- *             cubic_partition_bounds
+  /* "bubblebuster/bubblebuster.pyx":67
+ *     ) -> None:
+ *         self.box_vectors = box_vectors
+ *         self.box_dimensions = box_dimensions             # <<<<<<<<<<<<<<
+ *         self.mesh = mesh
+ *         self.cubic_partition = cubic_partition
+ */
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_box_dimensions, __pyx_v_box_dimensions) < 0) __PYX_ERR(0, 67, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":68
+ *         self.box_vectors = box_vectors
+ *         self.box_dimensions = box_dimensions
  *         self.mesh = mesh             # <<<<<<<<<<<<<<
- * 
+ *         self.cubic_partition = cubic_partition
+ *         self._empty_cubes = empty_cubes
+ */
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_mesh, __pyx_v_mesh) < 0) __PYX_ERR(0, 68, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":69
+ *         self.box_dimensions = box_dimensions
+ *         self.mesh = mesh
+ *         self.cubic_partition = cubic_partition             # <<<<<<<<<<<<<<
+ *         self._empty_cubes = empty_cubes
+ *         self.bounds = bounds
+ */
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_cubic_partition, __pyx_v_cubic_partition) < 0) __PYX_ERR(0, 69, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":70
+ *         self.mesh = mesh
+ *         self.cubic_partition = cubic_partition
+ *         self._empty_cubes = empty_cubes             # <<<<<<<<<<<<<<
+ *         self.bounds = bounds
  * 
  */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_mesh, __pyx_v_mesh) < 0) __PYX_ERR(0, 139, __pyx_L1_error)
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_empty_cubes_2, __pyx_v_empty_cubes) < 0) __PYX_ERR(0, 70, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":118
+  /* "bubblebuster/bubblebuster.pyx":71
+ *         self.cubic_partition = cubic_partition
+ *         self._empty_cubes = empty_cubes
+ *         self.bounds = bounds             # <<<<<<<<<<<<<<
  * 
- *     """
+ *     def __setattr__(
+ */
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_bounds, __pyx_v_bounds) < 0) __PYX_ERR(0, 71, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":57
+ *         return super(WaterBoxProperties, cls).__new__(cls)
+ * 
  *     def __init__(             # <<<<<<<<<<<<<<
  *             self,
- *             box_type: Optional[str] = None,
+ *             box_vectors: np.ndarray,
  */
 
   /* function exit code */
   __pyx_r = Py_None; __Pyx_INCREF(Py_None);
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("bubblebuster.bubblebuster.BoxInfo.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2120,7 +2246,981 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_7BoxInfo___init__(CYTHON
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":142
+/* "bubblebuster/bubblebuster.pyx":73
+ *         self.bounds = bounds
+ * 
+ *     def __setattr__(             # <<<<<<<<<<<<<<
+ *             self,
+ *             attr,
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_5__setattr__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_5__setattr__ = {"__setattr__", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_5__setattr__, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_5__setattr__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_self = 0;
+  PyObject *__pyx_v_attr = 0;
+  PyObject *__pyx_v_val = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__setattr__ (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_self,&__pyx_n_s_attr,&__pyx_n_s_val,0};
+    PyObject* values[3] = {0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_self)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_attr)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__setattr__", 1, 3, 3, 1); __PYX_ERR(0, 73, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_val)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__setattr__", 1, 3, 3, 2); __PYX_ERR(0, 73, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__setattr__") < 0)) __PYX_ERR(0, 73, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+    }
+    __pyx_v_self = values[0];
+    __pyx_v_attr = values[1];
+    __pyx_v_val = values[2];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("__setattr__", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 73, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.__setattr__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_4__setattr__(__pyx_self, __pyx_v_self, __pyx_v_attr, __pyx_v_val);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_4__setattr__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_attr, PyObject *__pyx_v_val) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  Py_ssize_t __pyx_t_3;
+  PyObject *__pyx_t_4 = NULL;
+  int __pyx_t_5;
+  int __pyx_t_6;
+  PyObject *__pyx_t_7 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("__setattr__", 0);
+
+  /* "bubblebuster/bubblebuster.pyx":78
+ *             val
+ *     ):
+ *         if self.__class__.__setattr_calls__ >= len(self.__slots__):             # <<<<<<<<<<<<<<
+ *             return
+ *         super().__setattr__(attr, val)
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_class); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_setattr_calls); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_slots); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = PyObject_Length(__pyx_t_1); if (unlikely(__pyx_t_3 == ((Py_ssize_t)-1))) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = PyInt_FromSsize_t(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_4 = PyObject_RichCompare(__pyx_t_2, __pyx_t_1, Py_GE); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 78, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (__pyx_t_5) {
+
+    /* "bubblebuster/bubblebuster.pyx":79
+ *     ):
+ *         if self.__class__.__setattr_calls__ >= len(self.__slots__):
+ *             return             # <<<<<<<<<<<<<<
+ *         super().__setattr__(attr, val)
+ *         self.__class__.__setattr_calls__ += 1
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+    goto __pyx_L0;
+
+    /* "bubblebuster/bubblebuster.pyx":78
+ *             val
+ *     ):
+ *         if self.__class__.__setattr_calls__ >= len(self.__slots__):             # <<<<<<<<<<<<<<
+ *             return
+ *         super().__setattr__(attr, val)
+ */
+  }
+
+  /* "bubblebuster/bubblebuster.pyx":80
+ *         if self.__class__.__setattr_calls__ >= len(self.__slots__):
+ *             return
+ *         super().__setattr__(attr, val)             # <<<<<<<<<<<<<<
+ *         self.__class__.__setattr_calls__ += 1
+ * 
+ */
+  __pyx_t_1 = __Pyx_CyFunction_GetClassObj(__pyx_self);
+  if (!__pyx_t_1) { PyErr_SetString(PyExc_SystemError, "super(): empty __class__ cell"); __PYX_ERR(0, 80, __pyx_L1_error) }
+  __Pyx_INCREF(__pyx_t_1);
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
+  __Pyx_INCREF(__pyx_v_self);
+  __Pyx_GIVEREF(__pyx_v_self);
+  PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_v_self);
+  __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_super, __pyx_t_2, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_setattr); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 80, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = NULL;
+  __pyx_t_6 = 0;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_1)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_1);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+      __pyx_t_6 = 1;
+    }
+  }
+  #if CYTHON_FAST_PYCALL
+  if (PyFunction_Check(__pyx_t_2)) {
+    PyObject *__pyx_temp[3] = {__pyx_t_1, __pyx_v_attr, __pyx_v_val};
+    __pyx_t_4 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_6, 2+__pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 80, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __Pyx_GOTREF(__pyx_t_4);
+  } else
+  #endif
+  #if CYTHON_FAST_PYCCALL
+  if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
+    PyObject *__pyx_temp[3] = {__pyx_t_1, __pyx_v_attr, __pyx_v_val};
+    __pyx_t_4 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_6, 2+__pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 80, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __Pyx_GOTREF(__pyx_t_4);
+  } else
+  #endif
+  {
+    __pyx_t_7 = PyTuple_New(2+__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 80, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    if (__pyx_t_1) {
+      __Pyx_GIVEREF(__pyx_t_1); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_1); __pyx_t_1 = NULL;
+    }
+    __Pyx_INCREF(__pyx_v_attr);
+    __Pyx_GIVEREF(__pyx_v_attr);
+    PyTuple_SET_ITEM(__pyx_t_7, 0+__pyx_t_6, __pyx_v_attr);
+    __Pyx_INCREF(__pyx_v_val);
+    __Pyx_GIVEREF(__pyx_v_val);
+    PyTuple_SET_ITEM(__pyx_t_7, 1+__pyx_t_6, __pyx_v_val);
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_7, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 80, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+  }
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":81
+ *             return
+ *         super().__setattr__(attr, val)
+ *         self.__class__.__setattr_calls__ += 1             # <<<<<<<<<<<<<<
+ * 
+ *     def __get_cube_bounds(
+ */
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_class); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 81, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_setattr_calls); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 81, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_7 = __Pyx_PyInt_AddObjC(__pyx_t_2, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 81, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_7);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (__Pyx_PyObject_SetAttrStr(__pyx_t_4, __pyx_n_s_setattr_calls, __pyx_t_7) < 0) __PYX_ERR(0, 81, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":73
+ *         self.bounds = bounds
+ * 
+ *     def __setattr__(             # <<<<<<<<<<<<<<
+ *             self,
+ *             attr,
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.__setattr__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "bubblebuster/bubblebuster.pyx":83
+ *         self.__class__.__setattr_calls__ += 1
+ * 
+ *     def __get_cube_bounds(             # <<<<<<<<<<<<<<
+ *             self,
+ *             cube_index: int,
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_7__get_cube_bounds(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_7__get_cube_bounds = {"__get_cube_bounds", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_7__get_cube_bounds, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_7__get_cube_bounds(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_self = 0;
+  PyObject *__pyx_v_cube_index = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get_cube_bounds (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_self,&__pyx_n_s_cube_index,0};
+    PyObject* values[2] = {0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_self)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cube_index)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__get_cube_bounds", 1, 2, 2, 1); __PYX_ERR(0, 83, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__get_cube_bounds") < 0)) __PYX_ERR(0, 83, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+    }
+    __pyx_v_self = values[0];
+    __pyx_v_cube_index = values[1];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("__get_cube_bounds", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 83, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.__get_cube_bounds", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_6__get_cube_bounds(__pyx_self, __pyx_v_self, __pyx_v_cube_index);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_6__get_cube_bounds(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_cube_index) {
+  PyObject *__pyx_v_i = NULL;
+  PyObject *__pyx_v_j = NULL;
+  PyObject *__pyx_v_k = NULL;
+  PyObject *__pyx_v_cube_bounds = NULL;
+  PyObject *__pyx_v_wx = NULL;
+  PyObject *__pyx_v_wy = NULL;
+  PyObject *__pyx_v_wz = NULL;
+  PyObject *__pyx_v_x_lb = NULL;
+  PyObject *__pyx_v_y_lb = NULL;
+  PyObject *__pyx_v_z_lb = NULL;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *(*__pyx_t_6)(PyObject *);
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("__get_cube_bounds", 0);
+
+  /* "bubblebuster/bubblebuster.pyx":87
+ *             cube_index: int,
+ *     ) -> np.ndarray:
+ *         i, j, k = list(self.cubic_partition)[cube_index]             # <<<<<<<<<<<<<<
+ *         cube_bounds = np.zeros((3, 2), dtype=np.float64)
+ *         wx, wy, wz = self.mesh
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_cubic_partition); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = PySequence_List(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 87, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_t_2, __pyx_v_cube_index); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if ((likely(PyTuple_CheckExact(__pyx_t_1))) || (PyList_CheckExact(__pyx_t_1))) {
+    PyObject* sequence = __pyx_t_1;
+    Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
+    if (unlikely(size != 3)) {
+      if (size > 3) __Pyx_RaiseTooManyValuesError(3);
+      else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
+      __PYX_ERR(0, 87, __pyx_L1_error)
+    }
+    #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    if (likely(PyTuple_CheckExact(sequence))) {
+      __pyx_t_2 = PyTuple_GET_ITEM(sequence, 0); 
+      __pyx_t_3 = PyTuple_GET_ITEM(sequence, 1); 
+      __pyx_t_4 = PyTuple_GET_ITEM(sequence, 2); 
+    } else {
+      __pyx_t_2 = PyList_GET_ITEM(sequence, 0); 
+      __pyx_t_3 = PyList_GET_ITEM(sequence, 1); 
+      __pyx_t_4 = PyList_GET_ITEM(sequence, 2); 
+    }
+    __Pyx_INCREF(__pyx_t_2);
+    __Pyx_INCREF(__pyx_t_3);
+    __Pyx_INCREF(__pyx_t_4);
+    #else
+    __pyx_t_2 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 87, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_3 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 87, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 87, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    #endif
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  } else {
+    Py_ssize_t index = -1;
+    __pyx_t_5 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 87, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_6 = Py_TYPE(__pyx_t_5)->tp_iternext;
+    index = 0; __pyx_t_2 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_2)) goto __pyx_L3_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_2);
+    index = 1; __pyx_t_3 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_3)) goto __pyx_L3_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_3);
+    index = 2; __pyx_t_4 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_4)) goto __pyx_L3_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_4);
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_6(__pyx_t_5), 3) < 0) __PYX_ERR(0, 87, __pyx_L1_error)
+    __pyx_t_6 = NULL;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    goto __pyx_L4_unpacking_done;
+    __pyx_L3_unpacking_failed:;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_6 = NULL;
+    if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
+    __PYX_ERR(0, 87, __pyx_L1_error)
+    __pyx_L4_unpacking_done:;
+  }
+  __pyx_v_i = __pyx_t_2;
+  __pyx_t_2 = 0;
+  __pyx_v_j = __pyx_t_3;
+  __pyx_t_3 = 0;
+  __pyx_v_k = __pyx_t_4;
+  __pyx_t_4 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":88
+ *     ) -> np.ndarray:
+ *         i, j, k = list(self.cubic_partition)[cube_index]
+ *         cube_bounds = np.zeros((3, 2), dtype=np.float64)             # <<<<<<<<<<<<<<
+ *         wx, wy, wz = self.mesh
+ *         x_lb = self.bounds[0, 0]
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_2) < 0) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_tuple__2, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_v_cube_bounds = __pyx_t_2;
+  __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":89
+ *         i, j, k = list(self.cubic_partition)[cube_index]
+ *         cube_bounds = np.zeros((3, 2), dtype=np.float64)
+ *         wx, wy, wz = self.mesh             # <<<<<<<<<<<<<<
+ *         x_lb = self.bounds[0, 0]
+ *         y_lb = self.bounds[1, 0]
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_mesh); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if ((likely(PyTuple_CheckExact(__pyx_t_2))) || (PyList_CheckExact(__pyx_t_2))) {
+    PyObject* sequence = __pyx_t_2;
+    Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
+    if (unlikely(size != 3)) {
+      if (size > 3) __Pyx_RaiseTooManyValuesError(3);
+      else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
+      __PYX_ERR(0, 89, __pyx_L1_error)
+    }
+    #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    if (likely(PyTuple_CheckExact(sequence))) {
+      __pyx_t_1 = PyTuple_GET_ITEM(sequence, 0); 
+      __pyx_t_4 = PyTuple_GET_ITEM(sequence, 1); 
+      __pyx_t_3 = PyTuple_GET_ITEM(sequence, 2); 
+    } else {
+      __pyx_t_1 = PyList_GET_ITEM(sequence, 0); 
+      __pyx_t_4 = PyList_GET_ITEM(sequence, 1); 
+      __pyx_t_3 = PyList_GET_ITEM(sequence, 2); 
+    }
+    __Pyx_INCREF(__pyx_t_1);
+    __Pyx_INCREF(__pyx_t_4);
+    __Pyx_INCREF(__pyx_t_3);
+    #else
+    __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_4 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 89, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 89, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    #endif
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  } else {
+    Py_ssize_t index = -1;
+    __pyx_t_5 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 89, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_6 = Py_TYPE(__pyx_t_5)->tp_iternext;
+    index = 0; __pyx_t_1 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_1)) goto __pyx_L5_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_1);
+    index = 1; __pyx_t_4 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_4)) goto __pyx_L5_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_4);
+    index = 2; __pyx_t_3 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_3)) goto __pyx_L5_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_3);
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_6(__pyx_t_5), 3) < 0) __PYX_ERR(0, 89, __pyx_L1_error)
+    __pyx_t_6 = NULL;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    goto __pyx_L6_unpacking_done;
+    __pyx_L5_unpacking_failed:;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_6 = NULL;
+    if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
+    __PYX_ERR(0, 89, __pyx_L1_error)
+    __pyx_L6_unpacking_done:;
+  }
+  __pyx_v_wx = __pyx_t_1;
+  __pyx_t_1 = 0;
+  __pyx_v_wy = __pyx_t_4;
+  __pyx_t_4 = 0;
+  __pyx_v_wz = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":90
+ *         cube_bounds = np.zeros((3, 2), dtype=np.float64)
+ *         wx, wy, wz = self.mesh
+ *         x_lb = self.bounds[0, 0]             # <<<<<<<<<<<<<<
+ *         y_lb = self.bounds[1, 0]
+ *         z_lb = self.bounds[2, 0]
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_bounds); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 90, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_2, __pyx_tuple__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 90, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_x_lb = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":91
+ *         wx, wy, wz = self.mesh
+ *         x_lb = self.bounds[0, 0]
+ *         y_lb = self.bounds[1, 0]             # <<<<<<<<<<<<<<
+ *         z_lb = self.bounds[2, 0]
+ *         cube_bounds[0, 0] = (i * wx) + x_lb
+ */
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_bounds); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 91, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_t_3, __pyx_tuple__4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 91, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_v_y_lb = __pyx_t_2;
+  __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":92
+ *         x_lb = self.bounds[0, 0]
+ *         y_lb = self.bounds[1, 0]
+ *         z_lb = self.bounds[2, 0]             # <<<<<<<<<<<<<<
+ *         cube_bounds[0, 0] = (i * wx) + x_lb
+ *         cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_bounds); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 92, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_2, __pyx_tuple__5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 92, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_z_lb = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":93
+ *         y_lb = self.bounds[1, 0]
+ *         z_lb = self.bounds[2, 0]
+ *         cube_bounds[0, 0] = (i * wx) + x_lb             # <<<<<<<<<<<<<<
+ *         cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ *         cube_bounds[1, 0] = (j * wy) + y_lb
+ */
+  __pyx_t_3 = PyNumber_Multiply(__pyx_v_i, __pyx_v_wx); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 93, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_x_lb); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 93, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__3, __pyx_t_2) < 0)) __PYX_ERR(0, 93, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":94
+ *         z_lb = self.bounds[2, 0]
+ *         cube_bounds[0, 0] = (i * wx) + x_lb
+ *         cube_bounds[0, 1] = (i * wx) + x_lb + wx             # <<<<<<<<<<<<<<
+ *         cube_bounds[1, 0] = (j * wy) + y_lb
+ *         cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ */
+  __pyx_t_2 = PyNumber_Multiply(__pyx_v_i, __pyx_v_wx); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 94, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_v_x_lb); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 94, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_wx); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 94, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__6, __pyx_t_2) < 0)) __PYX_ERR(0, 94, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":95
+ *         cube_bounds[0, 0] = (i * wx) + x_lb
+ *         cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ *         cube_bounds[1, 0] = (j * wy) + y_lb             # <<<<<<<<<<<<<<
+ *         cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ *         cube_bounds[2, 0] = (k * wz) + z_lb
+ */
+  __pyx_t_2 = PyNumber_Multiply(__pyx_v_j, __pyx_v_wy); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 95, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_v_y_lb); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 95, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__4, __pyx_t_3) < 0)) __PYX_ERR(0, 95, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":96
+ *         cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ *         cube_bounds[1, 0] = (j * wy) + y_lb
+ *         cube_bounds[1, 1] = (j * wy) + y_lb + wy             # <<<<<<<<<<<<<<
+ *         cube_bounds[2, 0] = (k * wz) + z_lb
+ *         cube_bounds[2, 1] = (k * wz) + z_lb + wz
+ */
+  __pyx_t_3 = PyNumber_Multiply(__pyx_v_j, __pyx_v_wy); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 96, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_y_lb); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 96, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_v_wy); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 96, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__7, __pyx_t_3) < 0)) __PYX_ERR(0, 96, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":97
+ *         cube_bounds[1, 0] = (j * wy) + y_lb
+ *         cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ *         cube_bounds[2, 0] = (k * wz) + z_lb             # <<<<<<<<<<<<<<
+ *         cube_bounds[2, 1] = (k * wz) + z_lb + wz
+ *         return cube_bounds
+ */
+  __pyx_t_3 = PyNumber_Multiply(__pyx_v_k, __pyx_v_wz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 97, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_z_lb); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 97, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__5, __pyx_t_2) < 0)) __PYX_ERR(0, 97, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":98
+ *         cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ *         cube_bounds[2, 0] = (k * wz) + z_lb
+ *         cube_bounds[2, 1] = (k * wz) + z_lb + wz             # <<<<<<<<<<<<<<
+ *         return cube_bounds
+ * 
+ */
+  __pyx_t_2 = PyNumber_Multiply(__pyx_v_k, __pyx_v_wz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_v_z_lb); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_wz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__8, __pyx_t_2) < 0)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":99
+ *         cube_bounds[2, 0] = (k * wz) + z_lb
+ *         cube_bounds[2, 1] = (k * wz) + z_lb + wz
+ *         return cube_bounds             # <<<<<<<<<<<<<<
+ * 
+ *     @property
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_cube_bounds);
+  __pyx_r = __pyx_v_cube_bounds;
+  goto __pyx_L0;
+
+  /* "bubblebuster/bubblebuster.pyx":83
+ *         self.__class__.__setattr_calls__ += 1
+ * 
+ *     def __get_cube_bounds(             # <<<<<<<<<<<<<<
+ *             self,
+ *             cube_index: int,
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.__get_cube_bounds", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_i);
+  __Pyx_XDECREF(__pyx_v_j);
+  __Pyx_XDECREF(__pyx_v_k);
+  __Pyx_XDECREF(__pyx_v_cube_bounds);
+  __Pyx_XDECREF(__pyx_v_wx);
+  __Pyx_XDECREF(__pyx_v_wy);
+  __Pyx_XDECREF(__pyx_v_wz);
+  __Pyx_XDECREF(__pyx_v_x_lb);
+  __Pyx_XDECREF(__pyx_v_y_lb);
+  __Pyx_XDECREF(__pyx_v_z_lb);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "bubblebuster/bubblebuster.pyx":102
+ * 
+ *     @property
+ *     def empty_cubes(             # <<<<<<<<<<<<<<
+ *             self
+ *     ):
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_9empty_cubes(PyObject *__pyx_self, PyObject *__pyx_v_self); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_9empty_cubes = {"empty_cubes", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_9empty_cubes, METH_O, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_9empty_cubes(PyObject *__pyx_self, PyObject *__pyx_v_self) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("empty_cubes (wrapper)", 0);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_8empty_cubes(__pyx_self, ((PyObject *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_8empty_cubes(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self) {
+  PyObject *__pyx_7genexpr__pyx_v_i = NULL;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  Py_ssize_t __pyx_t_4;
+  PyObject *(*__pyx_t_5)(PyObject *);
+  PyObject *__pyx_t_6 = NULL;
+  PyObject *__pyx_t_7 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("empty_cubes", 0);
+
+  /* "bubblebuster/bubblebuster.pyx":105
+ *             self
+ *     ):
+ *         return {i: self.__get_cube_bounds(i) for i in self._empty_cubes}             # <<<<<<<<<<<<<<
+ * 
+ *     @empty_cubes.setter
+ */
+  __Pyx_XDECREF(__pyx_r);
+  { /* enter inner scope */
+    __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L5_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_empty_cubes_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L5_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    if (likely(PyList_CheckExact(__pyx_t_2)) || PyTuple_CheckExact(__pyx_t_2)) {
+      __pyx_t_3 = __pyx_t_2; __Pyx_INCREF(__pyx_t_3); __pyx_t_4 = 0;
+      __pyx_t_5 = NULL;
+    } else {
+      __pyx_t_4 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 105, __pyx_L5_error)
+      __Pyx_GOTREF(__pyx_t_3);
+      __pyx_t_5 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 105, __pyx_L5_error)
+    }
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    for (;;) {
+      if (likely(!__pyx_t_5)) {
+        if (likely(PyList_CheckExact(__pyx_t_3))) {
+          if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_3)) break;
+          #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+          __pyx_t_2 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 105, __pyx_L5_error)
+          #else
+          __pyx_t_2 = PySequence_ITEM(__pyx_t_3, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L5_error)
+          __Pyx_GOTREF(__pyx_t_2);
+          #endif
+        } else {
+          if (__pyx_t_4 >= PyTuple_GET_SIZE(__pyx_t_3)) break;
+          #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+          __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 105, __pyx_L5_error)
+          #else
+          __pyx_t_2 = PySequence_ITEM(__pyx_t_3, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L5_error)
+          __Pyx_GOTREF(__pyx_t_2);
+          #endif
+        }
+      } else {
+        __pyx_t_2 = __pyx_t_5(__pyx_t_3);
+        if (unlikely(!__pyx_t_2)) {
+          PyObject* exc_type = PyErr_Occurred();
+          if (exc_type) {
+            if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
+            else __PYX_ERR(0, 105, __pyx_L5_error)
+          }
+          break;
+        }
+        __Pyx_GOTREF(__pyx_t_2);
+      }
+      __Pyx_XDECREF_SET(__pyx_7genexpr__pyx_v_i, __pyx_t_2);
+      __pyx_t_2 = 0;
+      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_WaterBoxProperties__get_cube_bo); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 105, __pyx_L5_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_7 = NULL;
+      if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_6))) {
+        __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_6);
+        if (likely(__pyx_t_7)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+          __Pyx_INCREF(__pyx_t_7);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_6, function);
+        }
+      }
+      __pyx_t_2 = (__pyx_t_7) ? __Pyx_PyObject_Call2Args(__pyx_t_6, __pyx_t_7, __pyx_7genexpr__pyx_v_i) : __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_7genexpr__pyx_v_i);
+      __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L5_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (unlikely(PyDict_SetItem(__pyx_t_1, (PyObject*)__pyx_7genexpr__pyx_v_i, (PyObject*)__pyx_t_2))) __PYX_ERR(0, 105, __pyx_L5_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    }
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_XDECREF(__pyx_7genexpr__pyx_v_i); __pyx_7genexpr__pyx_v_i = 0;
+    goto __pyx_L8_exit_scope;
+    __pyx_L5_error:;
+    __Pyx_XDECREF(__pyx_7genexpr__pyx_v_i); __pyx_7genexpr__pyx_v_i = 0;
+    goto __pyx_L1_error;
+    __pyx_L8_exit_scope:;
+  } /* exit inner scope */
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* "bubblebuster/bubblebuster.pyx":102
+ * 
+ *     @property
+ *     def empty_cubes(             # <<<<<<<<<<<<<<
+ *             self
+ *     ):
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.empty_cubes", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_7genexpr__pyx_v_i);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "bubblebuster/bubblebuster.pyx":108
+ * 
+ *     @empty_cubes.setter
+ *     def empty_cubes(             # <<<<<<<<<<<<<<
+ *             self,
+ *             empty_cubes
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_11empty_cubes(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_11empty_cubes = {"empty_cubes", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_11empty_cubes, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_18WaterBoxProperties_11empty_cubes(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_self = 0;
+  PyObject *__pyx_v_empty_cubes = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("empty_cubes (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_self,&__pyx_n_s_empty_cubes,0};
+    PyObject* values[2] = {0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_self)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_empty_cubes)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("empty_cubes", 1, 2, 2, 1); __PYX_ERR(0, 108, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "empty_cubes") < 0)) __PYX_ERR(0, 108, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+    }
+    __pyx_v_self = values[0];
+    __pyx_v_empty_cubes = values[1];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("empty_cubes", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 108, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.empty_cubes", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_10empty_cubes(__pyx_self, __pyx_v_self, __pyx_v_empty_cubes);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18WaterBoxProperties_10empty_cubes(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_empty_cubes) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("empty_cubes", 0);
+
+  /* "bubblebuster/bubblebuster.pyx":112
+ *             empty_cubes
+ *     ):
+ *         self._empty_cubes = empty_cubes             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_empty_cubes_2, __pyx_v_empty_cubes) < 0) __PYX_ERR(0, 112, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":108
+ * 
+ *     @empty_cubes.setter
+ *     def empty_cubes(             # <<<<<<<<<<<<<<
+ *             self,
+ *             empty_cubes
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.WaterBoxProperties.empty_cubes", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "bubblebuster/bubblebuster.pyx":115
  * 
  * 
  * def get_box_vectors(             # <<<<<<<<<<<<<<
@@ -2130,8 +3230,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_7BoxInfo___init__(CYTHON
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_1get_box_vectors(PyObject *__pyx_self, PyObject *__pyx_v_trajectory); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_get_box_vectors[] = "\n    Returns the box vectors of a mdtraj trajectory's water box.\n\n    Parameters\n    ----------\n    trajectory : mdtraj.core.trajectory\n        mdtraj trajectory object that holds the molecular system of\n        interest's structural information.\n\n    Returns\n    -------\n    : ndarray\n        Trajectory's water box box vectors.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_1get_box_vectors = {"get_box_vectors", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_1get_box_vectors, METH_O, __pyx_doc_12bubblebuster_12bubblebuster_get_box_vectors};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_1get_box_vectors = {"get_box_vectors", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_1get_box_vectors, METH_O, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_1get_box_vectors(PyObject *__pyx_self, PyObject *__pyx_v_trajectory) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -2153,24 +3252,24 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_get_box_vectors(CYTHON_U
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_box_vectors", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":160
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":118
+ *         trajectory: Trajectory,
+ * ) -> np.ndarray:
  *     return trajectory.unitcell_vectors[0]             # <<<<<<<<<<<<<<
  * 
  * def get_periodic_box_volume(
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_unitcell_vectors); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_unitcell_vectors); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 118, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 118, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":142
+  /* "bubblebuster/bubblebuster.pyx":115
  * 
  * 
  * def get_box_vectors(             # <<<<<<<<<<<<<<
@@ -2190,7 +3289,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_get_box_vectors(CYTHON_U
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":162
+/* "bubblebuster/bubblebuster.pyx":120
  *     return trajectory.unitcell_vectors[0]
  * 
  * def get_periodic_box_volume(             # <<<<<<<<<<<<<<
@@ -2200,8 +3299,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_get_box_vectors(CYTHON_U
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_3get_periodic_box_volume(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_2get_periodic_box_volume[] = "\n    Returns the volume of the system's periodic box.\n\n    Parameters\n    ----------\n    box_vectors : ndarray\n        Box vector matrix.\n\n    Returns\n    -------\n    : ndarray\n        Volume of the system's periodic box.\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_3get_periodic_box_volume = {"get_periodic_box_volume", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_3get_periodic_box_volume, METH_O, __pyx_doc_12bubblebuster_12bubblebuster_2get_periodic_box_volume};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_3get_periodic_box_volume = {"get_periodic_box_volume", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_3get_periodic_box_volume, METH_O, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_3get_periodic_box_volume(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -2232,9 +3330,9 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_periodic_box_volume", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":178
- *         Volume of the system's periodic box.
- *     """
+  /* "bubblebuster/bubblebuster.pyx":123
+ *         box_vectors: np.ndarray
+ * ) -> np.ndarray:
  *     a, b, c = box_vectors             # <<<<<<<<<<<<<<
  *     return abs(np.dot(a, np.cross(b, c)))
  * 
@@ -2245,7 +3343,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
     if (unlikely(size != 3)) {
       if (size > 3) __Pyx_RaiseTooManyValuesError(3);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      __PYX_ERR(0, 178, __pyx_L1_error)
+      __PYX_ERR(0, 123, __pyx_L1_error)
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
     if (likely(PyTuple_CheckExact(sequence))) {
@@ -2261,16 +3359,16 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
     __Pyx_INCREF(__pyx_t_2);
     __Pyx_INCREF(__pyx_t_3);
     #else
-    __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 178, __pyx_L1_error)
+    __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 178, __pyx_L1_error)
+    __pyx_t_2 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 178, __pyx_L1_error)
+    __pyx_t_3 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     #endif
   } else {
     Py_ssize_t index = -1;
-    __pyx_t_4 = PyObject_GetIter(__pyx_v_box_vectors); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 178, __pyx_L1_error)
+    __pyx_t_4 = PyObject_GetIter(__pyx_v_box_vectors); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_5 = Py_TYPE(__pyx_t_4)->tp_iternext;
     index = 0; __pyx_t_1 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_1)) goto __pyx_L3_unpacking_failed;
@@ -2279,7 +3377,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
     __Pyx_GOTREF(__pyx_t_2);
     index = 2; __pyx_t_3 = __pyx_t_5(__pyx_t_4); if (unlikely(!__pyx_t_3)) goto __pyx_L3_unpacking_failed;
     __Pyx_GOTREF(__pyx_t_3);
-    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 178, __pyx_L1_error)
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_5(__pyx_t_4), 3) < 0) __PYX_ERR(0, 123, __pyx_L1_error)
     __pyx_t_5 = NULL;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     goto __pyx_L4_unpacking_done;
@@ -2287,7 +3385,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
     if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-    __PYX_ERR(0, 178, __pyx_L1_error)
+    __PYX_ERR(0, 123, __pyx_L1_error)
     __pyx_L4_unpacking_done:;
   }
   __pyx_v_a = __pyx_t_1;
@@ -2297,22 +3395,22 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
   __pyx_v_c = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":179
- *     """
+  /* "bubblebuster/bubblebuster.pyx":124
+ * ) -> np.ndarray:
  *     a, b, c = box_vectors
  *     return abs(np.dot(a, np.cross(b, c)))             # <<<<<<<<<<<<<<
  * 
- * def get_box_vector_dimensions(
+ * def get_box_dimensions(
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_dot); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_dot); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_cross); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_cross); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_4 = NULL;
@@ -2330,7 +3428,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_6)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_v_b, __pyx_v_c};
-    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_2);
   } else
@@ -2338,13 +3436,13 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_6)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_v_b, __pyx_v_c};
-    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_2);
   } else
   #endif
   {
-    __pyx_t_8 = PyTuple_New(2+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_8 = PyTuple_New(2+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 124, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     if (__pyx_t_4) {
       __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -2355,7 +3453,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
     __Pyx_INCREF(__pyx_v_c);
     __Pyx_GIVEREF(__pyx_v_c);
     PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_7, __pyx_v_c);
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   }
@@ -2375,7 +3473,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_1)) {
     PyObject *__pyx_temp[3] = {__pyx_t_6, __pyx_v_a, __pyx_t_2};
-    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 124, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -2384,14 +3482,14 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
     PyObject *__pyx_temp[3] = {__pyx_t_6, __pyx_v_a, __pyx_t_2};
-    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 124, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   } else
   #endif
   {
-    __pyx_t_8 = PyTuple_New(2+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_8 = PyTuple_New(2+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 124, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     if (__pyx_t_6) {
       __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -2402,19 +3500,19 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_7, __pyx_t_2);
     __pyx_t_2 = 0;
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_8, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 179, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_8, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 124, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyNumber_Absolute(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyNumber_Absolute(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":162
+  /* "bubblebuster/bubblebuster.pyx":120
  *     return trajectory.unitcell_vectors[0]
  * 
  * def get_periodic_box_volume(             # <<<<<<<<<<<<<<
@@ -2441,30 +3539,29 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_2get_periodic_box_volume
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":181
+/* "bubblebuster/bubblebuster.pyx":126
  *     return abs(np.dot(a, np.cross(b, c)))
  * 
- * def get_box_vector_dimensions(             # <<<<<<<<<<<<<<
+ * def get_box_dimensions(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray,
  * ) -> np.ndarray:
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_5get_box_vector_dimensions(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_4get_box_vector_dimensions[] = "\n    Returns the magnitude of the trajectory's period box unit\n    vectors: a, b, and c.\n\n    Parameters\n    ----------\n    box_vectors : ndarray\n        Box vector matrix.\n\n    Returns\n    -------\n    : ndarray\n        Magnitude of the trajectory's period box unit vectors: a, b,\n        and c.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_5get_box_vector_dimensions = {"get_box_vector_dimensions", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_5get_box_vector_dimensions, METH_O, __pyx_doc_12bubblebuster_12bubblebuster_4get_box_vector_dimensions};
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_5get_box_vector_dimensions(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors) {
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_5get_box_dimensions(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_5get_box_dimensions = {"get_box_dimensions", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_5get_box_dimensions, METH_O, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_5get_box_dimensions(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("get_box_vector_dimensions (wrapper)", 0);
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensions(__pyx_self, ((PyObject *)__pyx_v_box_vectors));
+  __Pyx_RefNannySetupContext("get_box_dimensions (wrapper)", 0);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_4get_box_dimensions(__pyx_self, ((PyObject *)__pyx_v_box_vectors));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensions(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vectors) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_dimensions(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vectors) {
   PyObject *__pyx_v_a = NULL;
   PyObject *__pyx_v_b = NULL;
   PyObject *__pyx_v_c = NULL;
@@ -2479,54 +3576,54 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("get_box_vector_dimensions", 0);
+  __Pyx_RefNannySetupContext("get_box_dimensions", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":200
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":129
+ *         box_vectors: np.ndarray,
+ * ) -> np.ndarray:
  *     a, b, c = md.utils.box_vectors_to_lengths_and_angles(             # <<<<<<<<<<<<<<
  *         *box_vectors
  *     )[:3]
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_md); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 200, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_md); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_utils); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_utils); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 129, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_box_vectors_to_lengths_and_angle); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 200, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_box_vectors_to_lengths_and_angle); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":201
- *     """
+  /* "bubblebuster/bubblebuster.pyx":130
+ * ) -> np.ndarray:
  *     a, b, c = md.utils.box_vectors_to_lengths_and_angles(
  *         *box_vectors             # <<<<<<<<<<<<<<
  *     )[:3]
  *     return np.array([a, b, c])
  */
-  __pyx_t_2 = __Pyx_PySequence_Tuple(__pyx_v_box_vectors); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 200, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PySequence_Tuple(__pyx_v_box_vectors); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 129, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
 
-  /* "bubblebuster/bubblebuster.pyx":200
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":129
+ *         box_vectors: np.ndarray,
+ * ) -> np.ndarray:
  *     a, b, c = md.utils.box_vectors_to_lengths_and_angles(             # <<<<<<<<<<<<<<
  *         *box_vectors
  *     )[:3]
  */
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 200, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 129, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":202
+  /* "bubblebuster/bubblebuster.pyx":131
  *     a, b, c = md.utils.box_vectors_to_lengths_and_angles(
  *         *box_vectors
  *     )[:3]             # <<<<<<<<<<<<<<
  *     return np.array([a, b, c])
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_GetSlice(__pyx_t_3, 0, 3, NULL, NULL, &__pyx_slice_, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 202, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetSlice(__pyx_t_3, 0, 3, NULL, NULL, &__pyx_slice__9, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 131, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if ((likely(PyTuple_CheckExact(__pyx_t_2))) || (PyList_CheckExact(__pyx_t_2))) {
@@ -2535,7 +3632,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
     if (unlikely(size != 3)) {
       if (size > 3) __Pyx_RaiseTooManyValuesError(3);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      __PYX_ERR(0, 200, __pyx_L1_error)
+      __PYX_ERR(0, 129, __pyx_L1_error)
     }
     #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
     if (likely(PyTuple_CheckExact(sequence))) {
@@ -2551,17 +3648,17 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
     __Pyx_INCREF(__pyx_t_1);
     __Pyx_INCREF(__pyx_t_4);
     #else
-    __pyx_t_3 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 200, __pyx_L1_error)
+    __pyx_t_3 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 129, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 200, __pyx_L1_error)
+    __pyx_t_1 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_4 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 200, __pyx_L1_error)
+    __pyx_t_4 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 129, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     #endif
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   } else {
     Py_ssize_t index = -1;
-    __pyx_t_5 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 200, __pyx_L1_error)
+    __pyx_t_5 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 129, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_t_6 = Py_TYPE(__pyx_t_5)->tp_iternext;
@@ -2571,7 +3668,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
     __Pyx_GOTREF(__pyx_t_1);
     index = 2; __pyx_t_4 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_4)) goto __pyx_L3_unpacking_failed;
     __Pyx_GOTREF(__pyx_t_4);
-    if (__Pyx_IternextUnpackEndCheck(__pyx_t_6(__pyx_t_5), 3) < 0) __PYX_ERR(0, 200, __pyx_L1_error)
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_6(__pyx_t_5), 3) < 0) __PYX_ERR(0, 129, __pyx_L1_error)
     __pyx_t_6 = NULL;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     goto __pyx_L4_unpacking_done;
@@ -2579,13 +3676,13 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_t_6 = NULL;
     if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-    __PYX_ERR(0, 200, __pyx_L1_error)
+    __PYX_ERR(0, 129, __pyx_L1_error)
     __pyx_L4_unpacking_done:;
   }
 
-  /* "bubblebuster/bubblebuster.pyx":200
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":129
+ *         box_vectors: np.ndarray,
+ * ) -> np.ndarray:
  *     a, b, c = md.utils.box_vectors_to_lengths_and_angles(             # <<<<<<<<<<<<<<
  *         *box_vectors
  *     )[:3]
@@ -2597,7 +3694,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
   __pyx_v_c = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":203
+  /* "bubblebuster/bubblebuster.pyx":132
  *         *box_vectors
  *     )[:3]
  *     return np.array([a, b, c])             # <<<<<<<<<<<<<<
@@ -2605,12 +3702,12 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
  * def get_coordinates(
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 203, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 132, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_array); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 203, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_array); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 132, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = PyList_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 203, __pyx_L1_error)
+  __pyx_t_4 = PyList_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 132, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_INCREF(__pyx_v_a);
   __Pyx_GIVEREF(__pyx_v_a);
@@ -2634,17 +3731,17 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
   __pyx_t_2 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_3, __pyx_t_4) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_4);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 203, __pyx_L1_error)
+  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 132, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":181
+  /* "bubblebuster/bubblebuster.pyx":126
  *     return abs(np.dot(a, np.cross(b, c)))
  * 
- * def get_box_vector_dimensions(             # <<<<<<<<<<<<<<
+ * def get_box_dimensions(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray,
  * ) -> np.ndarray:
  */
@@ -2656,7 +3753,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("bubblebuster.bubblebuster.get_box_vector_dimensions", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.get_box_dimensions", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_a);
@@ -2667,7 +3764,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":205
+/* "bubblebuster/bubblebuster.pyx":134
  *     return np.array([a, b, c])
  * 
  * def get_coordinates(             # <<<<<<<<<<<<<<
@@ -2677,8 +3774,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_4get_box_vector_dimensio
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_7get_coordinates(PyObject *__pyx_self, PyObject *__pyx_v_trajectory); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_6get_coordinates[] = "\n    Returns the cartesian coordinates of each atom in the trajectory's\n    first frame.\n\n    Parameters\n    ----------\n    trajectory : mdtraj.core.trajectory\n        mdtraj trajectory object that holds the molecular system of\n        interest's structural information.\n\n    Returns\n    -------\n    : ndarray\n        Cartesian coordinates of each atom in the trajectory's\n        first frame.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_7get_coordinates = {"get_coordinates", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_7get_coordinates, METH_O, __pyx_doc_12bubblebuster_12bubblebuster_6get_coordinates};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_7get_coordinates = {"get_coordinates", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_7get_coordinates, METH_O, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_7get_coordinates(PyObject *__pyx_self, PyObject *__pyx_v_trajectory) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -2709,21 +3805,21 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_coordinates", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":225
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":137
+ *         trajectory: Trajectory,
+ * ) -> ndarray:
  *     npacoords = np.empty((trajectory.n_atoms, 3), dtype=np.float64)             # <<<<<<<<<<<<<<
  *     for i in range(trajectory.n_atoms):
  *         npacoords[i][0] = trajectory.xyz[0, i, 0]
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_n_atoms); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_n_atoms); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
@@ -2731,21 +3827,21 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
   __Pyx_GIVEREF(__pyx_int_3);
   PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_int_3);
   __pyx_t_1 = 0;
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 225, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 137, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -2753,25 +3849,25 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
   __pyx_v_npacoords = __pyx_t_5;
   __pyx_t_5 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":226
- *     """
+  /* "bubblebuster/bubblebuster.pyx":138
+ * ) -> ndarray:
  *     npacoords = np.empty((trajectory.n_atoms, 3), dtype=np.float64)
  *     for i in range(trajectory.n_atoms):             # <<<<<<<<<<<<<<
  *         npacoords[i][0] = trajectory.xyz[0, i, 0]
  *         npacoords[i][1] = trajectory.xyz[0, i, 1]
  */
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_n_atoms); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_n_atoms); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 138, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 226, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 138, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   if (likely(PyList_CheckExact(__pyx_t_3)) || PyTuple_CheckExact(__pyx_t_3)) {
     __pyx_t_5 = __pyx_t_3; __Pyx_INCREF(__pyx_t_5); __pyx_t_6 = 0;
     __pyx_t_7 = NULL;
   } else {
-    __pyx_t_6 = -1; __pyx_t_5 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 226, __pyx_L1_error)
+    __pyx_t_6 = -1; __pyx_t_5 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 138, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_7 = Py_TYPE(__pyx_t_5)->tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 226, __pyx_L1_error)
+    __pyx_t_7 = Py_TYPE(__pyx_t_5)->tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 138, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   for (;;) {
@@ -2779,17 +3875,17 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
       if (likely(PyList_CheckExact(__pyx_t_5))) {
         if (__pyx_t_6 >= PyList_GET_SIZE(__pyx_t_5)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_3 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_6); __Pyx_INCREF(__pyx_t_3); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 226, __pyx_L1_error)
+        __pyx_t_3 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_6); __Pyx_INCREF(__pyx_t_3); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 138, __pyx_L1_error)
         #else
-        __pyx_t_3 = PySequence_ITEM(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 226, __pyx_L1_error)
+        __pyx_t_3 = PySequence_ITEM(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 138, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
         #endif
       } else {
         if (__pyx_t_6 >= PyTuple_GET_SIZE(__pyx_t_5)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_5, __pyx_t_6); __Pyx_INCREF(__pyx_t_3); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 226, __pyx_L1_error)
+        __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_5, __pyx_t_6); __Pyx_INCREF(__pyx_t_3); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 138, __pyx_L1_error)
         #else
-        __pyx_t_3 = PySequence_ITEM(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 226, __pyx_L1_error)
+        __pyx_t_3 = PySequence_ITEM(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 138, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
         #endif
       }
@@ -2799,7 +3895,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 226, __pyx_L1_error)
+          else __PYX_ERR(0, 138, __pyx_L1_error)
         }
         break;
       }
@@ -2808,16 +3904,16 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
     __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":227
+    /* "bubblebuster/bubblebuster.pyx":139
  *     npacoords = np.empty((trajectory.n_atoms, 3), dtype=np.float64)
  *     for i in range(trajectory.n_atoms):
  *         npacoords[i][0] = trajectory.xyz[0, i, 0]             # <<<<<<<<<<<<<<
  *         npacoords[i][1] = trajectory.xyz[0, i, 1]
  *         npacoords[i][2] = trajectory.xyz[0, i, 2]
  */
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 227, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 139, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 227, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 139, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_INCREF(__pyx_int_0);
     __Pyx_GIVEREF(__pyx_int_0);
@@ -2828,26 +3924,26 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
     __Pyx_INCREF(__pyx_int_0);
     __Pyx_GIVEREF(__pyx_int_0);
     PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_int_0);
-    __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 227, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 139, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_npacoords, __pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 227, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_npacoords, __pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 139, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (unlikely(__Pyx_SetItemInt(__pyx_t_1, 0, __pyx_t_2, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 227, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_t_1, 0, __pyx_t_2, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 139, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":228
+    /* "bubblebuster/bubblebuster.pyx":140
  *     for i in range(trajectory.n_atoms):
  *         npacoords[i][0] = trajectory.xyz[0, i, 0]
  *         npacoords[i][1] = trajectory.xyz[0, i, 1]             # <<<<<<<<<<<<<<
  *         npacoords[i][2] = trajectory.xyz[0, i, 2]
  *     coords = [
  */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 228, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 228, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_INCREF(__pyx_int_0);
     __Pyx_GIVEREF(__pyx_int_0);
@@ -2858,26 +3954,26 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
     __Pyx_INCREF(__pyx_int_1);
     __Pyx_GIVEREF(__pyx_int_1);
     PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_int_1);
-    __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 228, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_npacoords, __pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 228, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_npacoords, __pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (unlikely(__Pyx_SetItemInt(__pyx_t_1, 1, __pyx_t_3, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 228, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_t_1, 1, __pyx_t_3, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":229
+    /* "bubblebuster/bubblebuster.pyx":141
  *         npacoords[i][0] = trajectory.xyz[0, i, 0]
  *         npacoords[i][1] = trajectory.xyz[0, i, 1]
  *         npacoords[i][2] = trajectory.xyz[0, i, 2]             # <<<<<<<<<<<<<<
  *     coords = [
  *         atom_coordinates for atom_coordinates
  */
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 229, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 229, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_INCREF(__pyx_int_0);
     __Pyx_GIVEREF(__pyx_int_0);
@@ -2888,18 +3984,18 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
     __Pyx_INCREF(__pyx_int_2);
     __Pyx_GIVEREF(__pyx_int_2);
     PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_int_2);
-    __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 229, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 141, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_npacoords, __pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 229, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_npacoords, __pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (unlikely(__Pyx_SetItemInt(__pyx_t_1, 2, __pyx_t_2, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 229, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_t_1, 2, __pyx_t_2, long, 1, __Pyx_PyInt_From_long, 0, 0, 1) < 0)) __PYX_ERR(0, 141, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":226
- *     """
+    /* "bubblebuster/bubblebuster.pyx":138
+ * ) -> ndarray:
  *     npacoords = np.empty((trajectory.n_atoms, 3), dtype=np.float64)
  *     for i in range(trajectory.n_atoms):             # <<<<<<<<<<<<<<
  *         npacoords[i][0] = trajectory.xyz[0, i, 0]
@@ -2908,35 +4004,35 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
   }
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":230
+  /* "bubblebuster/bubblebuster.pyx":142
  *         npacoords[i][1] = trajectory.xyz[0, i, 1]
  *         npacoords[i][2] = trajectory.xyz[0, i, 2]
  *     coords = [             # <<<<<<<<<<<<<<
  *         atom_coordinates for atom_coordinates
  *         in trajectory.xyz[0]
  */
-  __pyx_t_5 = PyList_New(0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 230, __pyx_L1_error)
+  __pyx_t_5 = PyList_New(0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 142, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
 
-  /* "bubblebuster/bubblebuster.pyx":232
+  /* "bubblebuster/bubblebuster.pyx":144
  *     coords = [
  *         atom_coordinates for atom_coordinates
  *         in trajectory.xyz[0]             # <<<<<<<<<<<<<<
  *     ]
  *     coords = np.array(coords)
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 232, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_2 = __pyx_t_1; __Pyx_INCREF(__pyx_t_2); __pyx_t_6 = 0;
     __pyx_t_7 = NULL;
   } else {
-    __pyx_t_6 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 232, __pyx_L1_error)
+    __pyx_t_6 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 144, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_7 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 232, __pyx_L1_error)
+    __pyx_t_7 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 144, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -2944,17 +4040,17 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
       if (likely(PyList_CheckExact(__pyx_t_2))) {
         if (__pyx_t_6 >= PyList_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 232, __pyx_L1_error)
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 144, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 232, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       } else {
         if (__pyx_t_6 >= PyTuple_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 232, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 144, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 232, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 144, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       }
@@ -2964,7 +4060,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 232, __pyx_L1_error)
+          else __PYX_ERR(0, 144, __pyx_L1_error)
         }
         break;
       }
@@ -2973,29 +4069,29 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
     __Pyx_XDECREF_SET(__pyx_v_atom_coordinates, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":231
+    /* "bubblebuster/bubblebuster.pyx":143
  *         npacoords[i][2] = trajectory.xyz[0, i, 2]
  *     coords = [
  *         atom_coordinates for atom_coordinates             # <<<<<<<<<<<<<<
  *         in trajectory.xyz[0]
  *     ]
  */
-    if (unlikely(__Pyx_ListComp_Append(__pyx_t_5, (PyObject*)__pyx_v_atom_coordinates))) __PYX_ERR(0, 230, __pyx_L1_error)
+    if (unlikely(__Pyx_ListComp_Append(__pyx_t_5, (PyObject*)__pyx_v_atom_coordinates))) __PYX_ERR(0, 142, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_coords = __pyx_t_5;
   __pyx_t_5 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":234
+  /* "bubblebuster/bubblebuster.pyx":146
  *         in trajectory.xyz[0]
  *     ]
  *     coords = np.array(coords)             # <<<<<<<<<<<<<<
- *     #coords = list(coords)
  *     return coords
+ * 
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 234, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 146, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_array); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 234, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_array); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 146, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_2 = NULL;
@@ -3010,15 +4106,15 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
   }
   __pyx_t_5 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_2, __pyx_v_coords) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_coords);
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 234, __pyx_L1_error)
+  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 146, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF_SET(__pyx_v_coords, __pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":236
+  /* "bubblebuster/bubblebuster.pyx":147
+ *     ]
  *     coords = np.array(coords)
- *     #coords = list(coords)
  *     return coords             # <<<<<<<<<<<<<<
  * 
  * def pbc_scale_factor(
@@ -3028,7 +4124,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
   __pyx_r = __pyx_v_coords;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":205
+  /* "bubblebuster/bubblebuster.pyx":134
  *     return np.array([a, b, c])
  * 
  * def get_coordinates(             # <<<<<<<<<<<<<<
@@ -3055,20 +4151,19 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_6get_coordinates(CYTHON_
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":238
+/* "bubblebuster/bubblebuster.pyx":149
  *     return coords
  * 
  * def pbc_scale_factor(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_9pbc_scale_factor(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_8pbc_scale_factor[] = "\n    Factor used to scale the each coordinate component of each atom\n    in a molecular system with defined periodic boundary conditions.\n    The periodic boundary conditions scale factor is calculated by\n    taking the floor of the quotient obtained by dividing each\n    component of an atom's coordinate (x, y, or z) by the magnitude of\n    the periodic box's corresponding unit cell vector. The\n    scale factor will evaluate to: 0 if the coordinate component is\n    inside the periodic box, 1 if the coordinate component is\n    outside the box by a distance less then or equal to two times\n    the magnitude of the corresponding periodic box unit cell vector,\n    2 if the coordinate component is outside the box by a distance\n    greater then the previously mentioned quantity and outside of the\n    box by a distance less then or equal to three times the\n    magnitude of\n    the corresponding periodic box unit cell vector, etc ...\n\n    Parameters\n    ----------\n    box_vector_dimensions : ndarray\n\n    atomic_coordinates : ndarray\n\n    coordinate_component_index : int\n\n    Returns\n    -------\n    : float\n    Period boundary conditions scale factor used to scale an atomic\n    coordinate component according to the system's periodic boundary\n    conditions.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_9pbc_scale_factor = {"pbc_scale_factor", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_9pbc_scale_factor, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_8pbc_scale_factor};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_9pbc_scale_factor = {"pbc_scale_factor", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_9pbc_scale_factor, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_9pbc_scale_factor(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyObject *__pyx_v_box_vector_dimensions = 0;
+  PyObject *__pyx_v_box_dimensions = 0;
   PyObject *__pyx_v_atom_coordinates = 0;
   PyObject *__pyx_v_coordinate_component_index = 0;
   int __pyx_lineno = 0;
@@ -3078,7 +4173,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_9pbc_scale_factor(PyObje
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("pbc_scale_factor (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_box_vector_dimensions,&__pyx_n_s_atom_coordinates,&__pyx_n_s_coordinate_component_index,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_box_dimensions,&__pyx_n_s_atom_coordinates,&__pyx_n_s_coordinate_component_index,0};
     PyObject* values[3] = {0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -3096,23 +4191,23 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_9pbc_scale_factor(PyObje
       kw_args = PyDict_Size(__pyx_kwds);
       switch (pos_args) {
         case  0:
-        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vector_dimensions)) != 0)) kw_args--;
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_dimensions)) != 0)) kw_args--;
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_atom_coordinates)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("pbc_scale_factor", 1, 3, 3, 1); __PYX_ERR(0, 238, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("pbc_scale_factor", 1, 3, 3, 1); __PYX_ERR(0, 149, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_coordinate_component_index)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("pbc_scale_factor", 1, 3, 3, 2); __PYX_ERR(0, 238, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("pbc_scale_factor", 1, 3, 3, 2); __PYX_ERR(0, 149, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "pbc_scale_factor") < 0)) __PYX_ERR(0, 238, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "pbc_scale_factor") < 0)) __PYX_ERR(0, 149, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -3121,26 +4216,26 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_9pbc_scale_factor(PyObje
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_box_vector_dimensions = values[0];
+    __pyx_v_box_dimensions = values[0];
     __pyx_v_atom_coordinates = values[1];
     __pyx_v_coordinate_component_index = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("pbc_scale_factor", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 238, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("pbc_scale_factor", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 149, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.pbc_scale_factor", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_8pbc_scale_factor(__pyx_self, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_coordinate_component_index);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_8pbc_scale_factor(__pyx_self, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_v_coordinate_component_index);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_8pbc_scale_factor(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vector_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_coordinate_component_index) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_8pbc_scale_factor(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_coordinate_component_index) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -3153,37 +4248,37 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_8pbc_scale_factor(CYTHON
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("pbc_scale_factor", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":276
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":154
+ *         coordinate_component_index: int,
+ * ) -> float:
  *     return floor(             # <<<<<<<<<<<<<<
  *         atom_coordinates[coordinate_component_index]
- *         / box_vector_dimensions[coordinate_component_index]
+ *         / box_dimensions[coordinate_component_index]
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_floor); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 276, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_floor); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 154, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
 
-  /* "bubblebuster/bubblebuster.pyx":277
- *     """
+  /* "bubblebuster/bubblebuster.pyx":155
+ * ) -> float:
  *     return floor(
  *         atom_coordinates[coordinate_component_index]             # <<<<<<<<<<<<<<
- *         / box_vector_dimensions[coordinate_component_index]
+ *         / box_dimensions[coordinate_component_index]
  *     )
  */
-  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_v_atom_coordinates, __pyx_v_coordinate_component_index); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 277, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_v_atom_coordinates, __pyx_v_coordinate_component_index); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 155, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
 
-  /* "bubblebuster/bubblebuster.pyx":278
+  /* "bubblebuster/bubblebuster.pyx":156
  *     return floor(
  *         atom_coordinates[coordinate_component_index]
- *         / box_vector_dimensions[coordinate_component_index]             # <<<<<<<<<<<<<<
+ *         / box_dimensions[coordinate_component_index]             # <<<<<<<<<<<<<<
  *     )
  * 
  */
-  __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_v_box_vector_dimensions, __pyx_v_coordinate_component_index); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 278, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_v_box_dimensions, __pyx_v_coordinate_component_index); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 156, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyNumber_Divide(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 278, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyNumber_Divide(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 156, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -3200,18 +4295,18 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_8pbc_scale_factor(CYTHON
   __pyx_t_1 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_4, __pyx_t_5) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5);
   __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 276, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":238
+  /* "bubblebuster/bubblebuster.pyx":149
  *     return coords
  * 
  * def pbc_scale_factor(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
 
@@ -3230,20 +4325,19 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_8pbc_scale_factor(CYTHON
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":281
+/* "bubblebuster/bubblebuster.pyx":159
  *     )
  * 
  * def apply_pbc_to_triclinic_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic_coordinates(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic_coordinates[] = "\n    Wraps the coordinates of an atom in a system with a triclinic\n    water box. Each coordinate component is wrapped according to the\n    below equation.\n\n    coord[i]_pbc = coord[i] - [(floor(coord[2] / ||c||) * V[2][i]\n                              + (floor(coord[1] / ||b||) * V[1][i]\n                              + (floor(coord[0] / ||a||) * V[0][i]]\n\n    for i in range(3), where a, b, and c are the magnitudes of the\n    periodic box's unit vectors, V is the periodic box vector matrix,\n    and coord[i] is the i'th component of the starting atomic\n    coordinates.\n\n    Parameters\n    ----------\n    box_vector_dimensions : ndarray\n        Magnitudes of the periodic box unit vectors.\n    atom_coordinates : ndarray\n        Cartesian coordinates of the atom being wrapped.\n    box_vectors : ndarray\n        Box vectors of the system's water box.\n\n    Returns\n    -------\n    : ndarray\n        Wrapped version of the input atom coordinates.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic_coordinates = {"apply_pbc_to_triclinic_coordinates", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic_coordinates, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic_coordinates};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic_coordinates = {"apply_pbc_to_triclinic_coordinates", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic_coordinates, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic_coordinates(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyObject *__pyx_v_box_vector_dimensions = 0;
+  PyObject *__pyx_v_box_dimensions = 0;
   PyObject *__pyx_v_atom_coordinates = 0;
   PyObject *__pyx_v_box_vectors = 0;
   int __pyx_lineno = 0;
@@ -3253,7 +4347,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("apply_pbc_to_triclinic_coordinates (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_box_vector_dimensions,&__pyx_n_s_atom_coordinates,&__pyx_n_s_box_vectors,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_box_dimensions,&__pyx_n_s_atom_coordinates,&__pyx_n_s_box_vectors,0};
     PyObject* values[3] = {0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -3271,23 +4365,23 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic
       kw_args = PyDict_Size(__pyx_kwds);
       switch (pos_args) {
         case  0:
-        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vector_dimensions)) != 0)) kw_args--;
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_dimensions)) != 0)) kw_args--;
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_atom_coordinates)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_triclinic_coordinates", 1, 3, 3, 1); __PYX_ERR(0, 281, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_triclinic_coordinates", 1, 3, 3, 1); __PYX_ERR(0, 159, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vectors)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_triclinic_coordinates", 1, 3, 3, 2); __PYX_ERR(0, 281, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_triclinic_coordinates", 1, 3, 3, 2); __PYX_ERR(0, 159, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "apply_pbc_to_triclinic_coordinates") < 0)) __PYX_ERR(0, 281, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "apply_pbc_to_triclinic_coordinates") < 0)) __PYX_ERR(0, 159, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -3296,26 +4390,26 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_box_vector_dimensions = values[0];
+    __pyx_v_box_dimensions = values[0];
     __pyx_v_atom_coordinates = values[1];
     __pyx_v_box_vectors = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("apply_pbc_to_triclinic_coordinates", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 281, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("apply_pbc_to_triclinic_coordinates", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 159, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.apply_pbc_to_triclinic_coordinates", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic_coordinates(__pyx_self, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic_coordinates(__pyx_self, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vector_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors) {
   long __pyx_v_i;
   long __pyx_v_j;
   PyObject *__pyx_v_scale_factor = NULL;
@@ -3335,9 +4429,9 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("apply_pbc_to_triclinic_coordinates", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":315
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":164
+ *         box_vectors: np.ndarray,
+ * ) -> np.ndarray:
  *     for i in reversed(range(3)):             # <<<<<<<<<<<<<<
  *         for j in range(3):
  *             scale_factor = pbc_scale_factor(
@@ -3345,34 +4439,34 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic
   for (__pyx_t_1 = 3-1; __pyx_t_1 >= 0; __pyx_t_1-=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "bubblebuster/bubblebuster.pyx":316
- *     """
+    /* "bubblebuster/bubblebuster.pyx":165
+ * ) -> np.ndarray:
  *     for i in reversed(range(3)):
  *         for j in range(3):             # <<<<<<<<<<<<<<
  *             scale_factor = pbc_scale_factor(
- *                 box_vector_dimensions,
+ *                 box_dimensions,
  */
     for (__pyx_t_2 = 0; __pyx_t_2 < 3; __pyx_t_2+=1) {
       __pyx_v_j = __pyx_t_2;
 
-      /* "bubblebuster/bubblebuster.pyx":317
+      /* "bubblebuster/bubblebuster.pyx":166
  *     for i in reversed(range(3)):
  *         for j in range(3):
  *             scale_factor = pbc_scale_factor(             # <<<<<<<<<<<<<<
- *                 box_vector_dimensions,
+ *                 box_dimensions,
  *                 atom_coordinates, i
  */
-      __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_pbc_scale_factor); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 317, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_pbc_scale_factor); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 166, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
 
-      /* "bubblebuster/bubblebuster.pyx":319
+      /* "bubblebuster/bubblebuster.pyx":168
  *             scale_factor = pbc_scale_factor(
- *                 box_vector_dimensions,
+ *                 box_dimensions,
  *                 atom_coordinates, i             # <<<<<<<<<<<<<<
  *             )
  *             atom_coordinates[j] -= \
  */
-      __pyx_t_5 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 319, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 168, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __pyx_t_6 = NULL;
       __pyx_t_7 = 0;
@@ -3388,8 +4482,8 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic
       }
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_4)) {
-        PyObject *__pyx_temp[4] = {__pyx_t_6, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_t_5};
-        __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_7, 3+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 317, __pyx_L1_error)
+        PyObject *__pyx_temp[4] = {__pyx_t_6, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_t_5};
+        __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_7, 3+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 166, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3397,29 +4491,29 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic
       #endif
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_4)) {
-        PyObject *__pyx_temp[4] = {__pyx_t_6, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_t_5};
-        __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_7, 3+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 317, __pyx_L1_error)
+        PyObject *__pyx_temp[4] = {__pyx_t_6, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_t_5};
+        __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_7, 3+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 166, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       } else
       #endif
       {
-        __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 317, __pyx_L1_error)
+        __pyx_t_8 = PyTuple_New(3+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 166, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         if (__pyx_t_6) {
           __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
         }
-        __Pyx_INCREF(__pyx_v_box_vector_dimensions);
-        __Pyx_GIVEREF(__pyx_v_box_vector_dimensions);
-        PyTuple_SET_ITEM(__pyx_t_8, 0+__pyx_t_7, __pyx_v_box_vector_dimensions);
+        __Pyx_INCREF(__pyx_v_box_dimensions);
+        __Pyx_GIVEREF(__pyx_v_box_dimensions);
+        PyTuple_SET_ITEM(__pyx_t_8, 0+__pyx_t_7, __pyx_v_box_dimensions);
         __Pyx_INCREF(__pyx_v_atom_coordinates);
         __Pyx_GIVEREF(__pyx_v_atom_coordinates);
         PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_7, __pyx_v_atom_coordinates);
         __Pyx_GIVEREF(__pyx_t_5);
         PyTuple_SET_ITEM(__pyx_t_8, 2+__pyx_t_7, __pyx_t_5);
         __pyx_t_5 = 0;
-        __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_8, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 317, __pyx_L1_error)
+        __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_8, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 166, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       }
@@ -3427,7 +4521,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic
       __Pyx_XDECREF_SET(__pyx_v_scale_factor, __pyx_t_3);
       __pyx_t_3 = 0;
 
-      /* "bubblebuster/bubblebuster.pyx":321
+      /* "bubblebuster/bubblebuster.pyx":170
  *                 atom_coordinates, i
  *             )
  *             atom_coordinates[j] -= \             # <<<<<<<<<<<<<<
@@ -3435,42 +4529,42 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic
  *     return atom_coordinates
  */
       __pyx_t_9 = __pyx_v_j;
-      __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_atom_coordinates, __pyx_t_9, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 321, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_atom_coordinates, __pyx_t_9, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 170, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
 
-      /* "bubblebuster/bubblebuster.pyx":322
+      /* "bubblebuster/bubblebuster.pyx":171
  *             )
  *             atom_coordinates[j] -= \
  *                 scale_factor * box_vectors[i][j]             # <<<<<<<<<<<<<<
  *     return atom_coordinates
  * 
  */
-      __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_box_vectors, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 322, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_box_vectors, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 171, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_4, __pyx_v_j, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 322, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_GetItemInt(__pyx_t_4, __pyx_v_j, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 171, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __pyx_t_4 = PyNumber_Multiply(__pyx_v_scale_factor, __pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 322, __pyx_L1_error)
+      __pyx_t_4 = PyNumber_Multiply(__pyx_v_scale_factor, __pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 171, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-      /* "bubblebuster/bubblebuster.pyx":321
+      /* "bubblebuster/bubblebuster.pyx":170
  *                 atom_coordinates, i
  *             )
  *             atom_coordinates[j] -= \             # <<<<<<<<<<<<<<
  *                 scale_factor * box_vectors[i][j]
  *     return atom_coordinates
  */
-      __pyx_t_8 = PyNumber_InPlaceSubtract(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 321, __pyx_L1_error)
+      __pyx_t_8 = PyNumber_InPlaceSubtract(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 170, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      if (unlikely(__Pyx_SetItemInt(__pyx_v_atom_coordinates, __pyx_t_9, __pyx_t_8, long, 1, __Pyx_PyInt_From_long, 0, 1, 1) < 0)) __PYX_ERR(0, 321, __pyx_L1_error)
+      if (unlikely(__Pyx_SetItemInt(__pyx_v_atom_coordinates, __pyx_t_9, __pyx_t_8, long, 1, __Pyx_PyInt_From_long, 0, 1, 1) < 0)) __PYX_ERR(0, 170, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     }
   }
 
-  /* "bubblebuster/bubblebuster.pyx":323
+  /* "bubblebuster/bubblebuster.pyx":172
  *             atom_coordinates[j] -= \
  *                 scale_factor * box_vectors[i][j]
  *     return atom_coordinates             # <<<<<<<<<<<<<<
@@ -3482,11 +4576,11 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic
   __pyx_r = __pyx_v_atom_coordinates;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":281
+  /* "bubblebuster/bubblebuster.pyx":159
  *     )
  * 
  * def apply_pbc_to_triclinic_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
 
@@ -3506,20 +4600,19 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_10apply_pbc_to_triclinic
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":325
+/* "bubblebuster/bubblebuster.pyx":174
  *     return atom_coordinates
  * 
  * def apply_pbc_to_cubic_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coordinates(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coordinates[] = "\n    Wraps the coordinates of an atom in a system with a cubic\n    water box. Each coordinate component is wrapped according to the\n    below equation.\n\n    coord[0]_pbc = coord[0] - [(floor(coord[0] / ||a||) * V[0][0]\n    coord[1]_pbc = coord[1] - [(floor(coord[1] / ||b||) * V[1][1]\n    coord[2]_pbc = coord[2] - [(floor(coord[2] / ||c||) * V[2][2]\n\n    where a, b, and c are the magnitudes of the\n    periodic box's unit vectors, V is the periodic box vector matrix,\n    and coord[i] is the i'th component of the starting atomic\n    coordinates.\n\n    Parameters\n    ----------\n    box_vector_dimensions : ndarray\n        Magnitudes of the periodic box unit vectors.\n    atom_coordinates : ndarray\n        Cartesian coordinates of the atom being wrapped.\n    box_vectors : ndarray\n        Box vectors of the system's water box.\n\n    Returns\n    -------\n    : ndarray\n        Wrapped version of the input atom coordinates.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coordinates = {"apply_pbc_to_cubic_coordinates", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coordinates, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coordinates};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coordinates = {"apply_pbc_to_cubic_coordinates", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coordinates, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coordinates(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyObject *__pyx_v_box_vector_dimensions = 0;
+  PyObject *__pyx_v_box_dimensions = 0;
   PyObject *__pyx_v_atom_coordinates = 0;
   PyObject *__pyx_v_box_vectors = 0;
   int __pyx_lineno = 0;
@@ -3529,7 +4622,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coo
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("apply_pbc_to_cubic_coordinates (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_box_vector_dimensions,&__pyx_n_s_atom_coordinates,&__pyx_n_s_box_vectors,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_box_dimensions,&__pyx_n_s_atom_coordinates,&__pyx_n_s_box_vectors,0};
     PyObject* values[3] = {0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -3547,23 +4640,23 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coo
       kw_args = PyDict_Size(__pyx_kwds);
       switch (pos_args) {
         case  0:
-        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vector_dimensions)) != 0)) kw_args--;
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_dimensions)) != 0)) kw_args--;
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_atom_coordinates)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_cubic_coordinates", 1, 3, 3, 1); __PYX_ERR(0, 325, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_cubic_coordinates", 1, 3, 3, 1); __PYX_ERR(0, 174, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vectors)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_cubic_coordinates", 1, 3, 3, 2); __PYX_ERR(0, 325, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_cubic_coordinates", 1, 3, 3, 2); __PYX_ERR(0, 174, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "apply_pbc_to_cubic_coordinates") < 0)) __PYX_ERR(0, 325, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "apply_pbc_to_cubic_coordinates") < 0)) __PYX_ERR(0, 174, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -3572,26 +4665,26 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coo
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_box_vector_dimensions = values[0];
+    __pyx_v_box_dimensions = values[0];
     __pyx_v_atom_coordinates = values[1];
     __pyx_v_box_vectors = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("apply_pbc_to_cubic_coordinates", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 325, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("apply_pbc_to_cubic_coordinates", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 174, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.apply_pbc_to_cubic_coordinates", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coordinates(__pyx_self, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coordinates(__pyx_self, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vector_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors) {
   long __pyx_v_i;
   PyObject *__pyx_v_scale_factor = NULL;
   PyObject *__pyx_r = NULL;
@@ -3609,34 +4702,34 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coo
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("apply_pbc_to_cubic_coordinates", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":359
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":179
+ *         box_vectors: np.ndarray,
+ * ) -> np.ndarray:
  *     for i in range(3):             # <<<<<<<<<<<<<<
  *         scale_factor = pbc_scale_factor(
- *             box_vector_dimensions,
+ *             box_dimensions,
  */
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "bubblebuster/bubblebuster.pyx":360
- *     """
+    /* "bubblebuster/bubblebuster.pyx":180
+ * ) -> np.ndarray:
  *     for i in range(3):
  *         scale_factor = pbc_scale_factor(             # <<<<<<<<<<<<<<
- *             box_vector_dimensions,
+ *             box_dimensions,
  *             atom_coordinates, i
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_pbc_scale_factor); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 360, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_pbc_scale_factor); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 180, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
 
-    /* "bubblebuster/bubblebuster.pyx":362
+    /* "bubblebuster/bubblebuster.pyx":182
  *         scale_factor = pbc_scale_factor(
- *             box_vector_dimensions,
+ *             box_dimensions,
  *             atom_coordinates, i             # <<<<<<<<<<<<<<
  *         )
  *         atom_coordinates[i] -= \
  */
-    __pyx_t_4 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 362, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 182, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __pyx_t_5 = NULL;
     __pyx_t_6 = 0;
@@ -3652,8 +4745,8 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coo
     }
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_3)) {
-      PyObject *__pyx_temp[4] = {__pyx_t_5, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_t_4};
-      __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 360, __pyx_L1_error)
+      PyObject *__pyx_temp[4] = {__pyx_t_5, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_t_4};
+      __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 180, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -3661,29 +4754,29 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coo
     #endif
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
-      PyObject *__pyx_temp[4] = {__pyx_t_5, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_t_4};
-      __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 360, __pyx_L1_error)
+      PyObject *__pyx_temp[4] = {__pyx_t_5, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_t_4};
+      __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 180, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     } else
     #endif
     {
-      __pyx_t_7 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 360, __pyx_L1_error)
+      __pyx_t_7 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 180, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       if (__pyx_t_5) {
         __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_5); __pyx_t_5 = NULL;
       }
-      __Pyx_INCREF(__pyx_v_box_vector_dimensions);
-      __Pyx_GIVEREF(__pyx_v_box_vector_dimensions);
-      PyTuple_SET_ITEM(__pyx_t_7, 0+__pyx_t_6, __pyx_v_box_vector_dimensions);
+      __Pyx_INCREF(__pyx_v_box_dimensions);
+      __Pyx_GIVEREF(__pyx_v_box_dimensions);
+      PyTuple_SET_ITEM(__pyx_t_7, 0+__pyx_t_6, __pyx_v_box_dimensions);
       __Pyx_INCREF(__pyx_v_atom_coordinates);
       __Pyx_GIVEREF(__pyx_v_atom_coordinates);
       PyTuple_SET_ITEM(__pyx_t_7, 1+__pyx_t_6, __pyx_v_atom_coordinates);
       __Pyx_GIVEREF(__pyx_t_4);
       PyTuple_SET_ITEM(__pyx_t_7, 2+__pyx_t_6, __pyx_t_4);
       __pyx_t_4 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_7, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 360, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_7, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 180, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     }
@@ -3691,7 +4784,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coo
     __Pyx_XDECREF_SET(__pyx_v_scale_factor, __pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":364
+    /* "bubblebuster/bubblebuster.pyx":184
  *             atom_coordinates, i
  *         )
  *         atom_coordinates[i] -= \             # <<<<<<<<<<<<<<
@@ -3699,41 +4792,41 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coo
  *     return atom_coordinates
  */
     __pyx_t_8 = __pyx_v_i;
-    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_atom_coordinates, __pyx_t_8, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_v_atom_coordinates, __pyx_t_8, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
 
-    /* "bubblebuster/bubblebuster.pyx":365
+    /* "bubblebuster/bubblebuster.pyx":185
  *         )
  *         atom_coordinates[i] -= \
  *             scale_factor * box_vectors[i][i]             # <<<<<<<<<<<<<<
  *     return atom_coordinates
  * 
  */
-    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_box_vectors, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 365, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_box_vectors, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 185, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_7 = __Pyx_GetItemInt(__pyx_t_3, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 365, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_GetItemInt(__pyx_t_3, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 185, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_Multiply(__pyx_v_scale_factor, __pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 365, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Multiply(__pyx_v_scale_factor, __pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 185, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":364
+    /* "bubblebuster/bubblebuster.pyx":184
  *             atom_coordinates, i
  *         )
  *         atom_coordinates[i] -= \             # <<<<<<<<<<<<<<
  *             scale_factor * box_vectors[i][i]
  *     return atom_coordinates
  */
-    __pyx_t_7 = PyNumber_InPlaceSubtract(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_7 = PyNumber_InPlaceSubtract(__pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(__Pyx_SetItemInt(__pyx_v_atom_coordinates, __pyx_t_8, __pyx_t_7, long, 1, __Pyx_PyInt_From_long, 0, 1, 1) < 0)) __PYX_ERR(0, 364, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(__pyx_v_atom_coordinates, __pyx_t_8, __pyx_t_7, long, 1, __Pyx_PyInt_From_long, 0, 1, 1) < 0)) __PYX_ERR(0, 184, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   }
 
-  /* "bubblebuster/bubblebuster.pyx":366
+  /* "bubblebuster/bubblebuster.pyx":186
  *         atom_coordinates[i] -= \
  *             scale_factor * box_vectors[i][i]
  *     return atom_coordinates             # <<<<<<<<<<<<<<
@@ -3745,11 +4838,11 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coo
   __pyx_r = __pyx_v_atom_coordinates;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":325
+  /* "bubblebuster/bubblebuster.pyx":174
  *     return atom_coordinates
  * 
  * def apply_pbc_to_cubic_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
 
@@ -3769,20 +4862,19 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_12apply_pbc_to_cubic_coo
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":368
+/* "bubblebuster/bubblebuster.pyx":188
  *     return atom_coordinates
  * 
  * def apply_pbc_to_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinates(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinates[] = "\n    Wraps the coordinates of an atom in a system with periodic\n    boundary conditions. If the system has a cubic water box,\n    the atom's coordinates are wrapped by the\n    apply_pbc_to_cubic_coordinates function, and if the system\n    has a triclinic water box the atom's coordinates are wrapped by\n    the apply_pbc_to_cubic_coordinates function.\n\n    Parameters\n    ----------\n    box_vector_dimensions : ndarray\n        Magnitudes of the periodic box unit vectors.\n    atom_coordinates : ndarray\n        Cartesian coordinates of the atom being wrapped.\n    box_vectors : ndarray\n        Box vectors of the system's water box.\n\n    Returns\n    -------\n    : ndarray\n        Wrapped version of the input atom coordinates.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinates = {"apply_pbc_to_coordinates", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinates, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinates};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinates = {"apply_pbc_to_coordinates", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinates, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinates(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyObject *__pyx_v_box_vector_dimensions = 0;
+  PyObject *__pyx_v_box_dimensions = 0;
   PyObject *__pyx_v_atom_coordinates = 0;
   PyObject *__pyx_v_box_vectors = 0;
   PyObject *__pyx_v_box_type = 0;
@@ -3793,7 +4885,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinat
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("apply_pbc_to_coordinates (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_box_vector_dimensions,&__pyx_n_s_atom_coordinates,&__pyx_n_s_box_vectors,&__pyx_n_s_box_type,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_box_dimensions,&__pyx_n_s_atom_coordinates,&__pyx_n_s_box_vectors,&__pyx_n_s_box_type,0};
     PyObject* values[4] = {0,0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -3813,29 +4905,29 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinat
       kw_args = PyDict_Size(__pyx_kwds);
       switch (pos_args) {
         case  0:
-        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vector_dimensions)) != 0)) kw_args--;
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_dimensions)) != 0)) kw_args--;
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_atom_coordinates)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_coordinates", 1, 4, 4, 1); __PYX_ERR(0, 368, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_coordinates", 1, 4, 4, 1); __PYX_ERR(0, 188, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vectors)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_coordinates", 1, 4, 4, 2); __PYX_ERR(0, 368, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_coordinates", 1, 4, 4, 2); __PYX_ERR(0, 188, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_type)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_coordinates", 1, 4, 4, 3); __PYX_ERR(0, 368, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("apply_pbc_to_coordinates", 1, 4, 4, 3); __PYX_ERR(0, 188, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "apply_pbc_to_coordinates") < 0)) __PYX_ERR(0, 368, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "apply_pbc_to_coordinates") < 0)) __PYX_ERR(0, 188, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -3845,21 +4937,21 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinat
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
       values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
     }
-    __pyx_v_box_vector_dimensions = values[0];
+    __pyx_v_box_dimensions = values[0];
     __pyx_v_atom_coordinates = values[1];
     __pyx_v_box_vectors = values[2];
     __pyx_v_box_type = ((PyObject*)values[3]);
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("apply_pbc_to_coordinates", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 368, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("apply_pbc_to_coordinates", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 188, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.apply_pbc_to_coordinates", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_box_type), (&PyString_Type), 1, "box_type", 1))) __PYX_ERR(0, 372, __pyx_L1_error)
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinates(__pyx_self, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors, __pyx_v_box_type);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_box_type), (&PyString_Type), 1, "box_type", 1))) __PYX_ERR(0, 192, __pyx_L1_error)
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinates(__pyx_self, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors, __pyx_v_box_type);
 
   /* function exit code */
   goto __pyx_L0;
@@ -3870,7 +4962,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinat
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vector_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_type) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinates(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_atom_coordinates, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_type) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -3885,30 +4977,30 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinat
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("apply_pbc_to_coordinates", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":397
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":194
+ *         box_type: str,
+ * ) -> np.ndarray:
  *     if box_type == "triclinic":             # <<<<<<<<<<<<<<
  *         return apply_pbc_to_triclinic_coordinates(
- *             box_vector_dimensions,
+ *             box_dimensions,
  */
-  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_v_box_type, __pyx_n_s_triclinic, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 397, __pyx_L1_error)
+  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_v_box_type, __pyx_n_s_triclinic, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 194, __pyx_L1_error)
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "bubblebuster/bubblebuster.pyx":398
- *     """
+    /* "bubblebuster/bubblebuster.pyx":195
+ * ) -> np.ndarray:
  *     if box_type == "triclinic":
  *         return apply_pbc_to_triclinic_coordinates(             # <<<<<<<<<<<<<<
- *             box_vector_dimensions,
+ *             box_dimensions,
  *             atom_coordinates,
  */
     __Pyx_XDECREF(__pyx_r);
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_apply_pbc_to_triclinic_coordinat); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 398, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_apply_pbc_to_triclinic_coordinat); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 195, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
 
-    /* "bubblebuster/bubblebuster.pyx":401
- *             box_vector_dimensions,
+    /* "bubblebuster/bubblebuster.pyx":198
+ *             box_dimensions,
  *             atom_coordinates,
  *             box_vectors,             # <<<<<<<<<<<<<<
  *         )
@@ -3928,36 +5020,36 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinat
     }
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_4)) {
-      PyObject *__pyx_temp[4] = {__pyx_t_5, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors};
-      __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 398, __pyx_L1_error)
+      PyObject *__pyx_temp[4] = {__pyx_t_5, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors};
+      __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 195, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_3);
     } else
     #endif
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_4)) {
-      PyObject *__pyx_temp[4] = {__pyx_t_5, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors};
-      __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 398, __pyx_L1_error)
+      PyObject *__pyx_temp[4] = {__pyx_t_5, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors};
+      __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 195, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_3);
     } else
     #endif
     {
-      __pyx_t_7 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 398, __pyx_L1_error)
+      __pyx_t_7 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 195, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       if (__pyx_t_5) {
         __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_5); __pyx_t_5 = NULL;
       }
-      __Pyx_INCREF(__pyx_v_box_vector_dimensions);
-      __Pyx_GIVEREF(__pyx_v_box_vector_dimensions);
-      PyTuple_SET_ITEM(__pyx_t_7, 0+__pyx_t_6, __pyx_v_box_vector_dimensions);
+      __Pyx_INCREF(__pyx_v_box_dimensions);
+      __Pyx_GIVEREF(__pyx_v_box_dimensions);
+      PyTuple_SET_ITEM(__pyx_t_7, 0+__pyx_t_6, __pyx_v_box_dimensions);
       __Pyx_INCREF(__pyx_v_atom_coordinates);
       __Pyx_GIVEREF(__pyx_v_atom_coordinates);
       PyTuple_SET_ITEM(__pyx_t_7, 1+__pyx_t_6, __pyx_v_atom_coordinates);
       __Pyx_INCREF(__pyx_v_box_vectors);
       __Pyx_GIVEREF(__pyx_v_box_vectors);
       PyTuple_SET_ITEM(__pyx_t_7, 2+__pyx_t_6, __pyx_v_box_vectors);
-      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 398, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 195, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     }
@@ -3966,39 +5058,39 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinat
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "bubblebuster/bubblebuster.pyx":397
- * 
- *     """
+    /* "bubblebuster/bubblebuster.pyx":194
+ *         box_type: str,
+ * ) -> np.ndarray:
  *     if box_type == "triclinic":             # <<<<<<<<<<<<<<
  *         return apply_pbc_to_triclinic_coordinates(
- *             box_vector_dimensions,
+ *             box_dimensions,
  */
   }
 
-  /* "bubblebuster/bubblebuster.pyx":403
+  /* "bubblebuster/bubblebuster.pyx":200
  *             box_vectors,
  *         )
  *     elif box_type == "cubic":             # <<<<<<<<<<<<<<
  *         return apply_pbc_to_cubic_coordinates(
- *             box_vector_dimensions,
+ *             box_dimensions,
  */
-  __pyx_t_2 = (__Pyx_PyString_Equals(__pyx_v_box_type, __pyx_n_s_cubic, Py_EQ)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 403, __pyx_L1_error)
+  __pyx_t_2 = (__Pyx_PyString_Equals(__pyx_v_box_type, __pyx_n_s_cubic, Py_EQ)); if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 200, __pyx_L1_error)
   __pyx_t_1 = (__pyx_t_2 != 0);
   if (__pyx_t_1) {
 
-    /* "bubblebuster/bubblebuster.pyx":404
+    /* "bubblebuster/bubblebuster.pyx":201
  *         )
  *     elif box_type == "cubic":
  *         return apply_pbc_to_cubic_coordinates(             # <<<<<<<<<<<<<<
- *             box_vector_dimensions,
+ *             box_dimensions,
  *             atom_coordinates,
  */
     __Pyx_XDECREF(__pyx_r);
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_apply_pbc_to_cubic_coordinates); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 404, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_apply_pbc_to_cubic_coordinates); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 201, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
 
-    /* "bubblebuster/bubblebuster.pyx":407
- *             box_vector_dimensions,
+    /* "bubblebuster/bubblebuster.pyx":204
+ *             box_dimensions,
  *             atom_coordinates,
  *             box_vectors,             # <<<<<<<<<<<<<<
  *         )
@@ -4018,36 +5110,36 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinat
     }
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_4)) {
-      PyObject *__pyx_temp[4] = {__pyx_t_7, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors};
-      __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 404, __pyx_L1_error)
+      PyObject *__pyx_temp[4] = {__pyx_t_7, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors};
+      __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 201, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
       __Pyx_GOTREF(__pyx_t_3);
     } else
     #endif
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_4)) {
-      PyObject *__pyx_temp[4] = {__pyx_t_7, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors};
-      __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 404, __pyx_L1_error)
+      PyObject *__pyx_temp[4] = {__pyx_t_7, __pyx_v_box_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors};
+      __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_6, 3+__pyx_t_6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 201, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
       __Pyx_GOTREF(__pyx_t_3);
     } else
     #endif
     {
-      __pyx_t_5 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 404, __pyx_L1_error)
+      __pyx_t_5 = PyTuple_New(3+__pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 201, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       if (__pyx_t_7) {
         __Pyx_GIVEREF(__pyx_t_7); PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_7); __pyx_t_7 = NULL;
       }
-      __Pyx_INCREF(__pyx_v_box_vector_dimensions);
-      __Pyx_GIVEREF(__pyx_v_box_vector_dimensions);
-      PyTuple_SET_ITEM(__pyx_t_5, 0+__pyx_t_6, __pyx_v_box_vector_dimensions);
+      __Pyx_INCREF(__pyx_v_box_dimensions);
+      __Pyx_GIVEREF(__pyx_v_box_dimensions);
+      PyTuple_SET_ITEM(__pyx_t_5, 0+__pyx_t_6, __pyx_v_box_dimensions);
       __Pyx_INCREF(__pyx_v_atom_coordinates);
       __Pyx_GIVEREF(__pyx_v_atom_coordinates);
       PyTuple_SET_ITEM(__pyx_t_5, 1+__pyx_t_6, __pyx_v_atom_coordinates);
       __Pyx_INCREF(__pyx_v_box_vectors);
       __Pyx_GIVEREF(__pyx_v_box_vectors);
       PyTuple_SET_ITEM(__pyx_t_5, 2+__pyx_t_6, __pyx_v_box_vectors);
-      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_5, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 404, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_5, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 201, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     }
@@ -4056,20 +5148,20 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinat
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "bubblebuster/bubblebuster.pyx":403
+    /* "bubblebuster/bubblebuster.pyx":200
  *             box_vectors,
  *         )
  *     elif box_type == "cubic":             # <<<<<<<<<<<<<<
  *         return apply_pbc_to_cubic_coordinates(
- *             box_vector_dimensions,
+ *             box_dimensions,
  */
   }
 
-  /* "bubblebuster/bubblebuster.pyx":368
+  /* "bubblebuster/bubblebuster.pyx":188
  *     return atom_coordinates
  * 
  * def apply_pbc_to_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
 
@@ -4089,21 +5181,22 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_14apply_pbc_to_coordinat
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":410
+/* "bubblebuster/bubblebuster.pyx":207
  *         )
  * 
  * def apply_pbc(             # <<<<<<<<<<<<<<
- *         coordinates: ndarray,
- *         box_info: BoxInfo,
+ *         coordinates: np.ndarray,
+ *         box_vectors: np.ndarray,
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_17apply_pbc(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_16apply_pbc[] = "\n    Wraps all atoms in the provided trajectory according to the\n    systems periodic boundary conditions.\n\n    Parameters\n    ----------\n    trajectory : mdtraj.core.trajectory\n        mdtraj trajectory object that holds the molecular system of\n        interest's structural information.\n    box_info : BoxInfo\n        BoxInfo class object that holds the properties of the system's\n        water box.\n\n    Returns\n    -------\n    trajectory : mdtraj.core.trajectory\n        mdtraj trajectory object with atomic coordinates\n        wrapped according to the system's periodic boundary\n        conditions.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_17apply_pbc = {"apply_pbc", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_17apply_pbc, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_16apply_pbc};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_17apply_pbc = {"apply_pbc", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_17apply_pbc, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_17apply_pbc(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_coordinates = 0;
-  PyObject *__pyx_v_box_info = 0;
+  PyObject *__pyx_v_box_vectors = 0;
+  PyObject *__pyx_v_box_dimensions = 0;
+  PyObject *__pyx_v_box_type = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -4111,12 +5204,16 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_17apply_pbc(PyObject *__
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("apply_pbc (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_coordinates,&__pyx_n_s_box_info,0};
-    PyObject* values[2] = {0,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_coordinates,&__pyx_n_s_box_vectors,&__pyx_n_s_box_dimensions,&__pyx_n_s_box_type,0};
+    PyObject* values[4] = {0,0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
+        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+        CYTHON_FALLTHROUGH;
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
         case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
         CYTHON_FALLTHROUGH;
         case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
@@ -4131,42 +5228,61 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_17apply_pbc(PyObject *__
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_info)) != 0)) kw_args--;
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vectors)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("apply_pbc", 1, 2, 2, 1); __PYX_ERR(0, 410, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("apply_pbc", 1, 4, 4, 1); __PYX_ERR(0, 207, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_dimensions)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("apply_pbc", 1, 4, 4, 2); __PYX_ERR(0, 207, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  3:
+        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_type)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("apply_pbc", 1, 4, 4, 3); __PYX_ERR(0, 207, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "apply_pbc") < 0)) __PYX_ERR(0, 410, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "apply_pbc") < 0)) __PYX_ERR(0, 207, __pyx_L3_error)
       }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
     }
     __pyx_v_coordinates = values[0];
-    __pyx_v_box_info = values[1];
+    __pyx_v_box_vectors = values[1];
+    __pyx_v_box_dimensions = values[2];
+    __pyx_v_box_type = ((PyObject*)values[3]);
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("apply_pbc", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 410, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("apply_pbc", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 207, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.apply_pbc", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(__pyx_self, __pyx_v_coordinates, __pyx_v_box_info);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_box_type), (&PyString_Type), 1, "box_type", 1))) __PYX_ERR(0, 211, __pyx_L1_error)
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(__pyx_self, __pyx_v_coordinates, __pyx_v_box_vectors, __pyx_v_box_dimensions, __pyx_v_box_type);
 
   /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_box_info) {
-  PyObject *__pyx_v_box_vectors = NULL;
-  PyObject *__pyx_v_box_vector_dimensions = NULL;
-  PyObject *__pyx_v_atom_coordinates = NULL;
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_box_type) {
+  PyObject *__pyx_v_coords = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4175,42 +5291,30 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(CYTHON_UNUSE
   Py_ssize_t __pyx_t_4;
   PyObject *(*__pyx_t_5)(PyObject *);
   PyObject *__pyx_t_6 = NULL;
-  PyObject *__pyx_t_7 = NULL;
-  int __pyx_t_8;
-  PyObject *__pyx_t_9 = NULL;
+  int __pyx_t_7;
+  PyObject *__pyx_t_8 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("apply_pbc", 0);
+  __Pyx_INCREF(__pyx_v_box_dimensions);
 
-  /* "bubblebuster/bubblebuster.pyx":436
- *     """
- * 
- *     box_vectors = box_info.box_vectors             # <<<<<<<<<<<<<<
- *     box_vector_dimensions = get_box_vector_dimensions(
- *         box_vectors
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_box_info, __pyx_n_s_box_vectors); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 436, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_v_box_vectors = __pyx_t_1;
-  __pyx_t_1 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":437
- * 
- *     box_vectors = box_info.box_vectors
- *     box_vector_dimensions = get_box_vector_dimensions(             # <<<<<<<<<<<<<<
+  /* "bubblebuster/bubblebuster.pyx":213
+ *         box_type: str,
+ * ) -> np.ndarray:
+ *     box_dimensions = get_box_dimensions(             # <<<<<<<<<<<<<<
  *         box_vectors
  *     )
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_get_box_vector_dimensions); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 437, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_get_box_dimensions); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 213, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
 
-  /* "bubblebuster/bubblebuster.pyx":438
- *     box_vectors = box_info.box_vectors
- *     box_vector_dimensions = get_box_vector_dimensions(
+  /* "bubblebuster/bubblebuster.pyx":214
+ * ) -> np.ndarray:
+ *     box_dimensions = get_box_dimensions(
  *         box_vectors             # <<<<<<<<<<<<<<
  *     )
- *     box_info.dimensions = box_vector_dimensions
+ *     for coords in coordinates:
  */
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
@@ -4224,79 +5328,43 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(CYTHON_UNUSE
   }
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_v_box_vectors) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_v_box_vectors);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 437, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 213, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_box_vector_dimensions = __pyx_t_1;
+  __Pyx_DECREF_SET(__pyx_v_box_dimensions, __pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":440
+  /* "bubblebuster/bubblebuster.pyx":216
  *         box_vectors
  *     )
- *     box_info.dimensions = box_vector_dimensions             # <<<<<<<<<<<<<<
- *     box_info.volume = get_periodic_box_volume(box_vectors)
- *     for atom_coordinates in coordinates:
- */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_box_info, __pyx_n_s_dimensions, __pyx_v_box_vector_dimensions) < 0) __PYX_ERR(0, 440, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":441
- *     )
- *     box_info.dimensions = box_vector_dimensions
- *     box_info.volume = get_periodic_box_volume(box_vectors)             # <<<<<<<<<<<<<<
- *     for atom_coordinates in coordinates:
+ *     for coords in coordinates:             # <<<<<<<<<<<<<<
  *         apply_pbc_to_coordinates(
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_get_periodic_box_volume); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 441, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = NULL;
-  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-      __Pyx_INCREF(__pyx_t_3);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_2, function);
-    }
-  }
-  __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_v_box_vectors) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_v_box_vectors);
-  __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 441, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_box_info, __pyx_n_s_volume, __pyx_t_1) < 0) __PYX_ERR(0, 441, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":442
- *     box_info.dimensions = box_vector_dimensions
- *     box_info.volume = get_periodic_box_volume(box_vectors)
- *     for atom_coordinates in coordinates:             # <<<<<<<<<<<<<<
- *         apply_pbc_to_coordinates(
- *             box_vector_dimensions,
+ *             box_dimensions,
  */
   if (likely(PyList_CheckExact(__pyx_v_coordinates)) || PyTuple_CheckExact(__pyx_v_coordinates)) {
     __pyx_t_1 = __pyx_v_coordinates; __Pyx_INCREF(__pyx_t_1); __pyx_t_4 = 0;
     __pyx_t_5 = NULL;
   } else {
-    __pyx_t_4 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 442, __pyx_L1_error)
+    __pyx_t_4 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_5 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 442, __pyx_L1_error)
+    __pyx_t_5 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 216, __pyx_L1_error)
   }
   for (;;) {
     if (likely(!__pyx_t_5)) {
       if (likely(PyList_CheckExact(__pyx_t_1))) {
         if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_2 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 442, __pyx_L1_error)
+        __pyx_t_2 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 216, __pyx_L1_error)
         #else
-        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 442, __pyx_L1_error)
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 216, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         #endif
       } else {
         if (__pyx_t_4 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 442, __pyx_L1_error)
+        __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_4); __Pyx_INCREF(__pyx_t_2); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 216, __pyx_L1_error)
         #else
-        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 442, __pyx_L1_error)
+        __pyx_t_2 = PySequence_ITEM(__pyx_t_1, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 216, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         #endif
       }
@@ -4306,101 +5374,97 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(CYTHON_UNUSE
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 442, __pyx_L1_error)
+          else __PYX_ERR(0, 216, __pyx_L1_error)
         }
         break;
       }
       __Pyx_GOTREF(__pyx_t_2);
     }
-    __Pyx_XDECREF_SET(__pyx_v_atom_coordinates, __pyx_t_2);
+    __Pyx_XDECREF_SET(__pyx_v_coords, __pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":443
- *     box_info.volume = get_periodic_box_volume(box_vectors)
- *     for atom_coordinates in coordinates:
+    /* "bubblebuster/bubblebuster.pyx":217
+ *     )
+ *     for coords in coordinates:
  *         apply_pbc_to_coordinates(             # <<<<<<<<<<<<<<
- *             box_vector_dimensions,
- *             atom_coordinates,
+ *             box_dimensions,
+ *             coords,
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_apply_pbc_to_coordinates); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 443, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_apply_pbc_to_coordinates); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 217, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
 
-    /* "bubblebuster/bubblebuster.pyx":447
- *             atom_coordinates,
+    /* "bubblebuster/bubblebuster.pyx":221
+ *             coords,
  *             box_vectors,
- *             box_info.box_type             # <<<<<<<<<<<<<<
+ *             box_type             # <<<<<<<<<<<<<<
  *         )
  *     return coordinates
  */
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_v_box_info, __pyx_n_s_box_type); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 447, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_7 = NULL;
-    __pyx_t_8 = 0;
+    __pyx_t_6 = NULL;
+    __pyx_t_7 = 0;
     if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
-      __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_3);
-      if (likely(__pyx_t_7)) {
+      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_3);
+      if (likely(__pyx_t_6)) {
         PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
-        __Pyx_INCREF(__pyx_t_7);
+        __Pyx_INCREF(__pyx_t_6);
         __Pyx_INCREF(function);
         __Pyx_DECREF_SET(__pyx_t_3, function);
-        __pyx_t_8 = 1;
+        __pyx_t_7 = 1;
       }
     }
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_3)) {
-      PyObject *__pyx_temp[5] = {__pyx_t_7, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors, __pyx_t_6};
-      __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_8, 4+__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 443, __pyx_L1_error)
-      __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
+      PyObject *__pyx_temp[5] = {__pyx_t_6, __pyx_v_box_dimensions, __pyx_v_coords, __pyx_v_box_vectors, __pyx_v_box_type};
+      __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 217, __pyx_L1_error)
+      __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_GOTREF(__pyx_t_2);
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     } else
     #endif
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
-      PyObject *__pyx_temp[5] = {__pyx_t_7, __pyx_v_box_vector_dimensions, __pyx_v_atom_coordinates, __pyx_v_box_vectors, __pyx_t_6};
-      __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_8, 4+__pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 443, __pyx_L1_error)
-      __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
+      PyObject *__pyx_temp[5] = {__pyx_t_6, __pyx_v_box_dimensions, __pyx_v_coords, __pyx_v_box_vectors, __pyx_v_box_type};
+      __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 217, __pyx_L1_error)
+      __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_GOTREF(__pyx_t_2);
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     } else
     #endif
     {
-      __pyx_t_9 = PyTuple_New(4+__pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 443, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_9);
-      if (__pyx_t_7) {
-        __Pyx_GIVEREF(__pyx_t_7); PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_7); __pyx_t_7 = NULL;
+      __pyx_t_8 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 217, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_8);
+      if (__pyx_t_6) {
+        __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
       }
-      __Pyx_INCREF(__pyx_v_box_vector_dimensions);
-      __Pyx_GIVEREF(__pyx_v_box_vector_dimensions);
-      PyTuple_SET_ITEM(__pyx_t_9, 0+__pyx_t_8, __pyx_v_box_vector_dimensions);
-      __Pyx_INCREF(__pyx_v_atom_coordinates);
-      __Pyx_GIVEREF(__pyx_v_atom_coordinates);
-      PyTuple_SET_ITEM(__pyx_t_9, 1+__pyx_t_8, __pyx_v_atom_coordinates);
+      __Pyx_INCREF(__pyx_v_box_dimensions);
+      __Pyx_GIVEREF(__pyx_v_box_dimensions);
+      PyTuple_SET_ITEM(__pyx_t_8, 0+__pyx_t_7, __pyx_v_box_dimensions);
+      __Pyx_INCREF(__pyx_v_coords);
+      __Pyx_GIVEREF(__pyx_v_coords);
+      PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_7, __pyx_v_coords);
       __Pyx_INCREF(__pyx_v_box_vectors);
       __Pyx_GIVEREF(__pyx_v_box_vectors);
-      PyTuple_SET_ITEM(__pyx_t_9, 2+__pyx_t_8, __pyx_v_box_vectors);
-      __Pyx_GIVEREF(__pyx_t_6);
-      PyTuple_SET_ITEM(__pyx_t_9, 3+__pyx_t_8, __pyx_t_6);
-      __pyx_t_6 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_9, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 443, __pyx_L1_error)
+      PyTuple_SET_ITEM(__pyx_t_8, 2+__pyx_t_7, __pyx_v_box_vectors);
+      __Pyx_INCREF(__pyx_v_box_type);
+      __Pyx_GIVEREF(__pyx_v_box_type);
+      PyTuple_SET_ITEM(__pyx_t_8, 3+__pyx_t_7, __pyx_v_box_type);
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 217, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+      __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":442
- *     box_info.dimensions = box_vector_dimensions
- *     box_info.volume = get_periodic_box_volume(box_vectors)
- *     for atom_coordinates in coordinates:             # <<<<<<<<<<<<<<
+    /* "bubblebuster/bubblebuster.pyx":216
+ *         box_vectors
+ *     )
+ *     for coords in coordinates:             # <<<<<<<<<<<<<<
  *         apply_pbc_to_coordinates(
- *             box_vector_dimensions,
+ *             box_dimensions,
  */
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":449
- *             box_info.box_type
+  /* "bubblebuster/bubblebuster.pyx":223
+ *             box_type
  *         )
  *     return coordinates             # <<<<<<<<<<<<<<
  * 
@@ -4411,12 +5475,12 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(CYTHON_UNUSE
   __pyx_r = __pyx_v_coordinates;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":410
+  /* "bubblebuster/bubblebuster.pyx":207
  *         )
  * 
  * def apply_pbc(             # <<<<<<<<<<<<<<
- *         coordinates: ndarray,
- *         box_info: BoxInfo,
+ *         coordinates: np.ndarray,
+ *         box_vectors: np.ndarray,
  */
 
   /* function exit code */
@@ -4425,34 +5489,33 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_16apply_pbc(CYTHON_UNUSE
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_XDECREF(__pyx_t_9);
+  __Pyx_XDECREF(__pyx_t_8);
   __Pyx_AddTraceback("bubblebuster.bubblebuster.apply_pbc", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
-  __Pyx_XDECREF(__pyx_v_box_vectors);
-  __Pyx_XDECREF(__pyx_v_box_vector_dimensions);
-  __Pyx_XDECREF(__pyx_v_atom_coordinates);
+  __Pyx_XDECREF(__pyx_v_coords);
+  __Pyx_XDECREF(__pyx_v_box_dimensions);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":451
+/* "bubblebuster/bubblebuster.pyx":225
  *     return coordinates
  * 
  * def wrap_structure(             # <<<<<<<<<<<<<<
- *         coordinates: ndarray,
- *         box_info: BoxInfo,
+ *         coordinates: np.ndarray,
+ *         box_vectors: np.ndarray,
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_19wrap_structure(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_18wrap_structure[] = "\n    Wraps all atoms in the provided trajectory according to the\n    systems periodic boundary conditions and ensures that all of\n    the atoms are wrapped into the same periodic image. This function\n    handles special cases where atoms are multiple periodic images away\n    from the periodic box. To check to see if all wrapped atoms are\n    in the same periodic image, the wrapped system's x, y and z\n    coordinate minimums are calculated. If each of these minimums equal\n    zero, all of the wrapped atomic coordinates are in the same\n    periodic\n    image. wrap_structure is called recursively until the above\n    condition is\n    met.\n\n    Parameters\n    ----------\n    trajectory : mdtraj.core.trajectory\n        mdtraj trajectory object that holds the molecular system of\n        interest's structural information.\n    box_info : BoxInfo\n        BoxInfo class object that holds the properties of the system's\n        water box.\n\n    Returns\n    -------\n    trajectory : mdtraj.core.trajectory\n        mdtraj trajectory object with atomic coordinates\n        wrapped according to the system's periodic boundary\n        conditions.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_19wrap_structure = {"wrap_structure", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_19wrap_structure, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_18wrap_structure};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_19wrap_structure = {"wrap_structure", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_19wrap_structure, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_19wrap_structure(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_coordinates = 0;
-  PyObject *__pyx_v_box_info = 0;
+  PyObject *__pyx_v_box_vectors = 0;
+  PyObject *__pyx_v_box_dimensions = 0;
+  PyObject *__pyx_v_box_type = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -4460,12 +5523,16 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_19wrap_structure(PyObjec
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("wrap_structure (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_coordinates,&__pyx_n_s_box_info,0};
-    PyObject* values[2] = {0,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_coordinates,&__pyx_n_s_box_vectors,&__pyx_n_s_box_dimensions,&__pyx_n_s_box_type,0};
+    PyObject* values[4] = {0,0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
+        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+        CYTHON_FALLTHROUGH;
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
         case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
         CYTHON_FALLTHROUGH;
         case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
@@ -4480,39 +5547,60 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_19wrap_structure(PyObjec
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_info)) != 0)) kw_args--;
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_vectors)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("wrap_structure", 1, 2, 2, 1); __PYX_ERR(0, 451, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("wrap_structure", 1, 4, 4, 1); __PYX_ERR(0, 225, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_dimensions)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("wrap_structure", 1, 4, 4, 2); __PYX_ERR(0, 225, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  3:
+        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_type)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("wrap_structure", 1, 4, 4, 3); __PYX_ERR(0, 225, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "wrap_structure") < 0)) __PYX_ERR(0, 451, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "wrap_structure") < 0)) __PYX_ERR(0, 225, __pyx_L3_error)
       }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
     }
     __pyx_v_coordinates = values[0];
-    __pyx_v_box_info = values[1];
+    __pyx_v_box_vectors = values[1];
+    __pyx_v_box_dimensions = values[2];
+    __pyx_v_box_type = ((PyObject*)values[3]);
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("wrap_structure", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 451, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("wrap_structure", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 225, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.wrap_structure", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(__pyx_self, __pyx_v_coordinates, __pyx_v_box_info);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_box_type), (&PyString_Type), 1, "box_type", 1))) __PYX_ERR(0, 229, __pyx_L1_error)
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(__pyx_self, __pyx_v_coordinates, __pyx_v_box_vectors, __pyx_v_box_dimensions, __pyx_v_box_type);
 
   /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_box_info) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_box_dimensions, PyObject *__pyx_v_box_type) {
   PyObject *__pyx_v_bounds = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -4528,14 +5616,14 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("wrap_structure", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":486
- * 
- *     """
- *     apply_pbc(coordinates, box_info)             # <<<<<<<<<<<<<<
+  /* "bubblebuster/bubblebuster.pyx":231
+ *         box_type: str,
+ * ) -> np.ndarray:
+ *     apply_pbc(coordinates, box_vectors, box_dimensions, box_type)             # <<<<<<<<<<<<<<
  *     bounds = coordinate_bounds(coordinates)
  *     if (round(bounds[0, 0], 2) == 0.0
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_apply_pbc); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 486, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_apply_pbc); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 231, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   __pyx_t_4 = 0;
@@ -4551,22 +5639,22 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
   }
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_2)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_3, __pyx_v_coordinates, __pyx_v_box_info};
-    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_4, 2+__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 486, __pyx_L1_error)
+    PyObject *__pyx_temp[5] = {__pyx_t_3, __pyx_v_coordinates, __pyx_v_box_vectors, __pyx_v_box_dimensions, __pyx_v_box_type};
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_4, 4+__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 231, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
   #endif
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_3, __pyx_v_coordinates, __pyx_v_box_info};
-    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_4, 2+__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 486, __pyx_L1_error)
+    PyObject *__pyx_temp[5] = {__pyx_t_3, __pyx_v_coordinates, __pyx_v_box_vectors, __pyx_v_box_dimensions, __pyx_v_box_type};
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_4, 4+__pyx_t_4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 231, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
   #endif
   {
-    __pyx_t_5 = PyTuple_New(2+__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 486, __pyx_L1_error)
+    __pyx_t_5 = PyTuple_New(4+__pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 231, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     if (__pyx_t_3) {
       __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_3); __pyx_t_3 = NULL;
@@ -4574,24 +5662,30 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
     __Pyx_INCREF(__pyx_v_coordinates);
     __Pyx_GIVEREF(__pyx_v_coordinates);
     PyTuple_SET_ITEM(__pyx_t_5, 0+__pyx_t_4, __pyx_v_coordinates);
-    __Pyx_INCREF(__pyx_v_box_info);
-    __Pyx_GIVEREF(__pyx_v_box_info);
-    PyTuple_SET_ITEM(__pyx_t_5, 1+__pyx_t_4, __pyx_v_box_info);
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 486, __pyx_L1_error)
+    __Pyx_INCREF(__pyx_v_box_vectors);
+    __Pyx_GIVEREF(__pyx_v_box_vectors);
+    PyTuple_SET_ITEM(__pyx_t_5, 1+__pyx_t_4, __pyx_v_box_vectors);
+    __Pyx_INCREF(__pyx_v_box_dimensions);
+    __Pyx_GIVEREF(__pyx_v_box_dimensions);
+    PyTuple_SET_ITEM(__pyx_t_5, 2+__pyx_t_4, __pyx_v_box_dimensions);
+    __Pyx_INCREF(__pyx_v_box_type);
+    __Pyx_GIVEREF(__pyx_v_box_type);
+    PyTuple_SET_ITEM(__pyx_t_5, 3+__pyx_t_4, __pyx_v_box_type);
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 231, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":487
- *     """
- *     apply_pbc(coordinates, box_info)
+  /* "bubblebuster/bubblebuster.pyx":232
+ * ) -> np.ndarray:
+ *     apply_pbc(coordinates, box_vectors, box_dimensions, box_type)
  *     bounds = coordinate_bounds(coordinates)             # <<<<<<<<<<<<<<
  *     if (round(bounds[0, 0], 2) == 0.0
  *             and round(bounds[1, 0], 2) == 0.0
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_coordinate_bounds); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 487, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_coordinate_bounds); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_5 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
@@ -4605,22 +5699,22 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
   }
   __pyx_t_1 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_5, __pyx_v_coordinates) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_v_coordinates);
   __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 487, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 232, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_bounds = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":488
- *     apply_pbc(coordinates, box_info)
+  /* "bubblebuster/bubblebuster.pyx":233
+ *     apply_pbc(coordinates, box_vectors, box_dimensions, box_type)
  *     bounds = coordinate_bounds(coordinates)
  *     if (round(bounds[0, 0], 2) == 0.0             # <<<<<<<<<<<<<<
  *             and round(bounds[1, 0], 2) == 0.0
  *             and round(bounds[2, 0], 2) == 0.0
  */
-  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 488, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 233, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 488, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 233, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
@@ -4628,13 +5722,13 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
   __Pyx_GIVEREF(__pyx_int_2);
   PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_int_2);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_round, __pyx_t_2, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 488, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_round, __pyx_t_2, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 233, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyFloat_EqObjC(__pyx_t_1, __pyx_float_0_0, 0.0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 488, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyFloat_EqObjC(__pyx_t_1, __pyx_float_0_0, 0.0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 233, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 488, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 233, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (__pyx_t_7) {
   } else {
@@ -4642,16 +5736,16 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
     goto __pyx_L4_bool_binop_done;
   }
 
-  /* "bubblebuster/bubblebuster.pyx":489
+  /* "bubblebuster/bubblebuster.pyx":234
  *     bounds = coordinate_bounds(coordinates)
  *     if (round(bounds[0, 0], 2) == 0.0
  *             and round(bounds[1, 0], 2) == 0.0             # <<<<<<<<<<<<<<
  *             and round(bounds[2, 0], 2) == 0.0
  *     ):
  */
-  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 489, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 234, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 489, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 234, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_2);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_2);
@@ -4659,13 +5753,13 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
   __Pyx_GIVEREF(__pyx_int_2);
   PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_int_2);
   __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_round, __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 489, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_round, __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 234, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyFloat_EqObjC(__pyx_t_2, __pyx_float_0_0, 0.0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 489, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyFloat_EqObjC(__pyx_t_2, __pyx_float_0_0, 0.0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 234, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 489, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 234, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   if (__pyx_t_7) {
   } else {
@@ -4673,16 +5767,16 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
     goto __pyx_L4_bool_binop_done;
   }
 
-  /* "bubblebuster/bubblebuster.pyx":490
+  /* "bubblebuster/bubblebuster.pyx":235
  *     if (round(bounds[0, 0], 2) == 0.0
  *             and round(bounds[1, 0], 2) == 0.0
  *             and round(bounds[2, 0], 2) == 0.0             # <<<<<<<<<<<<<<
  *     ):
  *         return coordinates
  */
-  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 490, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 490, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
@@ -4690,19 +5784,19 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
   __Pyx_GIVEREF(__pyx_int_2);
   PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_int_2);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_round, __pyx_t_2, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 490, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_round, __pyx_t_2, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyFloat_EqObjC(__pyx_t_1, __pyx_float_0_0, 0.0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 490, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyFloat_EqObjC(__pyx_t_1, __pyx_float_0_0, 0.0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 490, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_7 < 0)) __PYX_ERR(0, 235, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_6 = __pyx_t_7;
   __pyx_L4_bool_binop_done:;
 
-  /* "bubblebuster/bubblebuster.pyx":488
- *     apply_pbc(coordinates, box_info)
+  /* "bubblebuster/bubblebuster.pyx":233
+ *     apply_pbc(coordinates, box_vectors, box_dimensions, box_type)
  *     bounds = coordinate_bounds(coordinates)
  *     if (round(bounds[0, 0], 2) == 0.0             # <<<<<<<<<<<<<<
  *             and round(bounds[1, 0], 2) == 0.0
@@ -4710,11 +5804,11 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
  */
   if (__pyx_t_6) {
 
-    /* "bubblebuster/bubblebuster.pyx":492
+    /* "bubblebuster/bubblebuster.pyx":237
  *             and round(bounds[2, 0], 2) == 0.0
  *     ):
  *         return coordinates             # <<<<<<<<<<<<<<
- *     return wrap_structure(coordinates, box_info)
+ *     return wrap_structure(coordinates, box_type)
  * 
  */
     __Pyx_XDECREF(__pyx_r);
@@ -4722,8 +5816,8 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
     __pyx_r = __pyx_v_coordinates;
     goto __pyx_L0;
 
-    /* "bubblebuster/bubblebuster.pyx":488
- *     apply_pbc(coordinates, box_info)
+    /* "bubblebuster/bubblebuster.pyx":233
+ *     apply_pbc(coordinates, box_vectors, box_dimensions, box_type)
  *     bounds = coordinate_bounds(coordinates)
  *     if (round(bounds[0, 0], 2) == 0.0             # <<<<<<<<<<<<<<
  *             and round(bounds[1, 0], 2) == 0.0
@@ -4731,15 +5825,15 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
  */
   }
 
-  /* "bubblebuster/bubblebuster.pyx":493
+  /* "bubblebuster/bubblebuster.pyx":238
  *     ):
  *         return coordinates
- *     return wrap_structure(coordinates, box_info)             # <<<<<<<<<<<<<<
+ *     return wrap_structure(coordinates, box_type)             # <<<<<<<<<<<<<<
  * 
  * def coordinate_bounds(
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_wrap_structure); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 493, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_wrap_structure); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 238, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_5 = NULL;
   __pyx_t_4 = 0;
@@ -4755,22 +5849,22 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
   }
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_1)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_5, __pyx_v_coordinates, __pyx_v_box_info};
-    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_4, 2+__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 493, __pyx_L1_error)
+    PyObject *__pyx_temp[3] = {__pyx_t_5, __pyx_v_coordinates, __pyx_v_box_type};
+    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_4, 2+__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_GOTREF(__pyx_t_2);
   } else
   #endif
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_5, __pyx_v_coordinates, __pyx_v_box_info};
-    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_4, 2+__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 493, __pyx_L1_error)
+    PyObject *__pyx_temp[3] = {__pyx_t_5, __pyx_v_coordinates, __pyx_v_box_type};
+    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_4, 2+__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_GOTREF(__pyx_t_2);
   } else
   #endif
   {
-    __pyx_t_3 = PyTuple_New(2+__pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 493, __pyx_L1_error)
+    __pyx_t_3 = PyTuple_New(2+__pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     if (__pyx_t_5) {
       __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_5); __pyx_t_5 = NULL;
@@ -4778,10 +5872,10 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
     __Pyx_INCREF(__pyx_v_coordinates);
     __Pyx_GIVEREF(__pyx_v_coordinates);
     PyTuple_SET_ITEM(__pyx_t_3, 0+__pyx_t_4, __pyx_v_coordinates);
-    __Pyx_INCREF(__pyx_v_box_info);
-    __Pyx_GIVEREF(__pyx_v_box_info);
-    PyTuple_SET_ITEM(__pyx_t_3, 1+__pyx_t_4, __pyx_v_box_info);
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_3, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 493, __pyx_L1_error)
+    __Pyx_INCREF(__pyx_v_box_type);
+    __Pyx_GIVEREF(__pyx_v_box_type);
+    PyTuple_SET_ITEM(__pyx_t_3, 1+__pyx_t_4, __pyx_v_box_type);
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_3, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 238, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   }
@@ -4790,12 +5884,12 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":451
+  /* "bubblebuster/bubblebuster.pyx":225
  *     return coordinates
  * 
  * def wrap_structure(             # <<<<<<<<<<<<<<
- *         coordinates: ndarray,
- *         box_info: BoxInfo,
+ *         coordinates: np.ndarray,
+ *         box_vectors: np.ndarray,
  */
 
   /* function exit code */
@@ -4813,8 +5907,8 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":495
- *     return wrap_structure(coordinates, box_info)
+/* "bubblebuster/bubblebuster.pyx":240
+ *     return wrap_structure(coordinates, box_type)
  * 
  * def coordinate_bounds(             # <<<<<<<<<<<<<<
  *         coordinates: np.ndarray,
@@ -4823,8 +5917,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_18wrap_structure(CYTHON_
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_21coordinate_bounds(PyObject *__pyx_self, PyObject *__pyx_v_coordinates); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_20coordinate_bounds[] = "\n    x, y, and z upper and lower bounds for an array of cartesian\n    coordinate vectors. This function is used to calculate the wrapped\n    structure's x, y, and z coordinate bounds.\n\n    Parameters\n    ----------\n    coordinates : ndarray\n        2D numpy array containing the cartesian coordinates of the\n        system's atoms.\n\n    Returns\n    -------\n    : ndarray\n        Returns a numpy 2D array of the system's minimum and maximum\n        x, y, and z atomic coordinate values.\n        Eg.) [[xmin, xmax], [ymin, ymax], [zmin, zmax]].\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_21coordinate_bounds = {"coordinate_bounds", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_21coordinate_bounds, METH_O, __pyx_doc_12bubblebuster_12bubblebuster_20coordinate_bounds};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_21coordinate_bounds = {"coordinate_bounds", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_21coordinate_bounds, METH_O, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_21coordinate_bounds(PyObject *__pyx_self, PyObject *__pyx_v_coordinates) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
@@ -4852,16 +5945,16 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_20coordinate_bounds(CYTH
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("coordinate_bounds", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":517
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":243
+ *         coordinates: np.ndarray,
+ * ) -> np.ndarray:
  *     coordinates_transpose = np.array(coordinates).T             # <<<<<<<<<<<<<<
  *     bounds = np.zeros((3, 2), dtype=np.float64)
  *     for i in range(3):
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 517, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_array); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 517, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_array); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_2 = NULL;
@@ -4876,44 +5969,44 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_20coordinate_bounds(CYTH
   }
   __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_v_coordinates) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_v_coordinates);
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 517, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_T); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 517, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_T); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_coordinates_transpose = __pyx_t_3;
   __pyx_t_3 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":518
- *     """
+  /* "bubblebuster/bubblebuster.pyx":244
+ * ) -> np.ndarray:
  *     coordinates_transpose = np.array(coordinates).T
  *     bounds = np.zeros((3, 2), dtype=np.float64)             # <<<<<<<<<<<<<<
  *     for i in range(3):
  *         bounds[i, 0] = min(coordinates_transpose[i])
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 518, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 518, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 518, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 518, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 518, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_float64); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_4) < 0) __PYX_ERR(0, 518, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_4) < 0) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__6, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 518, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_tuple__2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_bounds = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":519
+  /* "bubblebuster/bubblebuster.pyx":245
  *     coordinates_transpose = np.array(coordinates).T
  *     bounds = np.zeros((3, 2), dtype=np.float64)
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -4923,21 +6016,21 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_20coordinate_bounds(CYTH
   for (__pyx_t_5 = 0; __pyx_t_5 < 3; __pyx_t_5+=1) {
     __pyx_v_i = __pyx_t_5;
 
-    /* "bubblebuster/bubblebuster.pyx":520
+    /* "bubblebuster/bubblebuster.pyx":246
  *     bounds = np.zeros((3, 2), dtype=np.float64)
  *     for i in range(3):
  *         bounds[i, 0] = min(coordinates_transpose[i])             # <<<<<<<<<<<<<<
  *         bounds[i, 1] = max(coordinates_transpose[i])
  *     return bounds
  */
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_coordinates_transpose, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 520, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_coordinates_transpose, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 246, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_min, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 520, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_builtin_min, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 246, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 520, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 246, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 520, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 246, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_GIVEREF(__pyx_t_4);
     PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_4);
@@ -4945,25 +6038,25 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_20coordinate_bounds(CYTH
     __Pyx_GIVEREF(__pyx_int_0);
     PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_int_0);
     __pyx_t_4 = 0;
-    if (unlikely(PyObject_SetItem(__pyx_v_bounds, __pyx_t_1, __pyx_t_3) < 0)) __PYX_ERR(0, 520, __pyx_L1_error)
+    if (unlikely(PyObject_SetItem(__pyx_v_bounds, __pyx_t_1, __pyx_t_3) < 0)) __PYX_ERR(0, 246, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":521
+    /* "bubblebuster/bubblebuster.pyx":247
  *     for i in range(3):
  *         bounds[i, 0] = min(coordinates_transpose[i])
  *         bounds[i, 1] = max(coordinates_transpose[i])             # <<<<<<<<<<<<<<
  *     return bounds
  * 
  */
-    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_coordinates_transpose, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 521, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_coordinates_transpose, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 247, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_max, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 521, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_max, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 247, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 521, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 247, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 521, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 247, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_GIVEREF(__pyx_t_3);
     PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
@@ -4971,12 +6064,12 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_20coordinate_bounds(CYTH
     __Pyx_GIVEREF(__pyx_int_1);
     PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_int_1);
     __pyx_t_3 = 0;
-    if (unlikely(PyObject_SetItem(__pyx_v_bounds, __pyx_t_4, __pyx_t_1) < 0)) __PYX_ERR(0, 521, __pyx_L1_error)
+    if (unlikely(PyObject_SetItem(__pyx_v_bounds, __pyx_t_4, __pyx_t_1) < 0)) __PYX_ERR(0, 247, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "bubblebuster/bubblebuster.pyx":522
+  /* "bubblebuster/bubblebuster.pyx":248
  *         bounds[i, 0] = min(coordinates_transpose[i])
  *         bounds[i, 1] = max(coordinates_transpose[i])
  *     return bounds             # <<<<<<<<<<<<<<
@@ -4988,8 +6081,8 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_20coordinate_bounds(CYTH
   __pyx_r = __pyx_v_bounds;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":495
- *     return wrap_structure(coordinates, box_info)
+  /* "bubblebuster/bubblebuster.pyx":240
+ *     return wrap_structure(coordinates, box_type)
  * 
  * def coordinate_bounds(             # <<<<<<<<<<<<<<
  *         coordinates: np.ndarray,
@@ -5012,22 +6105,21 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_20coordinate_bounds(CYTH
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":524
+/* "bubblebuster/bubblebuster.pyx":250
  *     return bounds
  * 
  * def get_num_subintervals(             # <<<<<<<<<<<<<<
- *         box_info: BoxInfo(),
  *         lower_bound: float,
+ *         upper_bound: float,
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_23get_num_subintervals(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_22get_num_subintervals[] = "\n    Calculates the number of sub-intervals used to construct a\n    partition\n    with bounds defined by the lower_bound and upper_bound parameters\n    and a mesh defined by the BoxInfo object's mesh attribute.\n\n    Parameters\n    ----------\n    box_info : BoxInfo\n        BoxInfo class object that holds the properties of the system's\n        water box. The BoxInfo mesh attribute is used in this function\n        defines the uniform sub-interval length.\n    lower_bound : float\n        Lower bound of the partition.\n    upper_bound : float\n        Upper bound of the partition.\n\n    Returns\n    -------\n    : int\n        The number of sub-intervals used to construct a partition\n        with bounds defined by the lower_bound and upper_bound\n        parameters\n        and a mesh defined by the BoxInfo object's mesh attribute.\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_23get_num_subintervals = {"get_num_subintervals", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_23get_num_subintervals, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_22get_num_subintervals};
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_23get_num_subintervals = {"get_num_subintervals", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_23get_num_subintervals, METH_VARARGS|METH_KEYWORDS, 0};
 static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_23get_num_subintervals(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyObject *__pyx_v_box_info = 0;
   double __pyx_v_lower_bound;
   double __pyx_v_upper_bound;
+  PyObject *__pyx_v_mesh = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -5035,7 +6127,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_23get_num_subintervals(P
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_num_subintervals (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_box_info,&__pyx_n_s_lower_bound,&__pyx_n_s_upper_bound,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_lower_bound,&__pyx_n_s_upper_bound,&__pyx_n_s_mesh,0};
     PyObject* values[3] = {0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -5053,23 +6145,23 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_23get_num_subintervals(P
       kw_args = PyDict_Size(__pyx_kwds);
       switch (pos_args) {
         case  0:
-        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_info)) != 0)) kw_args--;
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_lower_bound)) != 0)) kw_args--;
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_lower_bound)) != 0)) kw_args--;
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_upper_bound)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_num_subintervals", 1, 3, 3, 1); __PYX_ERR(0, 524, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_num_subintervals", 1, 3, 3, 1); __PYX_ERR(0, 250, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
-        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_upper_bound)) != 0)) kw_args--;
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_mesh)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_num_subintervals", 1, 3, 3, 2); __PYX_ERR(0, 524, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_num_subintervals", 1, 3, 3, 2); __PYX_ERR(0, 250, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "get_num_subintervals") < 0)) __PYX_ERR(0, 524, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "get_num_subintervals") < 0)) __PYX_ERR(0, 250, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -5078,26 +6170,26 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_23get_num_subintervals(P
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_box_info = values[0];
-    __pyx_v_lower_bound = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_lower_bound == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 526, __pyx_L3_error)
-    __pyx_v_upper_bound = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_upper_bound == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 527, __pyx_L3_error)
+    __pyx_v_lower_bound = __pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_lower_bound == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 251, __pyx_L3_error)
+    __pyx_v_upper_bound = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_upper_bound == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 252, __pyx_L3_error)
+    __pyx_v_mesh = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("get_num_subintervals", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 524, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("get_num_subintervals", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 250, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.get_num_subintervals", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_22get_num_subintervals(__pyx_self, __pyx_v_box_info, __pyx_v_lower_bound, __pyx_v_upper_bound);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_22get_num_subintervals(__pyx_self, __pyx_v_lower_bound, __pyx_v_upper_bound, __pyx_v_mesh);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_22get_num_subintervals(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_info, double __pyx_v_lower_bound, double __pyx_v_upper_bound) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_22get_num_subintervals(CYTHON_UNUSED PyObject *__pyx_self, double __pyx_v_lower_bound, double __pyx_v_upper_bound, PyObject *__pyx_v_mesh) {
   PyObject *__pyx_v_num_subintervals = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -5111,71 +6203,68 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_22get_num_subintervals(C
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_num_subintervals", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":554
- *         and a mesh defined by the BoxInfo object's mesh attribute.
- *     """
+  /* "bubblebuster/bubblebuster.pyx":255
+ *         mesh: Tuple,
+ * ) -> int:
  *     num_subintervals = ceil(             # <<<<<<<<<<<<<<
- *         (upper_bound - lower_bound) / box_info.mesh[0]
+ *         (upper_bound - lower_bound) / mesh[0]
  *     )
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_ceil); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 554, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_ceil); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 255, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
 
-  /* "bubblebuster/bubblebuster.pyx":555
- *     """
+  /* "bubblebuster/bubblebuster.pyx":256
+ * ) -> int:
  *     num_subintervals = ceil(
- *         (upper_bound - lower_bound) / box_info.mesh[0]             # <<<<<<<<<<<<<<
+ *         (upper_bound - lower_bound) / mesh[0]             # <<<<<<<<<<<<<<
  *     )
  *     return num_subintervals
  */
-  __pyx_t_3 = PyFloat_FromDouble((__pyx_v_upper_bound - __pyx_v_lower_bound)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 555, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble((__pyx_v_upper_bound - __pyx_v_lower_bound)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 256, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_box_info, __pyx_n_s_mesh); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 555, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_mesh, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 256, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 555, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyNumber_Divide(__pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 256, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyNumber_Divide(__pyx_t_3, __pyx_t_5); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 555, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = NULL;
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_4 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_2);
-    if (likely(__pyx_t_5)) {
+    __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_4)) {
       PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-      __Pyx_INCREF(__pyx_t_5);
+      __Pyx_INCREF(__pyx_t_4);
       __Pyx_INCREF(function);
       __Pyx_DECREF_SET(__pyx_t_2, function);
     }
   }
-  __pyx_t_1 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_5, __pyx_t_4) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 554, __pyx_L1_error)
+  __pyx_t_1 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_4, __pyx_t_5) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 255, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_num_subintervals = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":557
- *         (upper_bound - lower_bound) / box_info.mesh[0]
+  /* "bubblebuster/bubblebuster.pyx":258
+ *         (upper_bound - lower_bound) / mesh[0]
  *     )
  *     return num_subintervals             # <<<<<<<<<<<<<<
  * 
- * def get_cubic_partition(
+ * def get_mesh(
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(__pyx_v_num_subintervals);
   __pyx_r = __pyx_v_num_subintervals;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":524
+  /* "bubblebuster/bubblebuster.pyx":250
  *     return bounds
  * 
  * def get_num_subintervals(             # <<<<<<<<<<<<<<
- *         box_info: BoxInfo(),
  *         lower_bound: float,
+ *         upper_bound: float,
  */
 
   /* function exit code */
@@ -5194,8 +6283,199 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_22get_num_subintervals(C
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":559
+/* "bubblebuster/bubblebuster.pyx":260
  *     return num_subintervals
+ * 
+ * def get_mesh(             # <<<<<<<<<<<<<<
+ *         bounds: np.ndarray,
+ *         num_subintervals: Tuple,
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_25get_mesh(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_25get_mesh = {"get_mesh", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_25get_mesh, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_25get_mesh(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_bounds = 0;
+  PyObject *__pyx_v_num_subintervals = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("get_mesh (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_bounds,&__pyx_n_s_num_subintervals,0};
+    PyObject* values[2] = {0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_bounds)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_subintervals)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("get_mesh", 1, 2, 2, 1); __PYX_ERR(0, 260, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "get_mesh") < 0)) __PYX_ERR(0, 260, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+    }
+    __pyx_v_bounds = values[0];
+    __pyx_v_num_subintervals = values[1];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("get_mesh", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 260, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.get_mesh", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_24get_mesh(__pyx_self, __pyx_v_bounds, __pyx_v_num_subintervals);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_mesh(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bounds, PyObject *__pyx_v_num_subintervals) {
+  PyObject *__pyx_v_mesh = NULL;
+  long __pyx_v_i;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  long __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  int __pyx_t_5;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("get_mesh", 0);
+
+  /* "bubblebuster/bubblebuster.pyx":264
+ *         num_subintervals: Tuple,
+ * ) -> Tuple:
+ *     mesh = []             # <<<<<<<<<<<<<<
+ *     for i in range(3):
+ *         mesh.append((bounds[i, 1] - bounds[i, 0]) / num_subintervals[i])
+ */
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 264, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_v_mesh = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":265
+ * ) -> Tuple:
+ *     mesh = []
+ *     for i in range(3):             # <<<<<<<<<<<<<<
+ *         mesh.append((bounds[i, 1] - bounds[i, 0]) / num_subintervals[i])
+ *     return mesh
+ */
+  for (__pyx_t_2 = 0; __pyx_t_2 < 3; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
+
+    /* "bubblebuster/bubblebuster.pyx":266
+ *     mesh = []
+ *     for i in range(3):
+ *         mesh.append((bounds[i, 1] - bounds[i, 0]) / num_subintervals[i])             # <<<<<<<<<<<<<<
+ *     return mesh
+ * 
+ */
+    __pyx_t_1 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_GIVEREF(__pyx_t_1);
+    PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
+    __Pyx_INCREF(__pyx_int_1);
+    __Pyx_GIVEREF(__pyx_int_1);
+    PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_int_1);
+    __pyx_t_1 = 0;
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = __Pyx_PyInt_From_long(__pyx_v_i); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_GIVEREF(__pyx_t_3);
+    PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
+    __Pyx_INCREF(__pyx_int_0);
+    __Pyx_GIVEREF(__pyx_int_0);
+    PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_int_0);
+    __pyx_t_3 = 0;
+    __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_4 = PyNumber_Subtract(__pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_num_subintervals, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_1 = __Pyx_PyNumber_Divide(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_5 = __Pyx_PyList_Append(__pyx_v_mesh, __pyx_t_1); if (unlikely(__pyx_t_5 == ((int)-1))) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  }
+
+  /* "bubblebuster/bubblebuster.pyx":267
+ *     for i in range(3):
+ *         mesh.append((bounds[i, 1] - bounds[i, 0]) / num_subintervals[i])
+ *     return mesh             # <<<<<<<<<<<<<<
+ * 
+ * def get_cubic_partition(
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_mesh);
+  __pyx_r = __pyx_v_mesh;
+  goto __pyx_L0;
+
+  /* "bubblebuster/bubblebuster.pyx":260
+ *     return num_subintervals
+ * 
+ * def get_mesh(             # <<<<<<<<<<<<<<
+ *         bounds: np.ndarray,
+ *         num_subintervals: Tuple,
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.get_mesh", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_mesh);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "bubblebuster/bubblebuster.pyx":269
+ *     return mesh
  * 
  * def get_cubic_partition(             # <<<<<<<<<<<<<<
  *         coordinate_bounds: np.ndarray,
@@ -5203,15 +6483,13 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_22get_num_subintervals(C
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_25get_cubic_partition(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_24get_cubic_partition[] = "\n    Constructs the cubic partition that is used to calculate local atom\n    densities throughout the system. The properties of each cube in the\n    partition are stored in a unique CubeInfo object.\n\n    Parameters\n    ----------\n    coordinate_bounds : np.ndarray\n        Numpy array with the minimums and maximums for the\n        system's atoms x, y, and z coordinates.\n\n    num_x_subintervals : int\n        Number of x-axis subintervals.\n\n    num_y_subintervals : int\n        Number of y-axis subintervals.\n\n    num_z_subintervals : int\n        Number of z-axis subintervals.\n\n    box_info : BoxInfo\n        BoxInfo class object that holds the properties of the system's\n        water box. The BoxInfo mesh attribute is used in this function\n        defines the uniform sub-interval length.\n\n    Returns\n    -------\n    : dict\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_25get_cubic_partition = {"get_cubic_partition", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_25get_cubic_partition, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_24get_cubic_partition};
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_25get_cubic_partition(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_27get_cubic_partition(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_27get_cubic_partition = {"get_cubic_partition", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_27get_cubic_partition, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_27get_cubic_partition(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   CYTHON_UNUSED PyObject *__pyx_v_coordinate_bounds = 0;
   PyObject *__pyx_v_num_x_subintervals = 0;
   PyObject *__pyx_v_num_y_subintervals = 0;
   PyObject *__pyx_v_num_z_subintervals = 0;
-  CYTHON_UNUSED PyObject *__pyx_v_box_info = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -5219,14 +6497,12 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_25get_cubic_partition(Py
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_cubic_partition (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_coordinate_bounds,&__pyx_n_s_num_x_subintervals,&__pyx_n_s_num_y_subintervals,&__pyx_n_s_num_z_subintervals,&__pyx_n_s_box_info,0};
-    PyObject* values[5] = {0,0,0,0,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_coordinate_bounds,&__pyx_n_s_num_x_subintervals,&__pyx_n_s_num_y_subintervals,&__pyx_n_s_num_z_subintervals,0};
+    PyObject* values[4] = {0,0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
-        case  5: values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
-        CYTHON_FALLTHROUGH;
         case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
         CYTHON_FALLTHROUGH;
         case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
@@ -5247,61 +6523,53 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_25get_cubic_partition(Py
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_x_subintervals)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition", 1, 5, 5, 1); __PYX_ERR(0, 559, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_cubic_partition", 1, 4, 4, 1); __PYX_ERR(0, 269, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_y_subintervals)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition", 1, 5, 5, 2); __PYX_ERR(0, 559, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_cubic_partition", 1, 4, 4, 2); __PYX_ERR(0, 269, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_z_subintervals)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition", 1, 5, 5, 3); __PYX_ERR(0, 559, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  4:
-        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_box_info)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition", 1, 5, 5, 4); __PYX_ERR(0, 559, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_cubic_partition", 1, 4, 4, 3); __PYX_ERR(0, 269, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "get_cubic_partition") < 0)) __PYX_ERR(0, 559, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "get_cubic_partition") < 0)) __PYX_ERR(0, 269, __pyx_L3_error)
       }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 5) {
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
       values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
-      values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
     }
     __pyx_v_coordinate_bounds = values[0];
     __pyx_v_num_x_subintervals = values[1];
     __pyx_v_num_y_subintervals = values[2];
     __pyx_v_num_z_subintervals = values[3];
-    __pyx_v_box_info = values[4];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("get_cubic_partition", 1, 5, 5, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 559, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("get_cubic_partition", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 269, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.get_cubic_partition", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(__pyx_self, __pyx_v_coordinate_bounds, __pyx_v_num_x_subintervals, __pyx_v_num_y_subintervals, __pyx_v_num_z_subintervals, __pyx_v_box_info);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_26get_cubic_partition(__pyx_self, __pyx_v_coordinate_bounds, __pyx_v_num_x_subintervals, __pyx_v_num_y_subintervals, __pyx_v_num_z_subintervals);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CYTHON_UNUSED PyObject *__pyx_self, CYTHON_UNUSED PyObject *__pyx_v_coordinate_bounds, PyObject *__pyx_v_num_x_subintervals, PyObject *__pyx_v_num_y_subintervals, PyObject *__pyx_v_num_z_subintervals, CYTHON_UNUSED PyObject *__pyx_v_box_info) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_26get_cubic_partition(CYTHON_UNUSED PyObject *__pyx_self, CYTHON_UNUSED PyObject *__pyx_v_coordinate_bounds, PyObject *__pyx_v_num_x_subintervals, PyObject *__pyx_v_num_y_subintervals, PyObject *__pyx_v_num_z_subintervals) {
   PyObject *__pyx_v_cube_dict = NULL;
   PyObject *__pyx_v_i = NULL;
   PyObject *__pyx_v_j = NULL;
@@ -5323,34 +6591,34 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_cubic_partition", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":596
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":275
+ *         num_z_subintervals: int,
+ * ) -> Dict:
  *     cube_dict = {}             # <<<<<<<<<<<<<<
  *     for i in range(num_x_subintervals):
  *         for j in range(num_y_subintervals):
  */
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 596, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 275, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_cube_dict = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":597
- *     """
+  /* "bubblebuster/bubblebuster.pyx":276
+ * ) -> Dict:
  *     cube_dict = {}
  *     for i in range(num_x_subintervals):             # <<<<<<<<<<<<<<
  *         for j in range(num_y_subintervals):
  *             for k in range(num_z_subintervals):
  */
-  __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_v_num_x_subintervals); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 597, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_v_num_x_subintervals); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 276, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_2 = __pyx_t_1; __Pyx_INCREF(__pyx_t_2); __pyx_t_3 = 0;
     __pyx_t_4 = NULL;
   } else {
-    __pyx_t_3 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 597, __pyx_L1_error)
+    __pyx_t_3 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 276, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_4 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 597, __pyx_L1_error)
+    __pyx_t_4 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 276, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -5358,17 +6626,17 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
       if (likely(PyList_CheckExact(__pyx_t_2))) {
         if (__pyx_t_3 >= PyList_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 597, __pyx_L1_error)
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 276, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 597, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 276, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       } else {
         if (__pyx_t_3 >= PyTuple_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 597, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) __PYX_ERR(0, 276, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 597, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 276, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       }
@@ -5378,7 +6646,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 597, __pyx_L1_error)
+          else __PYX_ERR(0, 276, __pyx_L1_error)
         }
         break;
       }
@@ -5387,22 +6655,22 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
     __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":598
+    /* "bubblebuster/bubblebuster.pyx":277
  *     cube_dict = {}
  *     for i in range(num_x_subintervals):
  *         for j in range(num_y_subintervals):             # <<<<<<<<<<<<<<
  *             for k in range(num_z_subintervals):
  *                 cube_dict[(i, j, k)] = 0
  */
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_v_num_y_subintervals); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 598, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_v_num_y_subintervals); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
       __pyx_t_5 = __pyx_t_1; __Pyx_INCREF(__pyx_t_5); __pyx_t_6 = 0;
       __pyx_t_7 = NULL;
     } else {
-      __pyx_t_6 = -1; __pyx_t_5 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 598, __pyx_L1_error)
+      __pyx_t_6 = -1; __pyx_t_5 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 277, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_7 = Py_TYPE(__pyx_t_5)->tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 598, __pyx_L1_error)
+      __pyx_t_7 = Py_TYPE(__pyx_t_5)->tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 277, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     for (;;) {
@@ -5410,17 +6678,17 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
         if (likely(PyList_CheckExact(__pyx_t_5))) {
           if (__pyx_t_6 >= PyList_GET_SIZE(__pyx_t_5)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 598, __pyx_L1_error)
+          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 277, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 598, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         } else {
           if (__pyx_t_6 >= PyTuple_GET_SIZE(__pyx_t_5)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_5, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 598, __pyx_L1_error)
+          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_5, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 277, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 598, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_5, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 277, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         }
@@ -5430,7 +6698,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 598, __pyx_L1_error)
+            else __PYX_ERR(0, 277, __pyx_L1_error)
           }
           break;
         }
@@ -5439,22 +6707,22 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
       __Pyx_XDECREF_SET(__pyx_v_j, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "bubblebuster/bubblebuster.pyx":599
+      /* "bubblebuster/bubblebuster.pyx":278
  *     for i in range(num_x_subintervals):
  *         for j in range(num_y_subintervals):
  *             for k in range(num_z_subintervals):             # <<<<<<<<<<<<<<
  *                 cube_dict[(i, j, k)] = 0
  *     return cube_dict
  */
-      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_v_num_z_subintervals); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 599, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_range, __pyx_v_num_z_subintervals); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 278, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
         __pyx_t_8 = __pyx_t_1; __Pyx_INCREF(__pyx_t_8); __pyx_t_9 = 0;
         __pyx_t_10 = NULL;
       } else {
-        __pyx_t_9 = -1; __pyx_t_8 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 599, __pyx_L1_error)
+        __pyx_t_9 = -1; __pyx_t_8 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 278, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
-        __pyx_t_10 = Py_TYPE(__pyx_t_8)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 599, __pyx_L1_error)
+        __pyx_t_10 = Py_TYPE(__pyx_t_8)->tp_iternext; if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 278, __pyx_L1_error)
       }
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       for (;;) {
@@ -5462,17 +6730,17 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
           if (likely(PyList_CheckExact(__pyx_t_8))) {
             if (__pyx_t_9 >= PyList_GET_SIZE(__pyx_t_8)) break;
             #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-            __pyx_t_1 = PyList_GET_ITEM(__pyx_t_8, __pyx_t_9); __Pyx_INCREF(__pyx_t_1); __pyx_t_9++; if (unlikely(0 < 0)) __PYX_ERR(0, 599, __pyx_L1_error)
+            __pyx_t_1 = PyList_GET_ITEM(__pyx_t_8, __pyx_t_9); __Pyx_INCREF(__pyx_t_1); __pyx_t_9++; if (unlikely(0 < 0)) __PYX_ERR(0, 278, __pyx_L1_error)
             #else
-            __pyx_t_1 = PySequence_ITEM(__pyx_t_8, __pyx_t_9); __pyx_t_9++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 599, __pyx_L1_error)
+            __pyx_t_1 = PySequence_ITEM(__pyx_t_8, __pyx_t_9); __pyx_t_9++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 278, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_1);
             #endif
           } else {
             if (__pyx_t_9 >= PyTuple_GET_SIZE(__pyx_t_8)) break;
             #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-            __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_8, __pyx_t_9); __Pyx_INCREF(__pyx_t_1); __pyx_t_9++; if (unlikely(0 < 0)) __PYX_ERR(0, 599, __pyx_L1_error)
+            __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_8, __pyx_t_9); __Pyx_INCREF(__pyx_t_1); __pyx_t_9++; if (unlikely(0 < 0)) __PYX_ERR(0, 278, __pyx_L1_error)
             #else
-            __pyx_t_1 = PySequence_ITEM(__pyx_t_8, __pyx_t_9); __pyx_t_9++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 599, __pyx_L1_error)
+            __pyx_t_1 = PySequence_ITEM(__pyx_t_8, __pyx_t_9); __pyx_t_9++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 278, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_1);
             #endif
           }
@@ -5482,7 +6750,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
             PyObject* exc_type = PyErr_Occurred();
             if (exc_type) {
               if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-              else __PYX_ERR(0, 599, __pyx_L1_error)
+              else __PYX_ERR(0, 278, __pyx_L1_error)
             }
             break;
           }
@@ -5491,14 +6759,14 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
         __Pyx_XDECREF_SET(__pyx_v_k, __pyx_t_1);
         __pyx_t_1 = 0;
 
-        /* "bubblebuster/bubblebuster.pyx":600
+        /* "bubblebuster/bubblebuster.pyx":279
  *         for j in range(num_y_subintervals):
  *             for k in range(num_z_subintervals):
  *                 cube_dict[(i, j, k)] = 0             # <<<<<<<<<<<<<<
  *     return cube_dict
  * 
  */
-        __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 600, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 279, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_INCREF(__pyx_v_i);
         __Pyx_GIVEREF(__pyx_v_i);
@@ -5509,10 +6777,10 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
         __Pyx_INCREF(__pyx_v_k);
         __Pyx_GIVEREF(__pyx_v_k);
         PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_v_k);
-        if (unlikely(PyDict_SetItem(__pyx_v_cube_dict, __pyx_t_1, __pyx_int_0) < 0)) __PYX_ERR(0, 600, __pyx_L1_error)
+        if (unlikely(PyDict_SetItem(__pyx_v_cube_dict, __pyx_t_1, __pyx_int_0) < 0)) __PYX_ERR(0, 279, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "bubblebuster/bubblebuster.pyx":599
+        /* "bubblebuster/bubblebuster.pyx":278
  *     for i in range(num_x_subintervals):
  *         for j in range(num_y_subintervals):
  *             for k in range(num_z_subintervals):             # <<<<<<<<<<<<<<
@@ -5522,7 +6790,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
       }
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-      /* "bubblebuster/bubblebuster.pyx":598
+      /* "bubblebuster/bubblebuster.pyx":277
  *     cube_dict = {}
  *     for i in range(num_x_subintervals):
  *         for j in range(num_y_subintervals):             # <<<<<<<<<<<<<<
@@ -5532,8 +6800,8 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
     }
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":597
- *     """
+    /* "bubblebuster/bubblebuster.pyx":276
+ * ) -> Dict:
  *     cube_dict = {}
  *     for i in range(num_x_subintervals):             # <<<<<<<<<<<<<<
  *         for j in range(num_y_subintervals):
@@ -5542,7 +6810,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":601
+  /* "bubblebuster/bubblebuster.pyx":280
  *             for k in range(num_z_subintervals):
  *                 cube_dict[(i, j, k)] = 0
  *     return cube_dict             # <<<<<<<<<<<<<<
@@ -5554,8 +6822,8 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
   __pyx_r = __pyx_v_cube_dict;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":559
- *     return num_subintervals
+  /* "bubblebuster/bubblebuster.pyx":269
+ *     return mesh
  * 
  * def get_cubic_partition(             # <<<<<<<<<<<<<<
  *         coordinate_bounds: np.ndarray,
@@ -5580,7 +6848,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":603
+/* "bubblebuster/bubblebuster.pyx":282
  *     return cube_dict
  * 
  * def hash_widths(             # <<<<<<<<<<<<<<
@@ -5589,10 +6857,9 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_24get_cubic_partition(CY
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_27hash_widths(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_26hash_widths[] = "\n    :param bounds: Numpy array of the x, y, z\n        coordinate upper and lower bounds\n    :type:np.ndarray\n\n    :param delta:\n    :type:float, optional\n\n    :return:\n    :rtype: tuple\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_27hash_widths = {"hash_widths", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_27hash_widths, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_26hash_widths};
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_27hash_widths(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_29hash_widths(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_29hash_widths = {"hash_widths", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_29hash_widths, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_29hash_widths(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_bounds = 0;
   PyObject *__pyx_v_delta = 0;
   int __pyx_lineno = 0;
@@ -5629,7 +6896,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_27hash_widths(PyObject *
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "hash_widths") < 0)) __PYX_ERR(0, 603, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "hash_widths") < 0)) __PYX_ERR(0, 282, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -5645,20 +6912,20 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_27hash_widths(PyObject *
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("hash_widths", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 603, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("hash_widths", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 282, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.hash_widths", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_26hash_widths(__pyx_self, __pyx_v_bounds, __pyx_v_delta);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_28hash_widths(__pyx_self, __pyx_v_bounds, __pyx_v_delta);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_26hash_widths(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bounds, PyObject *__pyx_v_delta) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28hash_widths(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_bounds, PyObject *__pyx_v_delta) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5671,80 +6938,80 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_26hash_widths(CYTHON_UNU
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("hash_widths", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":618
- *     :rtype: tuple
- *     """
+  /* "bubblebuster/bubblebuster.pyx":286
+ *         delta: Optional[float] = 1e-7,
+ * )-> Tuple:
  *     return (             # <<<<<<<<<<<<<<
  *         (bounds[0, 1] - bounds[0, 0]) + delta,
  *         (bounds[1, 1] - bounds[1, 0]) + delta,
  */
   __Pyx_XDECREF(__pyx_r);
 
-  /* "bubblebuster/bubblebuster.pyx":619
- *     """
+  /* "bubblebuster/bubblebuster.pyx":287
+ * )-> Tuple:
  *     return (
  *         (bounds[0, 1] - bounds[0, 0]) + delta,             # <<<<<<<<<<<<<<
  *         (bounds[1, 1] - bounds[1, 0]) + delta,
  *         (bounds[2, 1] - bounds[2, 0]) + delta
  */
-  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 619, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 287, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 619, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 287, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 619, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Subtract(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 287, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_delta); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 619, __pyx_L1_error)
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_delta); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 287, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":620
+  /* "bubblebuster/bubblebuster.pyx":288
  *     return (
  *         (bounds[0, 1] - bounds[0, 0]) + delta,
  *         (bounds[1, 1] - bounds[1, 0]) + delta,             # <<<<<<<<<<<<<<
  *         (bounds[2, 1] - bounds[2, 0]) + delta
  *     )
  */
-  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__8); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 620, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 288, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 620, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 288, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = PyNumber_Subtract(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 620, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Subtract(__pyx_t_3, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 288, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyNumber_Add(__pyx_t_4, __pyx_v_delta); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 620, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Add(__pyx_t_4, __pyx_v_delta); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 288, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":621
+  /* "bubblebuster/bubblebuster.pyx":289
  *         (bounds[0, 1] - bounds[0, 0]) + delta,
  *         (bounds[1, 1] - bounds[1, 0]) + delta,
  *         (bounds[2, 1] - bounds[2, 0]) + delta             # <<<<<<<<<<<<<<
  *     )
  * 
  */
-  __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__9); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 621, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 289, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 621, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 289, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = PyNumber_Subtract(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 621, __pyx_L1_error)
+  __pyx_t_5 = PyNumber_Subtract(__pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 289, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyNumber_Add(__pyx_t_5, __pyx_v_delta); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 621, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(__pyx_t_5, __pyx_v_delta); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 289, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":619
- *     """
+  /* "bubblebuster/bubblebuster.pyx":287
+ * )-> Tuple:
  *     return (
  *         (bounds[0, 1] - bounds[0, 0]) + delta,             # <<<<<<<<<<<<<<
  *         (bounds[1, 1] - bounds[1, 0]) + delta,
  *         (bounds[2, 1] - bounds[2, 0]) + delta
  */
-  __pyx_t_5 = PyTuple_New(3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 619, __pyx_L1_error)
+  __pyx_t_5 = PyTuple_New(3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 287, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_GIVEREF(__pyx_t_2);
   PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_2);
@@ -5759,7 +7026,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_26hash_widths(CYTHON_UNU
   __pyx_t_5 = 0;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":603
+  /* "bubblebuster/bubblebuster.pyx":282
  *     return cube_dict
  * 
  * def hash_widths(             # <<<<<<<<<<<<<<
@@ -5782,7 +7049,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_26hash_widths(CYTHON_UNU
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":624
+/* "bubblebuster/bubblebuster.pyx":292
  *     )
  * 
  * def get_cubic_partition_occupancy(             # <<<<<<<<<<<<<<
@@ -5791,9 +7058,9 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_26hash_widths(CYTHON_UNU
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_29get_cubic_partition_occupancy(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_29get_cubic_partition_occupancy = {"get_cubic_partition_occupancy", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_29get_cubic_partition_occupancy, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_29get_cubic_partition_occupancy(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_31get_cubic_partition_occupancy(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_31get_cubic_partition_occupancy = {"get_cubic_partition_occupancy", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_31get_cubic_partition_occupancy, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_31get_cubic_partition_occupancy(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_coordinates = 0;
   PyObject *__pyx_v_num_x_subintervals = 0;
   PyObject *__pyx_v_num_y_subintervals = 0;
@@ -5840,41 +7107,41 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_29get_cubic_partition_oc
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_x_subintervals)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 1); __PYX_ERR(0, 624, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 1); __PYX_ERR(0, 292, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_y_subintervals)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 2); __PYX_ERR(0, 624, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 2); __PYX_ERR(0, 292, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_z_subintervals)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 3); __PYX_ERR(0, 624, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 3); __PYX_ERR(0, 292, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_hash_widths)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 4); __PYX_ERR(0, 624, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 4); __PYX_ERR(0, 292, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_bounds)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 5); __PYX_ERR(0, 624, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 5); __PYX_ERR(0, 292, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cubic_partition)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 6); __PYX_ERR(0, 624, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, 6); __PYX_ERR(0, 292, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "get_cubic_partition_occupancy") < 0)) __PYX_ERR(0, 624, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "get_cubic_partition_occupancy") < 0)) __PYX_ERR(0, 292, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 7) {
       goto __pyx_L5_argtuple_error;
@@ -5897,20 +7164,20 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_29get_cubic_partition_oc
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 624, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("get_cubic_partition_occupancy", 1, 7, 7, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 292, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.get_cubic_partition_occupancy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_occupancy(__pyx_self, __pyx_v_coordinates, __pyx_v_num_x_subintervals, __pyx_v_num_y_subintervals, __pyx_v_num_z_subintervals, __pyx_v_hash_widths, __pyx_v_bounds, __pyx_v_cubic_partition);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_30get_cubic_partition_occupancy(__pyx_self, __pyx_v_coordinates, __pyx_v_num_x_subintervals, __pyx_v_num_y_subintervals, __pyx_v_num_z_subintervals, __pyx_v_hash_widths, __pyx_v_bounds, __pyx_v_cubic_partition);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_occupancy(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_num_x_subintervals, PyObject *__pyx_v_num_y_subintervals, PyObject *__pyx_v_num_z_subintervals, PyObject *__pyx_v_hash_widths, PyObject *__pyx_v_bounds, PyObject *__pyx_v_cubic_partition) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_cubic_partition_occupancy(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coordinates, PyObject *__pyx_v_num_x_subintervals, PyObject *__pyx_v_num_y_subintervals, PyObject *__pyx_v_num_z_subintervals, PyObject *__pyx_v_hash_widths, PyObject *__pyx_v_bounds, PyObject *__pyx_v_cubic_partition) {
   PyObject *__pyx_v_x = NULL;
   PyObject *__pyx_v_y = NULL;
   PyObject *__pyx_v_z = NULL;
@@ -5933,37 +7200,37 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_cubic_partition_occupancy", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":633
+  /* "bubblebuster/bubblebuster.pyx":301
  *         cubic_partition: Dict,
  * ) -> Dict:
  *     for x, y, z in coordinates:             # <<<<<<<<<<<<<<
- *         i = int(num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0]))
- *         j = int(num_y_subintervals * ((y - bounds[1, 0]) / hash_widths[1]))
+ *         i = int(
+ *             num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0])
  */
   if (likely(PyList_CheckExact(__pyx_v_coordinates)) || PyTuple_CheckExact(__pyx_v_coordinates)) {
     __pyx_t_1 = __pyx_v_coordinates; __Pyx_INCREF(__pyx_t_1); __pyx_t_2 = 0;
     __pyx_t_3 = NULL;
   } else {
-    __pyx_t_2 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 633, __pyx_L1_error)
+    __pyx_t_2 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 301, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 633, __pyx_L1_error)
+    __pyx_t_3 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 301, __pyx_L1_error)
   }
   for (;;) {
     if (likely(!__pyx_t_3)) {
       if (likely(PyList_CheckExact(__pyx_t_1))) {
         if (__pyx_t_2 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 633, __pyx_L1_error)
+        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 301, __pyx_L1_error)
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 633, __pyx_L1_error)
+        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 301, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         #endif
       } else {
         if (__pyx_t_2 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 633, __pyx_L1_error)
+        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 301, __pyx_L1_error)
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 633, __pyx_L1_error)
+        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 301, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         #endif
       }
@@ -5973,7 +7240,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 633, __pyx_L1_error)
+          else __PYX_ERR(0, 301, __pyx_L1_error)
         }
         break;
       }
@@ -5985,7 +7252,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
       if (unlikely(size != 3)) {
         if (size > 3) __Pyx_RaiseTooManyValuesError(3);
         else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-        __PYX_ERR(0, 633, __pyx_L1_error)
+        __PYX_ERR(0, 301, __pyx_L1_error)
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
       if (likely(PyTuple_CheckExact(sequence))) {
@@ -6001,17 +7268,17 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
       __Pyx_INCREF(__pyx_t_6);
       __Pyx_INCREF(__pyx_t_7);
       #else
-      __pyx_t_5 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 633, __pyx_L1_error)
+      __pyx_t_5 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 301, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 633, __pyx_L1_error)
+      __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 301, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_7 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 633, __pyx_L1_error)
+      __pyx_t_7 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 301, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       #endif
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     } else {
       Py_ssize_t index = -1;
-      __pyx_t_8 = PyObject_GetIter(__pyx_t_4); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 633, __pyx_L1_error)
+      __pyx_t_8 = PyObject_GetIter(__pyx_t_4); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 301, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __pyx_t_9 = Py_TYPE(__pyx_t_8)->tp_iternext;
@@ -6021,7 +7288,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
       __Pyx_GOTREF(__pyx_t_6);
       index = 2; __pyx_t_7 = __pyx_t_9(__pyx_t_8); if (unlikely(!__pyx_t_7)) goto __pyx_L5_unpacking_failed;
       __Pyx_GOTREF(__pyx_t_7);
-      if (__Pyx_IternextUnpackEndCheck(__pyx_t_9(__pyx_t_8), 3) < 0) __PYX_ERR(0, 633, __pyx_L1_error)
+      if (__Pyx_IternextUnpackEndCheck(__pyx_t_9(__pyx_t_8), 3) < 0) __PYX_ERR(0, 301, __pyx_L1_error)
       __pyx_t_9 = NULL;
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       goto __pyx_L6_unpacking_done;
@@ -6029,7 +7296,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __pyx_t_9 = NULL;
       if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-      __PYX_ERR(0, 633, __pyx_L1_error)
+      __PYX_ERR(0, 301, __pyx_L1_error)
       __pyx_L6_unpacking_done:;
     }
     __Pyx_XDECREF_SET(__pyx_v_x, __pyx_t_5);
@@ -6039,95 +7306,119 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
     __Pyx_XDECREF_SET(__pyx_v_z, __pyx_t_7);
     __pyx_t_7 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":634
- * ) -> Dict:
+    /* "bubblebuster/bubblebuster.pyx":303
  *     for x, y, z in coordinates:
- *         i = int(num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0]))             # <<<<<<<<<<<<<<
- *         j = int(num_y_subintervals * ((y - bounds[1, 0]) / hash_widths[1]))
- *         k = int(num_z_subintervals * ((z - bounds[2, 0]) / hash_widths[2]))
+ *         i = int(
+ *             num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0])             # <<<<<<<<<<<<<<
+ *         )
+ *         j = int(
  */
-    __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 634, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 303, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_7 = PyNumber_Subtract(__pyx_v_x, __pyx_t_4); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 634, __pyx_L1_error)
+    __pyx_t_7 = PyNumber_Subtract(__pyx_v_x, __pyx_t_4); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 303, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_hash_widths, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 634, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_hash_widths, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 303, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PyNumber_Divide(__pyx_t_7, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 634, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyNumber_Divide(__pyx_t_7, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 303, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyNumber_Multiply(__pyx_v_num_x_subintervals, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 634, __pyx_L1_error)
+    __pyx_t_4 = PyNumber_Multiply(__pyx_v_num_x_subintervals, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 303, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyNumber_Int(__pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 634, __pyx_L1_error)
+
+    /* "bubblebuster/bubblebuster.pyx":302
+ * ) -> Dict:
+ *     for x, y, z in coordinates:
+ *         i = int(             # <<<<<<<<<<<<<<
+ *             num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0])
+ *         )
+ */
+    __pyx_t_6 = __Pyx_PyNumber_Int(__pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 302, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_XDECREF_SET(__pyx_v_i, __pyx_t_6);
     __pyx_t_6 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":635
- *     for x, y, z in coordinates:
- *         i = int(num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0]))
- *         j = int(num_y_subintervals * ((y - bounds[1, 0]) / hash_widths[1]))             # <<<<<<<<<<<<<<
- *         k = int(num_z_subintervals * ((z - bounds[2, 0]) / hash_widths[2]))
- *         cubic_partition[(i, j, k)] += 1
+    /* "bubblebuster/bubblebuster.pyx":306
+ *         )
+ *         j = int(
+ *             num_y_subintervals * ((y - bounds[1, 0]) / hash_widths[1])             # <<<<<<<<<<<<<<
+ *         )
+ *         k = int(
  */
-    __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__3); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 635, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 306, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_4 = PyNumber_Subtract(__pyx_v_y, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 635, __pyx_L1_error)
+    __pyx_t_4 = PyNumber_Subtract(__pyx_v_y, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 306, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_hash_widths, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 635, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_hash_widths, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 306, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_7 = __Pyx_PyNumber_Divide(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 635, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyNumber_Divide(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 306, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = PyNumber_Multiply(__pyx_v_num_y_subintervals, __pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 635, __pyx_L1_error)
+    __pyx_t_6 = PyNumber_Multiply(__pyx_v_num_y_subintervals, __pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 306, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __pyx_t_7 = __Pyx_PyNumber_Int(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 635, __pyx_L1_error)
+
+    /* "bubblebuster/bubblebuster.pyx":305
+ *             num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0])
+ *         )
+ *         j = int(             # <<<<<<<<<<<<<<
+ *             num_y_subintervals * ((y - bounds[1, 0]) / hash_widths[1])
+ *         )
+ */
+    __pyx_t_7 = __Pyx_PyNumber_Int(__pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 305, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_XDECREF_SET(__pyx_v_j, __pyx_t_7);
     __pyx_t_7 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":636
- *         i = int(num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0]))
- *         j = int(num_y_subintervals * ((y - bounds[1, 0]) / hash_widths[1]))
- *         k = int(num_z_subintervals * ((z - bounds[2, 0]) / hash_widths[2]))             # <<<<<<<<<<<<<<
+    /* "bubblebuster/bubblebuster.pyx":309
+ *         )
+ *         k = int(
+ *             num_z_subintervals * ((z - bounds[2, 0]) / hash_widths[2])             # <<<<<<<<<<<<<<
+ *         )
  *         cubic_partition[(i, j, k)] += 1
- *     return cubic_partition
  */
-    __pyx_t_7 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__4); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 636, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__5); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 309, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_6 = PyNumber_Subtract(__pyx_v_z, __pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 636, __pyx_L1_error)
+    __pyx_t_6 = PyNumber_Subtract(__pyx_v_z, __pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 309, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __pyx_t_7 = __Pyx_GetItemInt(__pyx_v_hash_widths, 2, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 636, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_GetItemInt(__pyx_v_hash_widths, 2, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 309, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_4 = __Pyx_PyNumber_Divide(__pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 636, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyNumber_Divide(__pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 309, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    __pyx_t_7 = PyNumber_Multiply(__pyx_v_num_z_subintervals, __pyx_t_4); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 636, __pyx_L1_error)
+    __pyx_t_7 = PyNumber_Multiply(__pyx_v_num_z_subintervals, __pyx_t_4); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 309, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyNumber_Int(__pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 636, __pyx_L1_error)
+
+    /* "bubblebuster/bubblebuster.pyx":308
+ *             num_y_subintervals * ((y - bounds[1, 0]) / hash_widths[1])
+ *         )
+ *         k = int(             # <<<<<<<<<<<<<<
+ *             num_z_subintervals * ((z - bounds[2, 0]) / hash_widths[2])
+ *         )
+ */
+    __pyx_t_4 = __Pyx_PyNumber_Int(__pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 308, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_XDECREF_SET(__pyx_v_k, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":637
- *         j = int(num_y_subintervals * ((y - bounds[1, 0]) / hash_widths[1]))
- *         k = int(num_z_subintervals * ((z - bounds[2, 0]) / hash_widths[2]))
+    /* "bubblebuster/bubblebuster.pyx":311
+ *             num_z_subintervals * ((z - bounds[2, 0]) / hash_widths[2])
+ *         )
  *         cubic_partition[(i, j, k)] += 1             # <<<<<<<<<<<<<<
  *     return cubic_partition
  * 
  */
-    __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 637, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 311, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_INCREF(__pyx_v_i);
     __Pyx_GIVEREF(__pyx_v_i);
@@ -6138,38 +7429,38 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
     __Pyx_INCREF(__pyx_v_k);
     __Pyx_GIVEREF(__pyx_v_k);
     PyTuple_SET_ITEM(__pyx_t_4, 2, __pyx_v_k);
-    __pyx_t_7 = __Pyx_PyObject_GetItem(__pyx_v_cubic_partition, __pyx_t_4); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 637, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetItem(__pyx_v_cubic_partition, __pyx_t_4); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 311, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_6 = __Pyx_PyInt_AddObjC(__pyx_t_7, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 637, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_AddObjC(__pyx_t_7, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 311, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    if (unlikely(PyObject_SetItem(__pyx_v_cubic_partition, __pyx_t_4, __pyx_t_6) < 0)) __PYX_ERR(0, 637, __pyx_L1_error)
+    if (unlikely(PyObject_SetItem(__pyx_v_cubic_partition, __pyx_t_4, __pyx_t_6) < 0)) __PYX_ERR(0, 311, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":633
+    /* "bubblebuster/bubblebuster.pyx":301
  *         cubic_partition: Dict,
  * ) -> Dict:
  *     for x, y, z in coordinates:             # <<<<<<<<<<<<<<
- *         i = int(num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0]))
- *         j = int(num_y_subintervals * ((y - bounds[1, 0]) / hash_widths[1]))
+ *         i = int(
+ *             num_x_subintervals * ((x - bounds[0, 0]) / hash_widths[0])
  */
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":638
- *         k = int(num_z_subintervals * ((z - bounds[2, 0]) / hash_widths[2]))
+  /* "bubblebuster/bubblebuster.pyx":312
+ *         )
  *         cubic_partition[(i, j, k)] += 1
  *     return cubic_partition             # <<<<<<<<<<<<<<
  * 
- * def get_box_type(
+ * def get_empty_cubes(
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(__pyx_v_cubic_partition);
   __pyx_r = __pyx_v_cubic_partition;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":624
+  /* "bubblebuster/bubblebuster.pyx":292
  *     )
  * 
  * def get_cubic_partition_occupancy(             # <<<<<<<<<<<<<<
@@ -6199,8 +7490,741 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":640
+/* "bubblebuster/bubblebuster.pyx":314
  *     return cubic_partition
+ * 
+ * def get_empty_cubes(             # <<<<<<<<<<<<<<
+ *         cubic_partition: Dict,
+ * ) -> Tuple:
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_33get_empty_cubes(PyObject *__pyx_self, PyObject *__pyx_v_cubic_partition); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_33get_empty_cubes = {"get_empty_cubes", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_33get_empty_cubes, METH_O, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_33get_empty_cubes(PyObject *__pyx_self, PyObject *__pyx_v_cubic_partition) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("get_empty_cubes (wrapper)", 0);
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_32get_empty_cubes(__pyx_self, ((PyObject *)__pyx_v_cubic_partition));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32get_empty_cubes(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_cubic_partition) {
+  PyObject *__pyx_v_empty_cubes = NULL;
+  PyObject *__pyx_v_cube_index = NULL;
+  CYTHON_UNUSED PyObject *__pyx_v_k = NULL;
+  PyObject *__pyx_v_v = NULL;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  Py_ssize_t __pyx_t_4;
+  PyObject *(*__pyx_t_5)(PyObject *);
+  PyObject *__pyx_t_6 = NULL;
+  PyObject *__pyx_t_7 = NULL;
+  PyObject *(*__pyx_t_8)(PyObject *);
+  int __pyx_t_9;
+  int __pyx_t_10;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("get_empty_cubes", 0);
+
+  /* "bubblebuster/bubblebuster.pyx":317
+ *         cubic_partition: Dict,
+ * ) -> Tuple:
+ *     empty_cubes = []             # <<<<<<<<<<<<<<
+ *     cube_index = 0
+ *     for k, v in cubic_partition.items():
+ */
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 317, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_v_empty_cubes = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":318
+ * ) -> Tuple:
+ *     empty_cubes = []
+ *     cube_index = 0             # <<<<<<<<<<<<<<
+ *     for k, v in cubic_partition.items():
+ *         if v == 0:
+ */
+  __Pyx_INCREF(__pyx_int_0);
+  __pyx_v_cube_index = __pyx_int_0;
+
+  /* "bubblebuster/bubblebuster.pyx":319
+ *     empty_cubes = []
+ *     cube_index = 0
+ *     for k, v in cubic_partition.items():             # <<<<<<<<<<<<<<
+ *         if v == 0:
+ *             empty_cubes.append(cube_index)
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_cubic_partition, __pyx_n_s_items); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 319, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = NULL;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+    }
+  }
+  __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3) : __Pyx_PyObject_CallNoArg(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 319, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
+    __pyx_t_2 = __pyx_t_1; __Pyx_INCREF(__pyx_t_2); __pyx_t_4 = 0;
+    __pyx_t_5 = NULL;
+  } else {
+    __pyx_t_4 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 319, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_5 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 319, __pyx_L1_error)
+  }
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  for (;;) {
+    if (likely(!__pyx_t_5)) {
+      if (likely(PyList_CheckExact(__pyx_t_2))) {
+        if (__pyx_t_4 >= PyList_GET_SIZE(__pyx_t_2)) break;
+        #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_4); __Pyx_INCREF(__pyx_t_1); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 319, __pyx_L1_error)
+        #else
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 319, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_1);
+        #endif
+      } else {
+        if (__pyx_t_4 >= PyTuple_GET_SIZE(__pyx_t_2)) break;
+        #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_4); __Pyx_INCREF(__pyx_t_1); __pyx_t_4++; if (unlikely(0 < 0)) __PYX_ERR(0, 319, __pyx_L1_error)
+        #else
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_4); __pyx_t_4++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 319, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_1);
+        #endif
+      }
+    } else {
+      __pyx_t_1 = __pyx_t_5(__pyx_t_2);
+      if (unlikely(!__pyx_t_1)) {
+        PyObject* exc_type = PyErr_Occurred();
+        if (exc_type) {
+          if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
+          else __PYX_ERR(0, 319, __pyx_L1_error)
+        }
+        break;
+      }
+      __Pyx_GOTREF(__pyx_t_1);
+    }
+    if ((likely(PyTuple_CheckExact(__pyx_t_1))) || (PyList_CheckExact(__pyx_t_1))) {
+      PyObject* sequence = __pyx_t_1;
+      Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
+      if (unlikely(size != 2)) {
+        if (size > 2) __Pyx_RaiseTooManyValuesError(2);
+        else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
+        __PYX_ERR(0, 319, __pyx_L1_error)
+      }
+      #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+      if (likely(PyTuple_CheckExact(sequence))) {
+        __pyx_t_3 = PyTuple_GET_ITEM(sequence, 0); 
+        __pyx_t_6 = PyTuple_GET_ITEM(sequence, 1); 
+      } else {
+        __pyx_t_3 = PyList_GET_ITEM(sequence, 0); 
+        __pyx_t_6 = PyList_GET_ITEM(sequence, 1); 
+      }
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(__pyx_t_6);
+      #else
+      __pyx_t_3 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 319, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_3);
+      __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 319, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_6);
+      #endif
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    } else {
+      Py_ssize_t index = -1;
+      __pyx_t_7 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 319, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_7);
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      __pyx_t_8 = Py_TYPE(__pyx_t_7)->tp_iternext;
+      index = 0; __pyx_t_3 = __pyx_t_8(__pyx_t_7); if (unlikely(!__pyx_t_3)) goto __pyx_L5_unpacking_failed;
+      __Pyx_GOTREF(__pyx_t_3);
+      index = 1; __pyx_t_6 = __pyx_t_8(__pyx_t_7); if (unlikely(!__pyx_t_6)) goto __pyx_L5_unpacking_failed;
+      __Pyx_GOTREF(__pyx_t_6);
+      if (__Pyx_IternextUnpackEndCheck(__pyx_t_8(__pyx_t_7), 2) < 0) __PYX_ERR(0, 319, __pyx_L1_error)
+      __pyx_t_8 = NULL;
+      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+      goto __pyx_L6_unpacking_done;
+      __pyx_L5_unpacking_failed:;
+      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+      __pyx_t_8 = NULL;
+      if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
+      __PYX_ERR(0, 319, __pyx_L1_error)
+      __pyx_L6_unpacking_done:;
+    }
+    __Pyx_XDECREF_SET(__pyx_v_k, __pyx_t_3);
+    __pyx_t_3 = 0;
+    __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_6);
+    __pyx_t_6 = 0;
+
+    /* "bubblebuster/bubblebuster.pyx":320
+ *     cube_index = 0
+ *     for k, v in cubic_partition.items():
+ *         if v == 0:             # <<<<<<<<<<<<<<
+ *             empty_cubes.append(cube_index)
+ *         cube_index += 1
+ */
+    __pyx_t_1 = __Pyx_PyInt_EqObjC(__pyx_v_v, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 320, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_9 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_9 < 0)) __PYX_ERR(0, 320, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    if (__pyx_t_9) {
+
+      /* "bubblebuster/bubblebuster.pyx":321
+ *     for k, v in cubic_partition.items():
+ *         if v == 0:
+ *             empty_cubes.append(cube_index)             # <<<<<<<<<<<<<<
+ *         cube_index += 1
+ *     return tuple(empty_cubes)
+ */
+      __pyx_t_10 = __Pyx_PyList_Append(__pyx_v_empty_cubes, __pyx_v_cube_index); if (unlikely(__pyx_t_10 == ((int)-1))) __PYX_ERR(0, 321, __pyx_L1_error)
+
+      /* "bubblebuster/bubblebuster.pyx":320
+ *     cube_index = 0
+ *     for k, v in cubic_partition.items():
+ *         if v == 0:             # <<<<<<<<<<<<<<
+ *             empty_cubes.append(cube_index)
+ *         cube_index += 1
+ */
+    }
+
+    /* "bubblebuster/bubblebuster.pyx":322
+ *         if v == 0:
+ *             empty_cubes.append(cube_index)
+ *         cube_index += 1             # <<<<<<<<<<<<<<
+ *     return tuple(empty_cubes)
+ * 
+ */
+    __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_v_cube_index, __pyx_int_1, 1, 1, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 322, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF_SET(__pyx_v_cube_index, __pyx_t_1);
+    __pyx_t_1 = 0;
+
+    /* "bubblebuster/bubblebuster.pyx":319
+ *     empty_cubes = []
+ *     cube_index = 0
+ *     for k, v in cubic_partition.items():             # <<<<<<<<<<<<<<
+ *         if v == 0:
+ *             empty_cubes.append(cube_index)
+ */
+  }
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":323
+ *             empty_cubes.append(cube_index)
+ *         cube_index += 1
+ *     return tuple(empty_cubes)             # <<<<<<<<<<<<<<
+ * 
+ * def get_cube_bounds(
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_2 = PyList_AsTuple(__pyx_v_empty_cubes); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 323, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_r = __pyx_t_2;
+  __pyx_t_2 = 0;
+  goto __pyx_L0;
+
+  /* "bubblebuster/bubblebuster.pyx":314
+ *     return cubic_partition
+ * 
+ * def get_empty_cubes(             # <<<<<<<<<<<<<<
+ *         cubic_partition: Dict,
+ * ) -> Tuple:
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.get_empty_cubes", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_empty_cubes);
+  __Pyx_XDECREF(__pyx_v_cube_index);
+  __Pyx_XDECREF(__pyx_v_k);
+  __Pyx_XDECREF(__pyx_v_v);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "bubblebuster/bubblebuster.pyx":325
+ *     return tuple(empty_cubes)
+ * 
+ * def get_cube_bounds(             # <<<<<<<<<<<<<<
+ *         water_box_properties: WaterBoxProperties,
+ *         cube_index: int,
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_35get_cube_bounds(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_35get_cube_bounds = {"get_cube_bounds", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_35get_cube_bounds, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_35get_cube_bounds(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_water_box_properties = 0;
+  PyObject *__pyx_v_cube_index = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("get_cube_bounds (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_water_box_properties,&__pyx_n_s_cube_index,0};
+    PyObject* values[2] = {0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_water_box_properties)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_cube_index)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("get_cube_bounds", 1, 2, 2, 1); __PYX_ERR(0, 325, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "get_cube_bounds") < 0)) __PYX_ERR(0, 325, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+    }
+    __pyx_v_water_box_properties = values[0];
+    __pyx_v_cube_index = values[1];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("get_cube_bounds", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 325, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.get_cube_bounds", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_34get_cube_bounds(__pyx_self, __pyx_v_water_box_properties, __pyx_v_cube_index);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34get_cube_bounds(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_water_box_properties, PyObject *__pyx_v_cube_index) {
+  PyObject *__pyx_v_i = NULL;
+  PyObject *__pyx_v_j = NULL;
+  PyObject *__pyx_v_k = NULL;
+  PyObject *__pyx_v_cube_bounds = NULL;
+  PyObject *__pyx_v_wx = NULL;
+  PyObject *__pyx_v_wy = NULL;
+  PyObject *__pyx_v_wz = NULL;
+  PyObject *__pyx_v_x_lb = NULL;
+  PyObject *__pyx_v_y_lb = NULL;
+  PyObject *__pyx_v_z_lb = NULL;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *(*__pyx_t_6)(PyObject *);
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("get_cube_bounds", 0);
+
+  /* "bubblebuster/bubblebuster.pyx":329
+ *         cube_index: int,
+ * ) -> np.ndarray:
+ *     i, j, k = list(water_box_properties.cubic_partition)[cube_index]             # <<<<<<<<<<<<<<
+ *     cube_bounds = np.zeros((3, 2), dtype=np.float64)
+ *     wx, wy, wz = water_box_properties.mesh
+ */
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_water_box_properties, __pyx_n_s_cubic_partition); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 329, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = PySequence_List(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 329, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_t_2, __pyx_v_cube_index); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 329, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if ((likely(PyTuple_CheckExact(__pyx_t_1))) || (PyList_CheckExact(__pyx_t_1))) {
+    PyObject* sequence = __pyx_t_1;
+    Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
+    if (unlikely(size != 3)) {
+      if (size > 3) __Pyx_RaiseTooManyValuesError(3);
+      else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
+      __PYX_ERR(0, 329, __pyx_L1_error)
+    }
+    #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    if (likely(PyTuple_CheckExact(sequence))) {
+      __pyx_t_2 = PyTuple_GET_ITEM(sequence, 0); 
+      __pyx_t_3 = PyTuple_GET_ITEM(sequence, 1); 
+      __pyx_t_4 = PyTuple_GET_ITEM(sequence, 2); 
+    } else {
+      __pyx_t_2 = PyList_GET_ITEM(sequence, 0); 
+      __pyx_t_3 = PyList_GET_ITEM(sequence, 1); 
+      __pyx_t_4 = PyList_GET_ITEM(sequence, 2); 
+    }
+    __Pyx_INCREF(__pyx_t_2);
+    __Pyx_INCREF(__pyx_t_3);
+    __Pyx_INCREF(__pyx_t_4);
+    #else
+    __pyx_t_2 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 329, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_3 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 329, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 329, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    #endif
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  } else {
+    Py_ssize_t index = -1;
+    __pyx_t_5 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 329, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_6 = Py_TYPE(__pyx_t_5)->tp_iternext;
+    index = 0; __pyx_t_2 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_2)) goto __pyx_L3_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_2);
+    index = 1; __pyx_t_3 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_3)) goto __pyx_L3_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_3);
+    index = 2; __pyx_t_4 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_4)) goto __pyx_L3_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_4);
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_6(__pyx_t_5), 3) < 0) __PYX_ERR(0, 329, __pyx_L1_error)
+    __pyx_t_6 = NULL;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    goto __pyx_L4_unpacking_done;
+    __pyx_L3_unpacking_failed:;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_6 = NULL;
+    if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
+    __PYX_ERR(0, 329, __pyx_L1_error)
+    __pyx_L4_unpacking_done:;
+  }
+  __pyx_v_i = __pyx_t_2;
+  __pyx_t_2 = 0;
+  __pyx_v_j = __pyx_t_3;
+  __pyx_t_3 = 0;
+  __pyx_v_k = __pyx_t_4;
+  __pyx_t_4 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":330
+ * ) -> np.ndarray:
+ *     i, j, k = list(water_box_properties.cubic_partition)[cube_index]
+ *     cube_bounds = np.zeros((3, 2), dtype=np.float64)             # <<<<<<<<<<<<<<
+ *     wx, wy, wz = water_box_properties.mesh
+ *     x_lb = water_box_properties.bounds[0, 0]
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 330, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 330, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 330, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 330, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 330, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_2) < 0) __PYX_ERR(0, 330, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_tuple__2, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 330, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_v_cube_bounds = __pyx_t_2;
+  __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":331
+ *     i, j, k = list(water_box_properties.cubic_partition)[cube_index]
+ *     cube_bounds = np.zeros((3, 2), dtype=np.float64)
+ *     wx, wy, wz = water_box_properties.mesh             # <<<<<<<<<<<<<<
+ *     x_lb = water_box_properties.bounds[0, 0]
+ *     y_lb = water_box_properties.bounds[1, 0]
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_water_box_properties, __pyx_n_s_mesh); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 331, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if ((likely(PyTuple_CheckExact(__pyx_t_2))) || (PyList_CheckExact(__pyx_t_2))) {
+    PyObject* sequence = __pyx_t_2;
+    Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
+    if (unlikely(size != 3)) {
+      if (size > 3) __Pyx_RaiseTooManyValuesError(3);
+      else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
+      __PYX_ERR(0, 331, __pyx_L1_error)
+    }
+    #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    if (likely(PyTuple_CheckExact(sequence))) {
+      __pyx_t_1 = PyTuple_GET_ITEM(sequence, 0); 
+      __pyx_t_4 = PyTuple_GET_ITEM(sequence, 1); 
+      __pyx_t_3 = PyTuple_GET_ITEM(sequence, 2); 
+    } else {
+      __pyx_t_1 = PyList_GET_ITEM(sequence, 0); 
+      __pyx_t_4 = PyList_GET_ITEM(sequence, 1); 
+      __pyx_t_3 = PyList_GET_ITEM(sequence, 2); 
+    }
+    __Pyx_INCREF(__pyx_t_1);
+    __Pyx_INCREF(__pyx_t_4);
+    __Pyx_INCREF(__pyx_t_3);
+    #else
+    __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 331, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_4 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 331, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 331, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    #endif
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  } else {
+    Py_ssize_t index = -1;
+    __pyx_t_5 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 331, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_6 = Py_TYPE(__pyx_t_5)->tp_iternext;
+    index = 0; __pyx_t_1 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_1)) goto __pyx_L5_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_1);
+    index = 1; __pyx_t_4 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_4)) goto __pyx_L5_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_4);
+    index = 2; __pyx_t_3 = __pyx_t_6(__pyx_t_5); if (unlikely(!__pyx_t_3)) goto __pyx_L5_unpacking_failed;
+    __Pyx_GOTREF(__pyx_t_3);
+    if (__Pyx_IternextUnpackEndCheck(__pyx_t_6(__pyx_t_5), 3) < 0) __PYX_ERR(0, 331, __pyx_L1_error)
+    __pyx_t_6 = NULL;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    goto __pyx_L6_unpacking_done;
+    __pyx_L5_unpacking_failed:;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_6 = NULL;
+    if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
+    __PYX_ERR(0, 331, __pyx_L1_error)
+    __pyx_L6_unpacking_done:;
+  }
+  __pyx_v_wx = __pyx_t_1;
+  __pyx_t_1 = 0;
+  __pyx_v_wy = __pyx_t_4;
+  __pyx_t_4 = 0;
+  __pyx_v_wz = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":332
+ *     cube_bounds = np.zeros((3, 2), dtype=np.float64)
+ *     wx, wy, wz = water_box_properties.mesh
+ *     x_lb = water_box_properties.bounds[0, 0]             # <<<<<<<<<<<<<<
+ *     y_lb = water_box_properties.bounds[1, 0]
+ *     z_lb = water_box_properties.bounds[2, 0]
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_water_box_properties, __pyx_n_s_bounds); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 332, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_2, __pyx_tuple__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 332, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_x_lb = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":333
+ *     wx, wy, wz = water_box_properties.mesh
+ *     x_lb = water_box_properties.bounds[0, 0]
+ *     y_lb = water_box_properties.bounds[1, 0]             # <<<<<<<<<<<<<<
+ *     z_lb = water_box_properties.bounds[2, 0]
+ *     cube_bounds[0, 0] = (i * wx) + x_lb
+ */
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_water_box_properties, __pyx_n_s_bounds); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 333, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_t_3, __pyx_tuple__4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 333, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_v_y_lb = __pyx_t_2;
+  __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":334
+ *     x_lb = water_box_properties.bounds[0, 0]
+ *     y_lb = water_box_properties.bounds[1, 0]
+ *     z_lb = water_box_properties.bounds[2, 0]             # <<<<<<<<<<<<<<
+ *     cube_bounds[0, 0] = (i * wx) + x_lb
+ *     cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_water_box_properties, __pyx_n_s_bounds); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 334, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_t_2, __pyx_tuple__5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 334, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_z_lb = __pyx_t_3;
+  __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":335
+ *     y_lb = water_box_properties.bounds[1, 0]
+ *     z_lb = water_box_properties.bounds[2, 0]
+ *     cube_bounds[0, 0] = (i * wx) + x_lb             # <<<<<<<<<<<<<<
+ *     cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ *     cube_bounds[1, 0] = (j * wy) + y_lb
+ */
+  __pyx_t_3 = PyNumber_Multiply(__pyx_v_i, __pyx_v_wx); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 335, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_x_lb); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 335, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__3, __pyx_t_2) < 0)) __PYX_ERR(0, 335, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":336
+ *     z_lb = water_box_properties.bounds[2, 0]
+ *     cube_bounds[0, 0] = (i * wx) + x_lb
+ *     cube_bounds[0, 1] = (i * wx) + x_lb + wx             # <<<<<<<<<<<<<<
+ *     cube_bounds[1, 0] = (j * wy) + y_lb
+ *     cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ */
+  __pyx_t_2 = PyNumber_Multiply(__pyx_v_i, __pyx_v_wx); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 336, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_v_x_lb); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 336, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_wx); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 336, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__6, __pyx_t_2) < 0)) __PYX_ERR(0, 336, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":337
+ *     cube_bounds[0, 0] = (i * wx) + x_lb
+ *     cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ *     cube_bounds[1, 0] = (j * wy) + y_lb             # <<<<<<<<<<<<<<
+ *     cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ *     cube_bounds[2, 0] = (k * wz) + z_lb
+ */
+  __pyx_t_2 = PyNumber_Multiply(__pyx_v_j, __pyx_v_wy); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 337, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_v_y_lb); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 337, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__4, __pyx_t_3) < 0)) __PYX_ERR(0, 337, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":338
+ *     cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ *     cube_bounds[1, 0] = (j * wy) + y_lb
+ *     cube_bounds[1, 1] = (j * wy) + y_lb + wy             # <<<<<<<<<<<<<<
+ *     cube_bounds[2, 0] = (k * wz) + z_lb
+ *     cube_bounds[2, 1] = (k * wz) + z_lb + wz
+ */
+  __pyx_t_3 = PyNumber_Multiply(__pyx_v_j, __pyx_v_wy); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 338, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_y_lb); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 338, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_v_wy); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 338, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__7, __pyx_t_3) < 0)) __PYX_ERR(0, 338, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":339
+ *     cube_bounds[1, 0] = (j * wy) + y_lb
+ *     cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ *     cube_bounds[2, 0] = (k * wz) + z_lb             # <<<<<<<<<<<<<<
+ *     cube_bounds[2, 1] = (k * wz) + z_lb + wz
+ *     return cube_bounds
+ */
+  __pyx_t_3 = PyNumber_Multiply(__pyx_v_k, __pyx_v_wz); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 339, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_z_lb); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 339, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__5, __pyx_t_2) < 0)) __PYX_ERR(0, 339, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":340
+ *     cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ *     cube_bounds[2, 0] = (k * wz) + z_lb
+ *     cube_bounds[2, 1] = (k * wz) + z_lb + wz             # <<<<<<<<<<<<<<
+ *     return cube_bounds
+ * 
+ */
+  __pyx_t_2 = PyNumber_Multiply(__pyx_v_k, __pyx_v_wz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 340, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = PyNumber_Add(__pyx_t_2, __pyx_v_z_lb); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 340, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = PyNumber_Add(__pyx_t_3, __pyx_v_wz); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 340, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(PyObject_SetItem(__pyx_v_cube_bounds, __pyx_tuple__8, __pyx_t_2) < 0)) __PYX_ERR(0, 340, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":341
+ *     cube_bounds[2, 0] = (k * wz) + z_lb
+ *     cube_bounds[2, 1] = (k * wz) + z_lb + wz
+ *     return cube_bounds             # <<<<<<<<<<<<<<
+ * 
+ * def get_box_type(
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_cube_bounds);
+  __pyx_r = __pyx_v_cube_bounds;
+  goto __pyx_L0;
+
+  /* "bubblebuster/bubblebuster.pyx":325
+ *     return tuple(empty_cubes)
+ * 
+ * def get_cube_bounds(             # <<<<<<<<<<<<<<
+ *         water_box_properties: WaterBoxProperties,
+ *         cube_index: int,
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.get_cube_bounds", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_i);
+  __Pyx_XDECREF(__pyx_v_j);
+  __Pyx_XDECREF(__pyx_v_k);
+  __Pyx_XDECREF(__pyx_v_cube_bounds);
+  __Pyx_XDECREF(__pyx_v_wx);
+  __Pyx_XDECREF(__pyx_v_wy);
+  __Pyx_XDECREF(__pyx_v_wz);
+  __Pyx_XDECREF(__pyx_v_x_lb);
+  __Pyx_XDECREF(__pyx_v_y_lb);
+  __Pyx_XDECREF(__pyx_v_z_lb);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "bubblebuster/bubblebuster.pyx":343
+ *     return cube_bounds
  * 
  * def get_box_type(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray,
@@ -6208,21 +8232,20 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_28get_cubic_partition_oc
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_31get_box_type(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_30get_box_type[] = "\n    Returns the system's type of periodic box. The type of\n    periodic box can be determined by examining the box vector\n    matrix. Box vectors for cubic boxes will form a diagonal\n    matrix, while box vectors for triclinic boxes will not.\n    Using this property, the box type is determined by looking\n    at all of the box vector matrix's off diagonal elements. If\n    any of them are non-zero, then the box is triclinic. Otherwise,\n    the system's periodic box is cubic.\n\n    Parameters\n    ----------\n    box_vectors : ndarray\n        Box vectors of the system's water box.\n\n    Returns\n    -------\n    : str\n        System's type of periodic box.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_31get_box_type = {"get_box_type", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_31get_box_type, METH_O, __pyx_doc_12bubblebuster_12bubblebuster_30get_box_type};
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_31get_box_type(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors) {
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_37get_box_type(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_37get_box_type = {"get_box_type", (PyCFunction)__pyx_pw_12bubblebuster_12bubblebuster_37get_box_type, METH_O, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_37get_box_type(PyObject *__pyx_self, PyObject *__pyx_v_box_vectors) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_box_type (wrapper)", 0);
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(__pyx_self, ((PyObject *)__pyx_v_box_vectors));
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_36get_box_type(__pyx_self, ((PyObject *)__pyx_v_box_vectors));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vectors) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_36get_box_type(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_box_vectors) {
   PyObject *__pyx_v_off_diagonals = NULL;
   long __pyx_v_i;
   long __pyx_v_j;
@@ -6239,18 +8262,18 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UN
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_box_type", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":664
- * 
- *     """
+  /* "bubblebuster/bubblebuster.pyx":346
+ *         box_vectors: np.ndarray,
+ * ) -> str:
  *     off_diagonals = [             # <<<<<<<<<<<<<<
  *         int(box_vectors[i][j]) for i in range(3)
  *         for j in range(3) if i != j
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 664, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "bubblebuster/bubblebuster.pyx":665
- *     """
+  /* "bubblebuster/bubblebuster.pyx":347
+ * ) -> str:
  *     off_diagonals = [
  *         int(box_vectors[i][j]) for i in range(3)             # <<<<<<<<<<<<<<
  *         for j in range(3) if i != j
@@ -6259,7 +8282,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UN
   for (__pyx_t_2 = 0; __pyx_t_2 < 3; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "bubblebuster/bubblebuster.pyx":666
+    /* "bubblebuster/bubblebuster.pyx":348
  *     off_diagonals = [
  *         int(box_vectors[i][j]) for i in range(3)
  *         for j in range(3) if i != j             # <<<<<<<<<<<<<<
@@ -6271,25 +8294,25 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UN
       __pyx_t_4 = ((__pyx_v_i != __pyx_v_j) != 0);
       if (__pyx_t_4) {
 
-        /* "bubblebuster/bubblebuster.pyx":665
- *     """
+        /* "bubblebuster/bubblebuster.pyx":347
+ * ) -> str:
  *     off_diagonals = [
  *         int(box_vectors[i][j]) for i in range(3)             # <<<<<<<<<<<<<<
  *         for j in range(3) if i != j
  *     ]
  */
-        __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_box_vectors, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 665, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_box_vectors, __pyx_v_i, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 347, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
-        __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_5, __pyx_v_j, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 665, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_5, __pyx_v_j, long, 1, __Pyx_PyInt_From_long, 0, 1, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 347, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-        __pyx_t_5 = __Pyx_PyNumber_Int(__pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 665, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyNumber_Int(__pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 347, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 664, __pyx_L1_error)
+        if (unlikely(__Pyx_ListComp_Append(__pyx_t_1, (PyObject*)__pyx_t_5))) __PYX_ERR(0, 346, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-        /* "bubblebuster/bubblebuster.pyx":666
+        /* "bubblebuster/bubblebuster.pyx":348
  *     off_diagonals = [
  *         int(box_vectors[i][j]) for i in range(3)
  *         for j in range(3) if i != j             # <<<<<<<<<<<<<<
@@ -6302,23 +8325,23 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UN
   __pyx_v_off_diagonals = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":668
+  /* "bubblebuster/bubblebuster.pyx":350
  *         for j in range(3) if i != j
  *     ]
  *     if sum(off_diagonals) == 0:             # <<<<<<<<<<<<<<
  *         return "cubic"
  *     return "triclinic"
  */
-  __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_sum, __pyx_v_off_diagonals); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 668, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_builtin_sum, __pyx_v_off_diagonals); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 668, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_EqObjC(__pyx_t_1, __pyx_int_0, 0, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 668, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_4 < 0)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   if (__pyx_t_4) {
 
-    /* "bubblebuster/bubblebuster.pyx":669
+    /* "bubblebuster/bubblebuster.pyx":351
  *     ]
  *     if sum(off_diagonals) == 0:
  *         return "cubic"             # <<<<<<<<<<<<<<
@@ -6330,7 +8353,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UN
     __pyx_r = __pyx_n_s_cubic;
     goto __pyx_L0;
 
-    /* "bubblebuster/bubblebuster.pyx":668
+    /* "bubblebuster/bubblebuster.pyx":350
  *         for j in range(3) if i != j
  *     ]
  *     if sum(off_diagonals) == 0:             # <<<<<<<<<<<<<<
@@ -6339,7 +8362,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UN
  */
   }
 
-  /* "bubblebuster/bubblebuster.pyx":670
+  /* "bubblebuster/bubblebuster.pyx":352
  *     if sum(off_diagonals) == 0:
  *         return "cubic"
  *     return "triclinic"             # <<<<<<<<<<<<<<
@@ -6351,8 +8374,8 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UN
   __pyx_r = __pyx_n_s_triclinic;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":640
- *     return cubic_partition
+  /* "bubblebuster/bubblebuster.pyx":343
+ *     return cube_bounds
  * 
  * def get_box_type(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray,
@@ -6373,7 +8396,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UN
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":672
+/* "bubblebuster/bubblebuster.pyx":354
  *     return "triclinic"
  * 
  * def load_mdtraj_trajectory(             # <<<<<<<<<<<<<<
@@ -6382,9 +8405,9 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_30get_box_type(CYTHON_UN
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_33load_mdtraj_trajectory(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_33load_mdtraj_trajectory = {"load_mdtraj_trajectory", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_33load_mdtraj_trajectory, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_33load_mdtraj_trajectory(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_39load_mdtraj_trajectory(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_39load_mdtraj_trajectory = {"load_mdtraj_trajectory", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_39load_mdtraj_trajectory, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_39load_mdtraj_trajectory(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_structure_file = 0;
   PyObject *__pyx_v_topology_file = 0;
   int __pyx_lineno = 0;
@@ -6421,7 +8444,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_33load_mdtraj_trajectory
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "load_mdtraj_trajectory") < 0)) __PYX_ERR(0, 672, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "load_mdtraj_trajectory") < 0)) __PYX_ERR(0, 354, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6437,14 +8460,14 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_33load_mdtraj_trajectory
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("load_mdtraj_trajectory", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 672, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("load_mdtraj_trajectory", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 354, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("bubblebuster.bubblebuster.load_mdtraj_trajectory", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_structure_file), (&PyString_Type), 1, "structure_file", 1))) __PYX_ERR(0, 673, __pyx_L1_error)
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_32load_mdtraj_trajectory(__pyx_self, __pyx_v_structure_file, __pyx_v_topology_file);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_structure_file), (&PyString_Type), 1, "structure_file", 1))) __PYX_ERR(0, 355, __pyx_L1_error)
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_38load_mdtraj_trajectory(__pyx_self, __pyx_v_structure_file, __pyx_v_topology_file);
 
   /* function exit code */
   goto __pyx_L0;
@@ -6455,7 +8478,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_33load_mdtraj_trajectory
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32load_mdtraj_trajectory(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_structure_file, PyObject *__pyx_v_topology_file) {
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_38load_mdtraj_trajectory(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_structure_file, PyObject *__pyx_v_topology_file) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6468,17 +8491,17 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32load_mdtraj_trajectory
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("load_mdtraj_trajectory", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":676
+  /* "bubblebuster/bubblebuster.pyx":358
  *         topology_file: Optional[str] = '',
  * ) -> Trajectory:
  *     if topology_file == '':             # <<<<<<<<<<<<<<
  *         return md.load(structure_file)
  *     return md.load(structure_file, top=topology_file)
  */
-  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_v_topology_file, __pyx_kp_s__10, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 676, __pyx_L1_error)
+  __pyx_t_1 = (__Pyx_PyString_Equals(__pyx_v_topology_file, __pyx_kp_s__10, Py_EQ)); if (unlikely(__pyx_t_1 < 0)) __PYX_ERR(0, 358, __pyx_L1_error)
   if (__pyx_t_1) {
 
-    /* "bubblebuster/bubblebuster.pyx":677
+    /* "bubblebuster/bubblebuster.pyx":359
  * ) -> Trajectory:
  *     if topology_file == '':
  *         return md.load(structure_file)             # <<<<<<<<<<<<<<
@@ -6486,9 +8509,9 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32load_mdtraj_trajectory
  * 
  */
     __Pyx_XDECREF(__pyx_r);
-    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_md); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 677, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_md); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 359, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_load); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 677, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_load); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 359, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_3 = NULL;
@@ -6503,14 +8526,14 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32load_mdtraj_trajectory
     }
     __pyx_t_2 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_3, __pyx_v_structure_file) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_v_structure_file);
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 677, __pyx_L1_error)
+    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 359, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_r = __pyx_t_2;
     __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "bubblebuster/bubblebuster.pyx":676
+    /* "bubblebuster/bubblebuster.pyx":358
  *         topology_file: Optional[str] = '',
  * ) -> Trajectory:
  *     if topology_file == '':             # <<<<<<<<<<<<<<
@@ -6519,28 +8542,28 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32load_mdtraj_trajectory
  */
   }
 
-  /* "bubblebuster/bubblebuster.pyx":678
+  /* "bubblebuster/bubblebuster.pyx":360
  *     if topology_file == '':
  *         return md.load(structure_file)
  *     return md.load(structure_file, top=topology_file)             # <<<<<<<<<<<<<<
  * 
- * def periodic_box_properties(
+ * def water_box_properties(
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_md); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 678, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_md); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 360, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_load); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 678, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_load); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 360, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 678, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 360, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_v_structure_file);
   __Pyx_GIVEREF(__pyx_v_structure_file);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_structure_file);
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 678, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 360, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_top, __pyx_v_topology_file) < 0) __PYX_ERR(0, 678, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 678, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_top, __pyx_v_topology_file) < 0) __PYX_ERR(0, 360, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 360, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -6549,7 +8572,7 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32load_mdtraj_trajectory
   __pyx_t_5 = 0;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":672
+  /* "bubblebuster/bubblebuster.pyx":354
  *     return "triclinic"
  * 
  * def load_mdtraj_trajectory(             # <<<<<<<<<<<<<<
@@ -6571,19 +8594,18 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_32load_mdtraj_trajectory
   return __pyx_r;
 }
 
-/* "bubblebuster/bubblebuster.pyx":680
+/* "bubblebuster/bubblebuster.pyx":362
  *     return md.load(structure_file, top=topology_file)
  * 
- * def periodic_box_properties(             # <<<<<<<<<<<<<<
+ * def water_box_properties(             # <<<<<<<<<<<<<<
  *         structure_file: str,
- *         box_vectors: Optional[np.ndarray] = None,
+ *         box_vectors: Optional[np.ndarray] = False,
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_35periodic_box_properties(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_12bubblebuster_12bubblebuster_34periodic_box_properties[] = "\n    Core function in module. Returns a filled out BoxInfo object,\n    which holds the system's total number of atoms, atom density,\n    periodic box volume, periodic box unit vector magnitudes, and\n    a boolean that is set to True if the system's water box likely\n    has a bubble. To determine if the system's water box has a bubble,\n    the structure provided by the structure_file parameter (and\n    possibly\n    the topology_file parameter) is wrapped into it's periodic image.\n    The wrapped structure is partitioned into cubes and the local atom\n    density is calculated for each cube. If any of these densities is\n    less then the system's mean density multiplied by the cutoff, the\n    system's water box likely has a bubble.\n\n    Parameters\n    ----------\n    structure_file : str\n        Name (including the path) of the system's structure file. Using\n        this file, the system's structure is loaded as a mdtraj\n        trajectory. If this file does not contain topology information,\n        a topology file must be provided. h5, lh5, and pdb formats\n        contain topology information and do not need to be accompanied\n        by a topology file.\n\n    mesh : tuple, optional\n        Three element tuple of floats that defines the length's of the\n        cubes' sides in the cubic partition. Decreasing\n        this value will lead to increased accuracy, but will\n        significantly increase the calculation time.\n        Defaults to (1.5, 1.5, 1.5).\n\n    box_vectors : ndarray, optional\n        Box vectors that define the system's periodic box. If they are\n        not provided, the box vectors are extracted from the system's\n        mdtraj Trajectory object.\n\n    cutoff : float, optional\n        Cutoff value used to determine if the system's water box has a\n        bubble. If any cube in the partition has a atom density less\n        than this value multiplied by the system's atom density then\n        the system is deemed to li""kely have a bubble. Increasing the\n        cutoff value increases the chances of this calculation yielding\n        a false negative, while having to low of a cutoff value\n        increases the chances of getting a false positive. Defaults to\n        0.5.\n\n    topology_file : str, optional\n        Name (and path) of system's topology file. A topology file is\n        required if structure_file does not contain topology\n        information.\n\n    wrapped_structure_filename : str, optional\n        If provided, the wrapped structure will be saved as PDB with\n        this name. If left blank, the wrapped structure will not be\n        saved.\n\n    Returns\n    -------\n    box_info : BoxInfo\n        BoxInfo class object that holds the properties of the system's\n        water box.\n\n    Notes\n    -----\n    The unit for all numerical float values is nanometers(nm) unless\n    otherwise noted.\n\n    ";
-static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_35periodic_box_properties = {"periodic_box_properties", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_35periodic_box_properties, METH_VARARGS|METH_KEYWORDS, __pyx_doc_12bubblebuster_12bubblebuster_34periodic_box_properties};
-static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_35periodic_box_properties(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_41water_box_properties(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_12bubblebuster_12bubblebuster_41water_box_properties = {"water_box_properties", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_12bubblebuster_12bubblebuster_41water_box_properties, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_41water_box_properties(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_structure_file = 0;
   PyObject *__pyx_v_box_vectors = 0;
   PyObject *__pyx_v_mesh = 0;
@@ -6595,28 +8617,28 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_35periodic_box_propertie
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("periodic_box_properties (wrapper)", 0);
+  __Pyx_RefNannySetupContext("water_box_properties (wrapper)", 0);
   {
     static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_structure_file,&__pyx_n_s_box_vectors,&__pyx_n_s_mesh,&__pyx_n_s_cutoff,&__pyx_n_s_topology_file,&__pyx_n_s_wrapped_structure_filename,0};
     PyObject* values[6] = {0,0,0,0,0,0};
 
-    /* "bubblebuster/bubblebuster.pyx":682
- * def periodic_box_properties(
+    /* "bubblebuster/bubblebuster.pyx":364
+ * def water_box_properties(
  *         structure_file: str,
- *         box_vectors: Optional[np.ndarray] = None,             # <<<<<<<<<<<<<<
- *         mesh: Optional[Tuple[float]] = (1.5, 1.5, 1.5),
+ *         box_vectors: Optional[np.ndarray] = False,             # <<<<<<<<<<<<<<
+ *         mesh: Optional[Tuple[float]] = False,
  *         cutoff: Optional[float] = 0.5,
  */
-    values[1] = ((PyObject *)Py_None);
+    values[1] = ((PyObject *)Py_False);
 
-    /* "bubblebuster/bubblebuster.pyx":683
+    /* "bubblebuster/bubblebuster.pyx":365
  *         structure_file: str,
- *         box_vectors: Optional[np.ndarray] = None,
- *         mesh: Optional[Tuple[float]] = (1.5, 1.5, 1.5),             # <<<<<<<<<<<<<<
+ *         box_vectors: Optional[np.ndarray] = False,
+ *         mesh: Optional[Tuple[float]] = False,             # <<<<<<<<<<<<<<
  *         cutoff: Optional[float] = 0.5,
  *         topology_file: Optional[str] = '',
  */
-    values[2] = ((PyObject *)__pyx_tuple__11);
+    values[2] = ((PyObject *)Py_False);
     values[3] = ((PyObject *)__pyx_float_0_5);
     values[4] = ((PyObject *)__pyx_kp_s__10);
     values[5] = ((PyObject *)__pyx_kp_s__10);
@@ -6676,7 +8698,7 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_35periodic_box_propertie
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "periodic_box_properties") < 0)) __PYX_ERR(0, 680, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "water_box_properties") < 0)) __PYX_ERR(0, 362, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -6704,21 +8726,21 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_35periodic_box_propertie
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("periodic_box_properties", 0, 1, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 680, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("water_box_properties", 0, 1, 6, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 362, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("bubblebuster.bubblebuster.periodic_box_properties", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.water_box_properties", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_structure_file), (&PyString_Type), 1, "structure_file", 1))) __PYX_ERR(0, 681, __pyx_L1_error)
-  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_properties(__pyx_self, __pyx_v_structure_file, __pyx_v_box_vectors, __pyx_v_mesh, __pyx_v_cutoff, __pyx_v_topology_file, __pyx_v_wrapped_structure_filename);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_structure_file), (&PyString_Type), 1, "structure_file", 1))) __PYX_ERR(0, 363, __pyx_L1_error)
+  __pyx_r = __pyx_pf_12bubblebuster_12bubblebuster_40water_box_properties(__pyx_self, __pyx_v_structure_file, __pyx_v_box_vectors, __pyx_v_mesh, __pyx_v_cutoff, __pyx_v_topology_file, __pyx_v_wrapped_structure_filename);
 
-  /* "bubblebuster/bubblebuster.pyx":680
+  /* "bubblebuster/bubblebuster.pyx":362
  *     return md.load(structure_file, top=topology_file)
  * 
- * def periodic_box_properties(             # <<<<<<<<<<<<<<
+ * def water_box_properties(             # <<<<<<<<<<<<<<
  *         structure_file: str,
- *         box_vectors: Optional[np.ndarray] = None,
+ *         box_vectors: Optional[np.ndarray] = False,
  */
 
   /* function exit code */
@@ -6730,9 +8752,10 @@ static PyObject *__pyx_pw_12bubblebuster_12bubblebuster_35periodic_box_propertie
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_properties(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_structure_file, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_mesh, CYTHON_UNUSED PyObject *__pyx_v_cutoff, PyObject *__pyx_v_topology_file, PyObject *__pyx_v_wrapped_structure_filename) {
-  PyObject *__pyx_v_box_info = NULL;
+static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_40water_box_properties(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_structure_file, PyObject *__pyx_v_box_vectors, PyObject *__pyx_v_mesh, CYTHON_UNUSED PyObject *__pyx_v_cutoff, PyObject *__pyx_v_topology_file, PyObject *__pyx_v_wrapped_structure_filename) {
   PyObject *__pyx_v_trajectory = NULL;
+  PyObject *__pyx_v_box_dimensions = NULL;
+  PyObject *__pyx_v_box_type = NULL;
   PyObject *__pyx_v_unwrapped_coordinates = NULL;
   PyObject *__pyx_v_wrapped_coordinates = NULL;
   CYTHON_UNUSED PyObject *__pyx_v_topology = NULL;
@@ -6742,6 +8765,8 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
   PyObject *__pyx_v_ny = NULL;
   PyObject *__pyx_v_nz = NULL;
   PyObject *__pyx_v_cubic_partition = NULL;
+  PyObject *__pyx_v_empty_cubes = NULL;
+  PyObject *__pyx_v_properties = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -6751,196 +8776,252 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
   int __pyx_t_5;
   int __pyx_t_6;
   int __pyx_t_7;
-  Py_ssize_t __pyx_t_8;
-  PyObject *__pyx_t_9 = NULL;
-  PyObject *__pyx_t_10 = NULL;
+  PyObject *__pyx_t_8 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("periodic_box_properties", 0);
+  __Pyx_RefNannySetupContext("water_box_properties", 0);
+  __Pyx_INCREF(__pyx_v_box_vectors);
+  __Pyx_INCREF(__pyx_v_mesh);
 
-  /* "bubblebuster/bubblebuster.pyx":756
- * 
- *     """
- *     box_info = BoxInfo(             # <<<<<<<<<<<<<<
- *         mesh=mesh,
- *     )
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_BoxInfo); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 756, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-
-  /* "bubblebuster/bubblebuster.pyx":757
- *     """
- *     box_info = BoxInfo(
- *         mesh=mesh,             # <<<<<<<<<<<<<<
- *     )
- *     trajectory = load_mdtraj_trajectory(
- */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 757, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_mesh, __pyx_v_mesh) < 0) __PYX_ERR(0, 757, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":756
- * 
- *     """
- *     box_info = BoxInfo(             # <<<<<<<<<<<<<<
- *         mesh=mesh,
- *     )
- */
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 756, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_box_info = __pyx_t_3;
-  __pyx_t_3 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":759
- *         mesh=mesh,
- *     )
+  /* "bubblebuster/bubblebuster.pyx":370
+ *         wrapped_structure_filename: Optional[str] = '',
+ * ) -> WaterBoxProperties:
  *     trajectory = load_mdtraj_trajectory(             # <<<<<<<<<<<<<<
  *         structure_file,
  *         topology_file=topology_file
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_load_mdtraj_trajectory); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 759, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_load_mdtraj_trajectory); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 370, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
 
-  /* "bubblebuster/bubblebuster.pyx":760
- *     )
+  /* "bubblebuster/bubblebuster.pyx":371
+ * ) -> WaterBoxProperties:
  *     trajectory = load_mdtraj_trajectory(
  *         structure_file,             # <<<<<<<<<<<<<<
  *         topology_file=topology_file
  *     )
  */
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 759, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 370, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_v_structure_file);
   __Pyx_GIVEREF(__pyx_v_structure_file);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_structure_file);
 
-  /* "bubblebuster/bubblebuster.pyx":761
+  /* "bubblebuster/bubblebuster.pyx":372
  *     trajectory = load_mdtraj_trajectory(
  *         structure_file,
  *         topology_file=topology_file             # <<<<<<<<<<<<<<
  *     )
- *     if box_vectors is not None:
+ *     if not box_vectors:
  */
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 761, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_topology_file, __pyx_v_topology_file) < 0) __PYX_ERR(0, 761, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 372, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_topology_file, __pyx_v_topology_file) < 0) __PYX_ERR(0, 372, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":759
- *         mesh=mesh,
- *     )
+  /* "bubblebuster/bubblebuster.pyx":370
+ *         wrapped_structure_filename: Optional[str] = '',
+ * ) -> WaterBoxProperties:
  *     trajectory = load_mdtraj_trajectory(             # <<<<<<<<<<<<<<
  *         structure_file,
  *         topology_file=topology_file
  */
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_2, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 759, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_2, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 370, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_trajectory = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":763
+  /* "bubblebuster/bubblebuster.pyx":374
  *         topology_file=topology_file
  *     )
- *     if box_vectors is not None:             # <<<<<<<<<<<<<<
- *         box_info.box_vectors = box_vectors
- *     else:
+ *     if not box_vectors:             # <<<<<<<<<<<<<<
+ *         box_vectors = get_box_vectors(trajectory)
+ *     box_dimensions = get_box_dimensions(box_vectors)
  */
-  __pyx_t_5 = (__pyx_v_box_vectors != Py_None);
-  __pyx_t_6 = (__pyx_t_5 != 0);
+  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_v_box_vectors); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 374, __pyx_L1_error)
+  __pyx_t_6 = ((!__pyx_t_5) != 0);
   if (__pyx_t_6) {
 
-    /* "bubblebuster/bubblebuster.pyx":764
+    /* "bubblebuster/bubblebuster.pyx":375
  *     )
- *     if box_vectors is not None:
- *         box_info.box_vectors = box_vectors             # <<<<<<<<<<<<<<
- *     else:
- *         box_info.box_vectors = get_box_vectors(trajectory)
+ *     if not box_vectors:
+ *         box_vectors = get_box_vectors(trajectory)             # <<<<<<<<<<<<<<
+ *     box_dimensions = get_box_dimensions(box_vectors)
+ *     if not mesh:
  */
-    if (__Pyx_PyObject_SetAttrStr(__pyx_v_box_info, __pyx_n_s_box_vectors, __pyx_v_box_vectors) < 0) __PYX_ERR(0, 764, __pyx_L1_error)
-
-    /* "bubblebuster/bubblebuster.pyx":763
- *         topology_file=topology_file
- *     )
- *     if box_vectors is not None:             # <<<<<<<<<<<<<<
- *         box_info.box_vectors = box_vectors
- *     else:
- */
-    goto __pyx_L3;
-  }
-
-  /* "bubblebuster/bubblebuster.pyx":766
- *         box_info.box_vectors = box_vectors
- *     else:
- *         box_info.box_vectors = get_box_vectors(trajectory)             # <<<<<<<<<<<<<<
- *     box_info.box_type = get_box_type(box_info.box_vectors)
- *     trajectory.center_coordinates()
- */
-  /*else*/ {
-    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_get_box_vectors); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 766, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_get_box_vectors); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 375, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_2 = NULL;
-    if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
-      __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_1);
+    if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
+      __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_3);
       if (likely(__pyx_t_2)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
         __Pyx_INCREF(__pyx_t_2);
         __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_1, function);
+        __Pyx_DECREF_SET(__pyx_t_3, function);
       }
     }
-    __pyx_t_4 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_2, __pyx_v_trajectory) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_trajectory);
+    __pyx_t_4 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_v_trajectory) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_v_trajectory);
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 766, __pyx_L1_error)
+    if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 375, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (__Pyx_PyObject_SetAttrStr(__pyx_v_box_info, __pyx_n_s_box_vectors, __pyx_t_4) < 0) __PYX_ERR(0, 766, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  }
-  __pyx_L3:;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_DECREF_SET(__pyx_v_box_vectors, __pyx_t_4);
+    __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":767
- *     else:
- *         box_info.box_vectors = get_box_vectors(trajectory)
- *     box_info.box_type = get_box_type(box_info.box_vectors)             # <<<<<<<<<<<<<<
+    /* "bubblebuster/bubblebuster.pyx":374
+ *         topology_file=topology_file
+ *     )
+ *     if not box_vectors:             # <<<<<<<<<<<<<<
+ *         box_vectors = get_box_vectors(trajectory)
+ *     box_dimensions = get_box_dimensions(box_vectors)
+ */
+  }
+
+  /* "bubblebuster/bubblebuster.pyx":376
+ *     if not box_vectors:
+ *         box_vectors = get_box_vectors(trajectory)
+ *     box_dimensions = get_box_dimensions(box_vectors)             # <<<<<<<<<<<<<<
+ *     if not mesh:
+ *         mesh = (
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_get_box_dimensions); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 376, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = NULL;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
+    __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_3);
+    if (likely(__pyx_t_2)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+      __Pyx_INCREF(__pyx_t_2);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_3, function);
+    }
+  }
+  __pyx_t_4 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_v_box_vectors) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_v_box_vectors);
+  __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 376, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_v_box_dimensions = __pyx_t_4;
+  __pyx_t_4 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":377
+ *         box_vectors = get_box_vectors(trajectory)
+ *     box_dimensions = get_box_dimensions(box_vectors)
+ *     if not mesh:             # <<<<<<<<<<<<<<
+ *         mesh = (
+ *             box_dimensions[0] / 10.0,
+ */
+  __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_v_mesh); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 377, __pyx_L1_error)
+  __pyx_t_5 = ((!__pyx_t_6) != 0);
+  if (__pyx_t_5) {
+
+    /* "bubblebuster/bubblebuster.pyx":379
+ *     if not mesh:
+ *         mesh = (
+ *             box_dimensions[0] / 10.0,             # <<<<<<<<<<<<<<
+ *             box_dimensions[1] / 10.0,
+ *             box_dimensions[2] / 10.0,
+ */
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_box_dimensions, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 379, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = __Pyx_PyFloat_DivideObjC(__pyx_t_4, __pyx_float_10_0, 10.0, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 379, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+
+    /* "bubblebuster/bubblebuster.pyx":380
+ *         mesh = (
+ *             box_dimensions[0] / 10.0,
+ *             box_dimensions[1] / 10.0,             # <<<<<<<<<<<<<<
+ *             box_dimensions[2] / 10.0,
+ *         )
+ */
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_box_dimensions, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 380, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_2 = __Pyx_PyFloat_DivideObjC(__pyx_t_4, __pyx_float_10_0, 10.0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 380, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+
+    /* "bubblebuster/bubblebuster.pyx":381
+ *             box_dimensions[0] / 10.0,
+ *             box_dimensions[1] / 10.0,
+ *             box_dimensions[2] / 10.0,             # <<<<<<<<<<<<<<
+ *         )
+ * 
+ */
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_box_dimensions, 2, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 381, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_1 = __Pyx_PyFloat_DivideObjC(__pyx_t_4, __pyx_float_10_0, 10.0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 381, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+
+    /* "bubblebuster/bubblebuster.pyx":379
+ *     if not mesh:
+ *         mesh = (
+ *             box_dimensions[0] / 10.0,             # <<<<<<<<<<<<<<
+ *             box_dimensions[1] / 10.0,
+ *             box_dimensions[2] / 10.0,
+ */
+    __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 379, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_GIVEREF(__pyx_t_3);
+    PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
+    __Pyx_GIVEREF(__pyx_t_2);
+    PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_t_2);
+    __Pyx_GIVEREF(__pyx_t_1);
+    PyTuple_SET_ITEM(__pyx_t_4, 2, __pyx_t_1);
+    __pyx_t_3 = 0;
+    __pyx_t_2 = 0;
+    __pyx_t_1 = 0;
+    __Pyx_DECREF_SET(__pyx_v_mesh, __pyx_t_4);
+    __pyx_t_4 = 0;
+
+    /* "bubblebuster/bubblebuster.pyx":377
+ *         box_vectors = get_box_vectors(trajectory)
+ *     box_dimensions = get_box_dimensions(box_vectors)
+ *     if not mesh:             # <<<<<<<<<<<<<<
+ *         mesh = (
+ *             box_dimensions[0] / 10.0,
+ */
+  }
+
+  /* "bubblebuster/bubblebuster.pyx":384
+ *         )
+ * 
+ *     box_type = get_box_type(box_vectors)             # <<<<<<<<<<<<<<
  *     trajectory.center_coordinates()
  *     unwrapped_coordinates = get_coordinates(trajectory)
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_get_box_type); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 767, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_get_box_type); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 384, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_box_info, __pyx_n_s_box_vectors); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 767, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = NULL;
+  __pyx_t_2 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
-    if (likely(__pyx_t_3)) {
+    __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_2)) {
       PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(__pyx_t_2);
       __Pyx_INCREF(function);
       __Pyx_DECREF_SET(__pyx_t_1, function);
     }
   }
-  __pyx_t_4 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_3, __pyx_t_2) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_2);
-  __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 767, __pyx_L1_error)
+  __pyx_t_4 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_2, __pyx_v_box_vectors) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_box_vectors);
+  __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 384, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_box_info, __pyx_n_s_box_type, __pyx_t_4) < 0) __PYX_ERR(0, 767, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_v_box_type = __pyx_t_4;
+  __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":768
- *         box_info.box_vectors = get_box_vectors(trajectory)
- *     box_info.box_type = get_box_type(box_info.box_vectors)
+  /* "bubblebuster/bubblebuster.pyx":385
+ * 
+ *     box_type = get_box_type(box_vectors)
  *     trajectory.center_coordinates()             # <<<<<<<<<<<<<<
  *     unwrapped_coordinates = get_coordinates(trajectory)
- *     wrapped_coordinates = wrap_structure(unwrapped_coordinates,
+ *     wrapped_coordinates = wrap_structure(
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_center_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 768, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_center_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 385, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_2 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_1))) {
@@ -6954,19 +9035,19 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
   }
   __pyx_t_4 = (__pyx_t_2) ? __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_2) : __Pyx_PyObject_CallNoArg(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 768, __pyx_L1_error)
+  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 385, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":769
- *     box_info.box_type = get_box_type(box_info.box_vectors)
+  /* "bubblebuster/bubblebuster.pyx":386
+ *     box_type = get_box_type(box_vectors)
  *     trajectory.center_coordinates()
  *     unwrapped_coordinates = get_coordinates(trajectory)             # <<<<<<<<<<<<<<
- *     wrapped_coordinates = wrap_structure(unwrapped_coordinates,
- *                                          box_info)
+ *     wrapped_coordinates = wrap_structure(
+ *         unwrapped_coordinates,
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_get_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 769, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_get_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 386, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_2 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
@@ -6980,28 +9061,28 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
   }
   __pyx_t_4 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_2, __pyx_v_trajectory) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_trajectory);
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 769, __pyx_L1_error)
+  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 386, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_unwrapped_coordinates = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":770
+  /* "bubblebuster/bubblebuster.pyx":387
  *     trajectory.center_coordinates()
  *     unwrapped_coordinates = get_coordinates(trajectory)
- *     wrapped_coordinates = wrap_structure(unwrapped_coordinates,             # <<<<<<<<<<<<<<
- *                                          box_info)
- *     trajectory.xyz[0, :, :] = wrapped_coordinates[:, :]
+ *     wrapped_coordinates = wrap_structure(             # <<<<<<<<<<<<<<
+ *         unwrapped_coordinates,
+ *         box_vectors,
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_wrap_structure); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 770, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_wrap_structure); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 387, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "bubblebuster/bubblebuster.pyx":771
- *     unwrapped_coordinates = get_coordinates(trajectory)
- *     wrapped_coordinates = wrap_structure(unwrapped_coordinates,
- *                                          box_info)             # <<<<<<<<<<<<<<
+  /* "bubblebuster/bubblebuster.pyx":391
+ *         box_vectors,
+ *         box_dimensions,
+ *         box_type             # <<<<<<<<<<<<<<
+ *     )
  *     trajectory.xyz[0, :, :] = wrapped_coordinates[:, :]
- *     topology = trajectory.topology
  */
   __pyx_t_2 = NULL;
   __pyx_t_7 = 0;
@@ -7017,22 +9098,22 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
   }
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_1)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_2, __pyx_v_unwrapped_coordinates, __pyx_v_box_info};
-    __pyx_t_4 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 770, __pyx_L1_error)
+    PyObject *__pyx_temp[5] = {__pyx_t_2, __pyx_v_unwrapped_coordinates, __pyx_v_box_vectors, __pyx_v_box_dimensions, __pyx_v_box_type};
+    __pyx_t_4 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 387, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_4);
   } else
   #endif
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_2, __pyx_v_unwrapped_coordinates, __pyx_v_box_info};
-    __pyx_t_4 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 770, __pyx_L1_error)
+    PyObject *__pyx_temp[5] = {__pyx_t_2, __pyx_v_unwrapped_coordinates, __pyx_v_box_vectors, __pyx_v_box_dimensions, __pyx_v_box_type};
+    __pyx_t_4 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 387, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_4);
   } else
   #endif
   {
-    __pyx_t_3 = PyTuple_New(2+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 770, __pyx_L1_error)
+    __pyx_t_3 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 387, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     if (__pyx_t_2) {
       __Pyx_GIVEREF(__pyx_t_2); PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_2); __pyx_t_2 = NULL;
@@ -7040,10 +9121,16 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
     __Pyx_INCREF(__pyx_v_unwrapped_coordinates);
     __Pyx_GIVEREF(__pyx_v_unwrapped_coordinates);
     PyTuple_SET_ITEM(__pyx_t_3, 0+__pyx_t_7, __pyx_v_unwrapped_coordinates);
-    __Pyx_INCREF(__pyx_v_box_info);
-    __Pyx_GIVEREF(__pyx_v_box_info);
-    PyTuple_SET_ITEM(__pyx_t_3, 1+__pyx_t_7, __pyx_v_box_info);
-    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_3, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 770, __pyx_L1_error)
+    __Pyx_INCREF(__pyx_v_box_vectors);
+    __Pyx_GIVEREF(__pyx_v_box_vectors);
+    PyTuple_SET_ITEM(__pyx_t_3, 1+__pyx_t_7, __pyx_v_box_vectors);
+    __Pyx_INCREF(__pyx_v_box_dimensions);
+    __Pyx_GIVEREF(__pyx_v_box_dimensions);
+    PyTuple_SET_ITEM(__pyx_t_3, 2+__pyx_t_7, __pyx_v_box_dimensions);
+    __Pyx_INCREF(__pyx_v_box_type);
+    __Pyx_GIVEREF(__pyx_v_box_type);
+    PyTuple_SET_ITEM(__pyx_t_3, 3+__pyx_t_7, __pyx_v_box_type);
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_3, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 387, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   }
@@ -7051,41 +9138,41 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
   __pyx_v_wrapped_coordinates = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":772
- *     wrapped_coordinates = wrap_structure(unwrapped_coordinates,
- *                                          box_info)
+  /* "bubblebuster/bubblebuster.pyx":393
+ *         box_type
+ *     )
  *     trajectory.xyz[0, :, :] = wrapped_coordinates[:, :]             # <<<<<<<<<<<<<<
  *     topology = trajectory.topology
  *     coordinates = get_coordinates(trajectory)
  */
-  __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_v_wrapped_coordinates, __pyx_tuple__13); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 772, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_v_wrapped_coordinates, __pyx_tuple__12); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 393, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 772, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_xyz); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 393, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (unlikely(PyObject_SetItem(__pyx_t_1, __pyx_tuple__14, __pyx_t_4) < 0)) __PYX_ERR(0, 772, __pyx_L1_error)
+  if (unlikely(PyObject_SetItem(__pyx_t_1, __pyx_tuple__13, __pyx_t_4) < 0)) __PYX_ERR(0, 393, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":773
- *                                          box_info)
+  /* "bubblebuster/bubblebuster.pyx":394
+ *     )
  *     trajectory.xyz[0, :, :] = wrapped_coordinates[:, :]
  *     topology = trajectory.topology             # <<<<<<<<<<<<<<
  *     coordinates = get_coordinates(trajectory)
- *     box_info.number_of_atoms = len(coordinates)
+ *     if wrapped_structure_filename:
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_topology); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 773, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_topology); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 394, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_v_topology = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":774
+  /* "bubblebuster/bubblebuster.pyx":395
  *     trajectory.xyz[0, :, :] = wrapped_coordinates[:, :]
  *     topology = trajectory.topology
  *     coordinates = get_coordinates(trajectory)             # <<<<<<<<<<<<<<
- *     box_info.number_of_atoms = len(coordinates)
- *     box_info.atom_density = box_info.number_of_atoms \
+ *     if wrapped_structure_filename:
+ *         trajectory.save_pdb(wrapped_structure_filename)
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_get_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 774, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_get_coordinates); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 395, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
@@ -7099,433 +9186,605 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
   }
   __pyx_t_4 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_3, __pyx_v_trajectory) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_trajectory);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 774, __pyx_L1_error)
+  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 395, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_coordinates = __pyx_t_4;
   __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":775
+  /* "bubblebuster/bubblebuster.pyx":396
  *     topology = trajectory.topology
  *     coordinates = get_coordinates(trajectory)
- *     box_info.number_of_atoms = len(coordinates)             # <<<<<<<<<<<<<<
- *     box_info.atom_density = box_info.number_of_atoms \
- *                             / box_info.volume
- */
-  __pyx_t_8 = PyObject_Length(__pyx_v_coordinates); if (unlikely(__pyx_t_8 == ((Py_ssize_t)-1))) __PYX_ERR(0, 775, __pyx_L1_error)
-  __pyx_t_4 = PyInt_FromSsize_t(__pyx_t_8); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 775, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_box_info, __pyx_n_s_number_of_atoms, __pyx_t_4) < 0) __PYX_ERR(0, 775, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":776
- *     coordinates = get_coordinates(trajectory)
- *     box_info.number_of_atoms = len(coordinates)
- *     box_info.atom_density = box_info.number_of_atoms \             # <<<<<<<<<<<<<<
- *                             / box_info.volume
- *     if wrapped_structure_filename:
- */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_box_info, __pyx_n_s_number_of_atoms); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 776, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-
-  /* "bubblebuster/bubblebuster.pyx":777
- *     box_info.number_of_atoms = len(coordinates)
- *     box_info.atom_density = box_info.number_of_atoms \
- *                             / box_info.volume             # <<<<<<<<<<<<<<
- *     if wrapped_structure_filename:
- *         trajectory.save_pdb(wrapped_structure_filename)
- */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_box_info, __pyx_n_s_volume); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 777, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyNumber_Divide(__pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 777, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":776
- *     coordinates = get_coordinates(trajectory)
- *     box_info.number_of_atoms = len(coordinates)
- *     box_info.atom_density = box_info.number_of_atoms \             # <<<<<<<<<<<<<<
- *                             / box_info.volume
- *     if wrapped_structure_filename:
- */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_box_info, __pyx_n_s_atom_density, __pyx_t_3) < 0) __PYX_ERR(0, 776, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":778
- *     box_info.atom_density = box_info.number_of_atoms \
- *                             / box_info.volume
  *     if wrapped_structure_filename:             # <<<<<<<<<<<<<<
  *         trajectory.save_pdb(wrapped_structure_filename)
  *     bounds = coordinate_bounds(coordinates)
  */
-  __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_v_wrapped_structure_filename); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 778, __pyx_L1_error)
-  if (__pyx_t_6) {
+  __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_v_wrapped_structure_filename); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 396, __pyx_L1_error)
+  if (__pyx_t_5) {
 
-    /* "bubblebuster/bubblebuster.pyx":779
- *                             / box_info.volume
+    /* "bubblebuster/bubblebuster.pyx":397
+ *     coordinates = get_coordinates(trajectory)
  *     if wrapped_structure_filename:
  *         trajectory.save_pdb(wrapped_structure_filename)             # <<<<<<<<<<<<<<
  *     bounds = coordinate_bounds(coordinates)
- *     box_info.cubic_partition_bounds = bounds
+ *     nx, ny, nz = (
  */
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_save_pdb); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 779, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_trajectory, __pyx_n_s_save_pdb); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 397, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_4 = NULL;
+    __pyx_t_3 = NULL;
     if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_1))) {
-      __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_1);
-      if (likely(__pyx_t_4)) {
+      __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+      if (likely(__pyx_t_3)) {
         PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-        __Pyx_INCREF(__pyx_t_4);
+        __Pyx_INCREF(__pyx_t_3);
         __Pyx_INCREF(function);
         __Pyx_DECREF_SET(__pyx_t_1, function);
       }
     }
-    __pyx_t_3 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_4, __pyx_v_wrapped_structure_filename) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_wrapped_structure_filename);
-    __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 779, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_3, __pyx_v_wrapped_structure_filename) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_wrapped_structure_filename);
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 397, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-    /* "bubblebuster/bubblebuster.pyx":778
- *     box_info.atom_density = box_info.number_of_atoms \
- *                             / box_info.volume
+    /* "bubblebuster/bubblebuster.pyx":396
+ *     topology = trajectory.topology
+ *     coordinates = get_coordinates(trajectory)
  *     if wrapped_structure_filename:             # <<<<<<<<<<<<<<
  *         trajectory.save_pdb(wrapped_structure_filename)
  *     bounds = coordinate_bounds(coordinates)
  */
   }
 
-  /* "bubblebuster/bubblebuster.pyx":780
+  /* "bubblebuster/bubblebuster.pyx":398
  *     if wrapped_structure_filename:
  *         trajectory.save_pdb(wrapped_structure_filename)
  *     bounds = coordinate_bounds(coordinates)             # <<<<<<<<<<<<<<
- *     box_info.cubic_partition_bounds = bounds
  *     nx, ny, nz = (
+ *         get_num_subintervals(
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_coordinate_bounds); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 780, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_coordinate_bounds); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = NULL;
+  __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
-    __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_1);
-    if (likely(__pyx_t_4)) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_1);
+    if (likely(__pyx_t_3)) {
       PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_4);
+      __Pyx_INCREF(__pyx_t_3);
       __Pyx_INCREF(function);
       __Pyx_DECREF_SET(__pyx_t_1, function);
     }
   }
-  __pyx_t_3 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_4, __pyx_v_coordinates) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_coordinates);
-  __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 780, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_1, __pyx_t_3, __pyx_v_coordinates) : __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_v_coordinates);
+  __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 398, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_v_bounds = __pyx_t_3;
-  __pyx_t_3 = 0;
+  __pyx_v_bounds = __pyx_t_4;
+  __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":781
- *         trajectory.save_pdb(wrapped_structure_filename)
+  /* "bubblebuster/bubblebuster.pyx":400
  *     bounds = coordinate_bounds(coordinates)
- *     box_info.cubic_partition_bounds = bounds             # <<<<<<<<<<<<<<
  *     nx, ny, nz = (
- *         get_num_subintervals(box_info, lower_bound=bounds[0, 0], upper_bound=bounds[0, 1]),
+ *         get_num_subintervals(             # <<<<<<<<<<<<<<
+ *             lower_bound=bounds[0, 0], upper_bound=bounds[0, 1],
+ *             mesh=mesh
  */
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_box_info, __pyx_n_s_cubic_partition_bounds, __pyx_v_bounds) < 0) __PYX_ERR(0, 781, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":783
- *     box_info.cubic_partition_bounds = bounds
- *     nx, ny, nz = (
- *         get_num_subintervals(box_info, lower_bound=bounds[0, 0], upper_bound=bounds[0, 1]),             # <<<<<<<<<<<<<<
- *         get_num_subintervals(box_info, lower_bound=bounds[1, 0], upper_bound=bounds[1, 1]),
- *         get_num_subintervals(box_info, lower_bound=bounds[2, 0], upper_bound=bounds[2, 1]),
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_get_num_subintervals); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 783, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 783, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(__pyx_v_box_info);
-  __Pyx_GIVEREF(__pyx_v_box_info);
-  PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_box_info);
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 783, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_get_num_subintervals); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 400, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 783, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_lower_bound, __pyx_t_2) < 0) __PYX_ERR(0, 783, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 783, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_upper_bound, __pyx_t_2) < 0) __PYX_ERR(0, 783, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 783, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
+
+  /* "bubblebuster/bubblebuster.pyx":401
+ *     nx, ny, nz = (
+ *         get_num_subintervals(
+ *             lower_bound=bounds[0, 0], upper_bound=bounds[0, 1],             # <<<<<<<<<<<<<<
+ *             mesh=mesh
+ *         ),
+ */
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 401, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 401, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_lower_bound, __pyx_t_3) < 0) __PYX_ERR(0, 401, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__6); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 401, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_upper_bound, __pyx_t_3) < 0) __PYX_ERR(0, 401, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":402
+ *         get_num_subintervals(
+ *             lower_bound=bounds[0, 0], upper_bound=bounds[0, 1],
+ *             mesh=mesh             # <<<<<<<<<<<<<<
+ *         ),
+ *         get_num_subintervals(
+ */
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_mesh, __pyx_v_mesh) < 0) __PYX_ERR(0, 401, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":400
+ *     bounds = coordinate_bounds(coordinates)
+ *     nx, ny, nz = (
+ *         get_num_subintervals(             # <<<<<<<<<<<<<<
+ *             lower_bound=bounds[0, 0], upper_bound=bounds[0, 1],
+ *             mesh=mesh
+ */
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_empty_tuple, __pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 400, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":404
+ *             mesh=mesh
+ *         ),
+ *         get_num_subintervals(             # <<<<<<<<<<<<<<
+ *             lower_bound=bounds[1, 0], upper_bound=bounds[1, 1],
+ *             mesh=mesh
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_get_num_subintervals); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 404, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+
+  /* "bubblebuster/bubblebuster.pyx":405
+ *         ),
+ *         get_num_subintervals(
+ *             lower_bound=bounds[1, 0], upper_bound=bounds[1, 1],             # <<<<<<<<<<<<<<
+ *             mesh=mesh
+ *         ),
+ */
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 405, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 405, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_lower_bound, __pyx_t_2) < 0) __PYX_ERR(0, 405, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 405, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_upper_bound, __pyx_t_2) < 0) __PYX_ERR(0, 405, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":406
+ *         get_num_subintervals(
+ *             lower_bound=bounds[1, 0], upper_bound=bounds[1, 1],
+ *             mesh=mesh             # <<<<<<<<<<<<<<
+ *         ),
+ *         get_num_subintervals(
+ */
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_mesh, __pyx_v_mesh) < 0) __PYX_ERR(0, 405, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":404
+ *             mesh=mesh
+ *         ),
+ *         get_num_subintervals(             # <<<<<<<<<<<<<<
+ *             lower_bound=bounds[1, 0], upper_bound=bounds[1, 1],
+ *             mesh=mesh
+ */
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 404, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":784
- *     nx, ny, nz = (
- *         get_num_subintervals(box_info, lower_bound=bounds[0, 0], upper_bound=bounds[0, 1]),
- *         get_num_subintervals(box_info, lower_bound=bounds[1, 0], upper_bound=bounds[1, 1]),             # <<<<<<<<<<<<<<
- *         get_num_subintervals(box_info, lower_bound=bounds[2, 0], upper_bound=bounds[2, 1]),
+  /* "bubblebuster/bubblebuster.pyx":408
+ *             mesh=mesh
+ *         ),
+ *         get_num_subintervals(             # <<<<<<<<<<<<<<
+ *             lower_bound=bounds[2, 0], upper_bound=bounds[2, 1],
+ *             mesh=mesh
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_get_num_subintervals); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 408, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+
+  /* "bubblebuster/bubblebuster.pyx":409
+ *         ),
+ *         get_num_subintervals(
+ *             lower_bound=bounds[2, 0], upper_bound=bounds[2, 1],             # <<<<<<<<<<<<<<
+ *             mesh=mesh
+ *         ),
+ */
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 409, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__5); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 409, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_8);
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_lower_bound, __pyx_t_8) < 0) __PYX_ERR(0, 409, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  __pyx_t_8 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__8); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 409, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_8);
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_upper_bound, __pyx_t_8) < 0) __PYX_ERR(0, 409, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":410
+ *         get_num_subintervals(
+ *             lower_bound=bounds[2, 0], upper_bound=bounds[2, 1],
+ *             mesh=mesh             # <<<<<<<<<<<<<<
+ *         ),
  *     )
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_get_num_subintervals); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 784, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 784, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(__pyx_v_box_info);
-  __Pyx_GIVEREF(__pyx_v_box_info);
-  PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_box_info);
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 784, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_9 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__3); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 784, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_9);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_lower_bound, __pyx_t_9) < 0) __PYX_ERR(0, 784, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-  __pyx_t_9 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 784, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_9);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_upper_bound, __pyx_t_9) < 0) __PYX_ERR(0, 784, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-  __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_1, __pyx_t_3); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 784, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_9);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_mesh, __pyx_v_mesh) < 0) __PYX_ERR(0, 409, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":785
- *         get_num_subintervals(box_info, lower_bound=bounds[0, 0], upper_bound=bounds[0, 1]),
- *         get_num_subintervals(box_info, lower_bound=bounds[1, 0], upper_bound=bounds[1, 1]),
- *         get_num_subintervals(box_info, lower_bound=bounds[2, 0], upper_bound=bounds[2, 1]),             # <<<<<<<<<<<<<<
- *     )
- *     cubic_partition = get_cubic_partition(
+  /* "bubblebuster/bubblebuster.pyx":408
+ *             mesh=mesh
+ *         ),
+ *         get_num_subintervals(             # <<<<<<<<<<<<<<
+ *             lower_bound=bounds[2, 0], upper_bound=bounds[2, 1],
+ *             mesh=mesh
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_get_num_subintervals); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 785, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 785, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(__pyx_v_box_info);
-  __Pyx_GIVEREF(__pyx_v_box_info);
-  PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_box_info);
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 785, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_10 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__4); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 785, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_10);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_lower_bound, __pyx_t_10) < 0) __PYX_ERR(0, 785, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-  __pyx_t_10 = __Pyx_PyObject_GetItem(__pyx_v_bounds, __pyx_tuple__9); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 785, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_10);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_upper_bound, __pyx_t_10) < 0) __PYX_ERR(0, 785, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-  __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_1, __pyx_t_4); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 785, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_10);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_8 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_empty_tuple, __pyx_t_1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 408, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_v_nx = __pyx_t_2;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_v_nx = __pyx_t_3;
+  __pyx_t_3 = 0;
+  __pyx_v_ny = __pyx_t_2;
   __pyx_t_2 = 0;
-  __pyx_v_ny = __pyx_t_9;
-  __pyx_t_9 = 0;
-  __pyx_v_nz = __pyx_t_10;
-  __pyx_t_10 = 0;
+  __pyx_v_nz = __pyx_t_8;
+  __pyx_t_8 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":787
- *         get_num_subintervals(box_info, lower_bound=bounds[2, 0], upper_bound=bounds[2, 1]),
+  /* "bubblebuster/bubblebuster.pyx":413
+ *         ),
  *     )
  *     cubic_partition = get_cubic_partition(             # <<<<<<<<<<<<<<
- *         bounds, nx, ny, nz, box_info,
+ *         bounds, nx, ny, nz
  *     )
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_get_cubic_partition); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 787, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_9);
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_get_cubic_partition); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 413, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
 
-  /* "bubblebuster/bubblebuster.pyx":788
+  /* "bubblebuster/bubblebuster.pyx":414
  *     )
  *     cubic_partition = get_cubic_partition(
- *         bounds, nx, ny, nz, box_info,             # <<<<<<<<<<<<<<
+ *         bounds, nx, ny, nz             # <<<<<<<<<<<<<<
  *     )
- *     box_info.cubic_partition = get_cubic_partition_occupancy(
+ *     cubic_partition = get_cubic_partition_occupancy(
  */
-  __pyx_t_2 = NULL;
+  __pyx_t_3 = NULL;
   __pyx_t_7 = 0;
-  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_9))) {
-    __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_9);
-    if (likely(__pyx_t_2)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_9);
-      __Pyx_INCREF(__pyx_t_2);
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_9, function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
       __pyx_t_7 = 1;
     }
   }
   #if CYTHON_FAST_PYCALL
-  if (PyFunction_Check(__pyx_t_9)) {
-    PyObject *__pyx_temp[6] = {__pyx_t_2, __pyx_v_bounds, __pyx_v_nx, __pyx_v_ny, __pyx_v_nz, __pyx_v_box_info};
-    __pyx_t_10 = __Pyx_PyFunction_FastCall(__pyx_t_9, __pyx_temp+1-__pyx_t_7, 5+__pyx_t_7); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 787, __pyx_L1_error)
-    __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __Pyx_GOTREF(__pyx_t_10);
+  if (PyFunction_Check(__pyx_t_2)) {
+    PyObject *__pyx_temp[5] = {__pyx_t_3, __pyx_v_bounds, __pyx_v_nx, __pyx_v_ny, __pyx_v_nz};
+    __pyx_t_8 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_GOTREF(__pyx_t_8);
   } else
   #endif
   #if CYTHON_FAST_PYCCALL
-  if (__Pyx_PyFastCFunction_Check(__pyx_t_9)) {
-    PyObject *__pyx_temp[6] = {__pyx_t_2, __pyx_v_bounds, __pyx_v_nx, __pyx_v_ny, __pyx_v_nz, __pyx_v_box_info};
-    __pyx_t_10 = __Pyx_PyCFunction_FastCall(__pyx_t_9, __pyx_temp+1-__pyx_t_7, 5+__pyx_t_7); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 787, __pyx_L1_error)
-    __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __Pyx_GOTREF(__pyx_t_10);
+  if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
+    PyObject *__pyx_temp[5] = {__pyx_t_3, __pyx_v_bounds, __pyx_v_nx, __pyx_v_ny, __pyx_v_nz};
+    __pyx_t_8 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_GOTREF(__pyx_t_8);
   } else
   #endif
   {
-    __pyx_t_4 = PyTuple_New(5+__pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 787, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    if (__pyx_t_2) {
-      __Pyx_GIVEREF(__pyx_t_2); PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_2); __pyx_t_2 = NULL;
+    __pyx_t_1 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    if (__pyx_t_3) {
+      __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_t_3); __pyx_t_3 = NULL;
     }
     __Pyx_INCREF(__pyx_v_bounds);
     __Pyx_GIVEREF(__pyx_v_bounds);
-    PyTuple_SET_ITEM(__pyx_t_4, 0+__pyx_t_7, __pyx_v_bounds);
+    PyTuple_SET_ITEM(__pyx_t_1, 0+__pyx_t_7, __pyx_v_bounds);
     __Pyx_INCREF(__pyx_v_nx);
     __Pyx_GIVEREF(__pyx_v_nx);
-    PyTuple_SET_ITEM(__pyx_t_4, 1+__pyx_t_7, __pyx_v_nx);
+    PyTuple_SET_ITEM(__pyx_t_1, 1+__pyx_t_7, __pyx_v_nx);
     __Pyx_INCREF(__pyx_v_ny);
     __Pyx_GIVEREF(__pyx_v_ny);
-    PyTuple_SET_ITEM(__pyx_t_4, 2+__pyx_t_7, __pyx_v_ny);
+    PyTuple_SET_ITEM(__pyx_t_1, 2+__pyx_t_7, __pyx_v_ny);
     __Pyx_INCREF(__pyx_v_nz);
     __Pyx_GIVEREF(__pyx_v_nz);
-    PyTuple_SET_ITEM(__pyx_t_4, 3+__pyx_t_7, __pyx_v_nz);
-    __Pyx_INCREF(__pyx_v_box_info);
-    __Pyx_GIVEREF(__pyx_v_box_info);
-    PyTuple_SET_ITEM(__pyx_t_4, 4+__pyx_t_7, __pyx_v_box_info);
-    __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_t_4, NULL); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 787, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_10);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    PyTuple_SET_ITEM(__pyx_t_1, 3+__pyx_t_7, __pyx_v_nz);
+    __pyx_t_8 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_1, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
-  __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-  __pyx_v_cubic_partition = __pyx_t_10;
-  __pyx_t_10 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_cubic_partition = __pyx_t_8;
+  __pyx_t_8 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":790
- *         bounds, nx, ny, nz, box_info,
+  /* "bubblebuster/bubblebuster.pyx":416
+ *         bounds, nx, ny, nz
  *     )
- *     box_info.cubic_partition = get_cubic_partition_occupancy(             # <<<<<<<<<<<<<<
+ *     cubic_partition = get_cubic_partition_occupancy(             # <<<<<<<<<<<<<<
  *         coordinates=coordinates,
  *         num_x_subintervals=nx,
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_get_cubic_partition_occupancy); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 790, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_10);
+  __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_get_cubic_partition_occupancy); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 416, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_8);
 
-  /* "bubblebuster/bubblebuster.pyx":791
+  /* "bubblebuster/bubblebuster.pyx":417
  *     )
- *     box_info.cubic_partition = get_cubic_partition_occupancy(
+ *     cubic_partition = get_cubic_partition_occupancy(
  *         coordinates=coordinates,             # <<<<<<<<<<<<<<
  *         num_x_subintervals=nx,
  *         num_y_subintervals=ny,
  */
-  __pyx_t_9 = __Pyx_PyDict_NewPresized(7); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 791, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_9);
-  if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_coordinates, __pyx_v_coordinates) < 0) __PYX_ERR(0, 791, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 417, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_coordinates, __pyx_v_coordinates) < 0) __PYX_ERR(0, 417, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":792
- *     box_info.cubic_partition = get_cubic_partition_occupancy(
+  /* "bubblebuster/bubblebuster.pyx":418
+ *     cubic_partition = get_cubic_partition_occupancy(
  *         coordinates=coordinates,
  *         num_x_subintervals=nx,             # <<<<<<<<<<<<<<
  *         num_y_subintervals=ny,
  *         num_z_subintervals=nz,
  */
-  if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_num_x_subintervals, __pyx_v_nx) < 0) __PYX_ERR(0, 791, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_num_x_subintervals, __pyx_v_nx) < 0) __PYX_ERR(0, 417, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":793
+  /* "bubblebuster/bubblebuster.pyx":419
  *         coordinates=coordinates,
  *         num_x_subintervals=nx,
  *         num_y_subintervals=ny,             # <<<<<<<<<<<<<<
  *         num_z_subintervals=nz,
  *         hash_widths=hash_widths(bounds),
  */
-  if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_num_y_subintervals, __pyx_v_ny) < 0) __PYX_ERR(0, 791, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_num_y_subintervals, __pyx_v_ny) < 0) __PYX_ERR(0, 417, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":794
+  /* "bubblebuster/bubblebuster.pyx":420
  *         num_x_subintervals=nx,
  *         num_y_subintervals=ny,
  *         num_z_subintervals=nz,             # <<<<<<<<<<<<<<
  *         hash_widths=hash_widths(bounds),
  *         bounds=bounds,
  */
-  if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_num_z_subintervals, __pyx_v_nz) < 0) __PYX_ERR(0, 791, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_num_z_subintervals, __pyx_v_nz) < 0) __PYX_ERR(0, 417, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":795
+  /* "bubblebuster/bubblebuster.pyx":421
  *         num_y_subintervals=ny,
  *         num_z_subintervals=nz,
  *         hash_widths=hash_widths(bounds),             # <<<<<<<<<<<<<<
  *         bounds=bounds,
  *         cubic_partition=cubic_partition,
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_hash_widths); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 795, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = NULL;
-  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
-    __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_2);
-    if (likely(__pyx_t_1)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-      __Pyx_INCREF(__pyx_t_1);
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_hash_widths); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 421, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = NULL;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
+    __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
+    if (likely(__pyx_t_4)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+      __Pyx_INCREF(__pyx_t_4);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_2, function);
+      __Pyx_DECREF_SET(__pyx_t_3, function);
     }
   }
-  __pyx_t_4 = (__pyx_t_1) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_1, __pyx_v_bounds) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_v_bounds);
-  __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 795, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_hash_widths, __pyx_t_4) < 0) __PYX_ERR(0, 791, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_1 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_4, __pyx_v_bounds) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_v_bounds);
+  __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 421, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_hash_widths, __pyx_t_1) < 0) __PYX_ERR(0, 417, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":796
+  /* "bubblebuster/bubblebuster.pyx":422
  *         num_z_subintervals=nz,
  *         hash_widths=hash_widths(bounds),
  *         bounds=bounds,             # <<<<<<<<<<<<<<
  *         cubic_partition=cubic_partition,
  *     )
  */
-  if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_bounds, __pyx_v_bounds) < 0) __PYX_ERR(0, 791, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_bounds, __pyx_v_bounds) < 0) __PYX_ERR(0, 417, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":797
+  /* "bubblebuster/bubblebuster.pyx":423
  *         hash_widths=hash_widths(bounds),
  *         bounds=bounds,
  *         cubic_partition=cubic_partition,             # <<<<<<<<<<<<<<
  *     )
- *     return box_info
+ *     empty_cubes = get_empty_cubes(cubic_partition)
  */
-  if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_cubic_partition, __pyx_v_cubic_partition) < 0) __PYX_ERR(0, 791, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_cubic_partition, __pyx_v_cubic_partition) < 0) __PYX_ERR(0, 417, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":790
- *         bounds, nx, ny, nz, box_info,
+  /* "bubblebuster/bubblebuster.pyx":416
+ *         bounds, nx, ny, nz
  *     )
- *     box_info.cubic_partition = get_cubic_partition_occupancy(             # <<<<<<<<<<<<<<
+ *     cubic_partition = get_cubic_partition_occupancy(             # <<<<<<<<<<<<<<
  *         coordinates=coordinates,
  *         num_x_subintervals=nx,
  */
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_10, __pyx_empty_tuple, __pyx_t_9); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 790, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-  __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-  if (__Pyx_PyObject_SetAttrStr(__pyx_v_box_info, __pyx_n_s_cubic_partition, __pyx_t_4) < 0) __PYX_ERR(0, 790, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_empty_tuple, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 416, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF_SET(__pyx_v_cubic_partition, __pyx_t_1);
+  __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":799
+  /* "bubblebuster/bubblebuster.pyx":425
  *         cubic_partition=cubic_partition,
  *     )
- *     return box_info             # <<<<<<<<<<<<<<
+ *     empty_cubes = get_empty_cubes(cubic_partition)             # <<<<<<<<<<<<<<
+ *     mesh = get_mesh(bounds, (nx, ny, nz))
+ *     properties = WaterBoxProperties(
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_get_empty_cubes); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 425, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_8 = NULL;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_8)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_8);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+    }
+  }
+  __pyx_t_1 = (__pyx_t_8) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_8, __pyx_v_cubic_partition) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_v_cubic_partition);
+  __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 425, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_empty_cubes = __pyx_t_1;
+  __pyx_t_1 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":426
+ *     )
+ *     empty_cubes = get_empty_cubes(cubic_partition)
+ *     mesh = get_mesh(bounds, (nx, ny, nz))             # <<<<<<<<<<<<<<
+ *     properties = WaterBoxProperties(
+ *         box_vectors,
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_get_mesh); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 426, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_8 = PyTuple_New(3); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 426, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_8);
+  __Pyx_INCREF(__pyx_v_nx);
+  __Pyx_GIVEREF(__pyx_v_nx);
+  PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_v_nx);
+  __Pyx_INCREF(__pyx_v_ny);
+  __Pyx_GIVEREF(__pyx_v_ny);
+  PyTuple_SET_ITEM(__pyx_t_8, 1, __pyx_v_ny);
+  __Pyx_INCREF(__pyx_v_nz);
+  __Pyx_GIVEREF(__pyx_v_nz);
+  PyTuple_SET_ITEM(__pyx_t_8, 2, __pyx_v_nz);
+  __pyx_t_3 = NULL;
+  __pyx_t_7 = 0;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_3)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_3);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+      __pyx_t_7 = 1;
+    }
+  }
+  #if CYTHON_FAST_PYCALL
+  if (PyFunction_Check(__pyx_t_2)) {
+    PyObject *__pyx_temp[3] = {__pyx_t_3, __pyx_v_bounds, __pyx_t_8};
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 426, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  } else
+  #endif
+  #if CYTHON_FAST_PYCCALL
+  if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
+    PyObject *__pyx_temp[3] = {__pyx_t_3, __pyx_v_bounds, __pyx_t_8};
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 426, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  } else
+  #endif
+  {
+    __pyx_t_4 = PyTuple_New(2+__pyx_t_7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 426, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    if (__pyx_t_3) {
+      __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3); __pyx_t_3 = NULL;
+    }
+    __Pyx_INCREF(__pyx_v_bounds);
+    __Pyx_GIVEREF(__pyx_v_bounds);
+    PyTuple_SET_ITEM(__pyx_t_4, 0+__pyx_t_7, __pyx_v_bounds);
+    __Pyx_GIVEREF(__pyx_t_8);
+    PyTuple_SET_ITEM(__pyx_t_4, 1+__pyx_t_7, __pyx_t_8);
+    __pyx_t_8 = 0;
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 426, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  }
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF_SET(__pyx_v_mesh, __pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":427
+ *     empty_cubes = get_empty_cubes(cubic_partition)
+ *     mesh = get_mesh(bounds, (nx, ny, nz))
+ *     properties = WaterBoxProperties(             # <<<<<<<<<<<<<<
+ *         box_vectors,
+ *         box_dimensions,
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_WaterBoxProperties); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 427, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+
+  /* "bubblebuster/bubblebuster.pyx":433
+ *         cubic_partition,
+ *         empty_cubes,
+ *         bounds,             # <<<<<<<<<<<<<<
+ *     )
+ *     return properties
+ */
+  __pyx_t_4 = NULL;
+  __pyx_t_7 = 0;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_2))) {
+    __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_2);
+    if (likely(__pyx_t_4)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+      __Pyx_INCREF(__pyx_t_4);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_2, function);
+      __pyx_t_7 = 1;
+    }
+  }
+  #if CYTHON_FAST_PYCALL
+  if (PyFunction_Check(__pyx_t_2)) {
+    PyObject *__pyx_temp[7] = {__pyx_t_4, __pyx_v_box_vectors, __pyx_v_box_dimensions, __pyx_v_mesh, __pyx_v_cubic_partition, __pyx_v_empty_cubes, __pyx_v_bounds};
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 6+__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 427, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_GOTREF(__pyx_t_1);
+  } else
+  #endif
+  #if CYTHON_FAST_PYCCALL
+  if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
+    PyObject *__pyx_temp[7] = {__pyx_t_4, __pyx_v_box_vectors, __pyx_v_box_dimensions, __pyx_v_mesh, __pyx_v_cubic_partition, __pyx_v_empty_cubes, __pyx_v_bounds};
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_7, 6+__pyx_t_7); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 427, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_GOTREF(__pyx_t_1);
+  } else
+  #endif
+  {
+    __pyx_t_8 = PyTuple_New(6+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 427, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    if (__pyx_t_4) {
+      __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_4); __pyx_t_4 = NULL;
+    }
+    __Pyx_INCREF(__pyx_v_box_vectors);
+    __Pyx_GIVEREF(__pyx_v_box_vectors);
+    PyTuple_SET_ITEM(__pyx_t_8, 0+__pyx_t_7, __pyx_v_box_vectors);
+    __Pyx_INCREF(__pyx_v_box_dimensions);
+    __Pyx_GIVEREF(__pyx_v_box_dimensions);
+    PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_7, __pyx_v_box_dimensions);
+    __Pyx_INCREF(__pyx_v_mesh);
+    __Pyx_GIVEREF(__pyx_v_mesh);
+    PyTuple_SET_ITEM(__pyx_t_8, 2+__pyx_t_7, __pyx_v_mesh);
+    __Pyx_INCREF(__pyx_v_cubic_partition);
+    __Pyx_GIVEREF(__pyx_v_cubic_partition);
+    PyTuple_SET_ITEM(__pyx_t_8, 3+__pyx_t_7, __pyx_v_cubic_partition);
+    __Pyx_INCREF(__pyx_v_empty_cubes);
+    __Pyx_GIVEREF(__pyx_v_empty_cubes);
+    PyTuple_SET_ITEM(__pyx_t_8, 4+__pyx_t_7, __pyx_v_empty_cubes);
+    __Pyx_INCREF(__pyx_v_bounds);
+    __Pyx_GIVEREF(__pyx_v_bounds);
+    PyTuple_SET_ITEM(__pyx_t_8, 5+__pyx_t_7, __pyx_v_bounds);
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 427, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  }
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_properties = __pyx_t_1;
+  __pyx_t_1 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":435
+ *         bounds,
+ *     )
+ *     return properties             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_INCREF(__pyx_v_box_info);
-  __pyx_r = __pyx_v_box_info;
+  __Pyx_INCREF(__pyx_v_properties);
+  __pyx_r = __pyx_v_properties;
   goto __pyx_L0;
 
-  /* "bubblebuster/bubblebuster.pyx":680
+  /* "bubblebuster/bubblebuster.pyx":362
  *     return md.load(structure_file, top=topology_file)
  * 
- * def periodic_box_properties(             # <<<<<<<<<<<<<<
+ * def water_box_properties(             # <<<<<<<<<<<<<<
  *         structure_file: str,
- *         box_vectors: Optional[np.ndarray] = None,
+ *         box_vectors: Optional[np.ndarray] = False,
  */
 
   /* function exit code */
@@ -7534,13 +9793,13 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_9);
-  __Pyx_XDECREF(__pyx_t_10);
-  __Pyx_AddTraceback("bubblebuster.bubblebuster.periodic_box_properties", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_XDECREF(__pyx_t_8);
+  __Pyx_AddTraceback("bubblebuster.bubblebuster.water_box_properties", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
-  __Pyx_XDECREF(__pyx_v_box_info);
   __Pyx_XDECREF(__pyx_v_trajectory);
+  __Pyx_XDECREF(__pyx_v_box_dimensions);
+  __Pyx_XDECREF(__pyx_v_box_type);
   __Pyx_XDECREF(__pyx_v_unwrapped_coordinates);
   __Pyx_XDECREF(__pyx_v_wrapped_coordinates);
   __Pyx_XDECREF(__pyx_v_topology);
@@ -7550,6 +9809,10 @@ static PyObject *__pyx_pf_12bubblebuster_12bubblebuster_34periodic_box_propertie
   __Pyx_XDECREF(__pyx_v_ny);
   __Pyx_XDECREF(__pyx_v_nz);
   __Pyx_XDECREF(__pyx_v_cubic_partition);
+  __Pyx_XDECREF(__pyx_v_empty_cubes);
+  __Pyx_XDECREF(__pyx_v_properties);
+  __Pyx_XDECREF(__pyx_v_box_vectors);
+  __Pyx_XDECREF(__pyx_v_mesh);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -7601,28 +9864,33 @@ static struct PyModuleDef __pyx_moduledef = {
 #endif
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
-  {&__pyx_n_s_BoxInfo, __pyx_k_BoxInfo, sizeof(__pyx_k_BoxInfo), 0, 0, 1, 1},
-  {&__pyx_n_s_BoxInfo___init, __pyx_k_BoxInfo___init, sizeof(__pyx_k_BoxInfo___init), 0, 0, 1, 1},
   {&__pyx_n_s_Dict, __pyx_k_Dict, sizeof(__pyx_k_Dict), 0, 0, 1, 1},
-  {&__pyx_kp_s_Holds_the_water_box_properties_p, __pyx_k_Holds_the_water_box_properties_p, sizeof(__pyx_k_Holds_the_water_box_properties_p), 0, 0, 1, 0},
   {&__pyx_n_s_Optional, __pyx_k_Optional, sizeof(__pyx_k_Optional), 0, 0, 1, 1},
   {&__pyx_n_s_T, __pyx_k_T, sizeof(__pyx_k_T), 0, 0, 1, 1},
   {&__pyx_n_s_Trajectory, __pyx_k_Trajectory, sizeof(__pyx_k_Trajectory), 0, 0, 1, 1},
   {&__pyx_n_s_Tuple, __pyx_k_Tuple, sizeof(__pyx_k_Tuple), 0, 0, 1, 1},
+  {&__pyx_n_s_WaterBoxProperties, __pyx_k_WaterBoxProperties, sizeof(__pyx_k_WaterBoxProperties), 0, 0, 1, 1},
+  {&__pyx_n_s_WaterBoxProperties___get_cube_bo, __pyx_k_WaterBoxProperties___get_cube_bo, sizeof(__pyx_k_WaterBoxProperties___get_cube_bo), 0, 0, 1, 1},
+  {&__pyx_n_s_WaterBoxProperties___init, __pyx_k_WaterBoxProperties___init, sizeof(__pyx_k_WaterBoxProperties___init), 0, 0, 1, 1},
+  {&__pyx_n_s_WaterBoxProperties___new, __pyx_k_WaterBoxProperties___new, sizeof(__pyx_k_WaterBoxProperties___new), 0, 0, 1, 1},
+  {&__pyx_n_s_WaterBoxProperties___setattr, __pyx_k_WaterBoxProperties___setattr, sizeof(__pyx_k_WaterBoxProperties___setattr), 0, 0, 1, 1},
+  {&__pyx_n_s_WaterBoxProperties__get_cube_bo, __pyx_k_WaterBoxProperties__get_cube_bo, sizeof(__pyx_k_WaterBoxProperties__get_cube_bo), 0, 0, 1, 1},
+  {&__pyx_n_s_WaterBoxProperties_empty_cubes, __pyx_k_WaterBoxProperties_empty_cubes, sizeof(__pyx_k_WaterBoxProperties_empty_cubes), 0, 0, 1, 1},
   {&__pyx_kp_s__10, __pyx_k__10, sizeof(__pyx_k__10), 0, 0, 1, 0},
   {&__pyx_n_s_a, __pyx_k_a, sizeof(__pyx_k_a), 0, 0, 1, 1},
+  {&__pyx_n_s_all, __pyx_k_all, sizeof(__pyx_k_all), 0, 0, 1, 1},
   {&__pyx_n_s_apply_pbc, __pyx_k_apply_pbc, sizeof(__pyx_k_apply_pbc), 0, 0, 1, 1},
   {&__pyx_n_s_apply_pbc_to_coordinates, __pyx_k_apply_pbc_to_coordinates, sizeof(__pyx_k_apply_pbc_to_coordinates), 0, 0, 1, 1},
   {&__pyx_n_s_apply_pbc_to_cubic_coordinates, __pyx_k_apply_pbc_to_cubic_coordinates, sizeof(__pyx_k_apply_pbc_to_cubic_coordinates), 0, 0, 1, 1},
   {&__pyx_n_s_apply_pbc_to_triclinic_coordinat, __pyx_k_apply_pbc_to_triclinic_coordinat, sizeof(__pyx_k_apply_pbc_to_triclinic_coordinat), 0, 0, 1, 1},
+  {&__pyx_n_s_args, __pyx_k_args, sizeof(__pyx_k_args), 0, 0, 1, 1},
   {&__pyx_n_s_array, __pyx_k_array, sizeof(__pyx_k_array), 0, 0, 1, 1},
   {&__pyx_n_s_atom_coordinates, __pyx_k_atom_coordinates, sizeof(__pyx_k_atom_coordinates), 0, 0, 1, 1},
-  {&__pyx_n_s_atom_density, __pyx_k_atom_density, sizeof(__pyx_k_atom_density), 0, 0, 1, 1},
+  {&__pyx_n_s_attr, __pyx_k_attr, sizeof(__pyx_k_attr), 0, 0, 1, 1},
   {&__pyx_n_s_b, __pyx_k_b, sizeof(__pyx_k_b), 0, 0, 1, 1},
   {&__pyx_n_s_bounds, __pyx_k_bounds, sizeof(__pyx_k_bounds), 0, 0, 1, 1},
-  {&__pyx_n_s_box_info, __pyx_k_box_info, sizeof(__pyx_k_box_info), 0, 0, 1, 1},
+  {&__pyx_n_s_box_dimensions, __pyx_k_box_dimensions, sizeof(__pyx_k_box_dimensions), 0, 0, 1, 1},
   {&__pyx_n_s_box_type, __pyx_k_box_type, sizeof(__pyx_k_box_type), 0, 0, 1, 1},
-  {&__pyx_n_s_box_vector_dimensions, __pyx_k_box_vector_dimensions, sizeof(__pyx_k_box_vector_dimensions), 0, 0, 1, 1},
   {&__pyx_n_s_box_vectors, __pyx_k_box_vectors, sizeof(__pyx_k_box_vectors), 0, 0, 1, 1},
   {&__pyx_n_s_box_vectors_to_lengths_and_angle, __pyx_k_box_vectors_to_lengths_and_angle, sizeof(__pyx_k_box_vectors_to_lengths_and_angle), 0, 0, 1, 1},
   {&__pyx_n_s_bubblebuster_bubblebuster, __pyx_k_bubblebuster_bubblebuster, sizeof(__pyx_k_bubblebuster_bubblebuster), 0, 0, 1, 1},
@@ -7630,40 +9898,51 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 0, 1, 1},
   {&__pyx_n_s_ceil, __pyx_k_ceil, sizeof(__pyx_k_ceil), 0, 0, 1, 1},
   {&__pyx_n_s_center_coordinates, __pyx_k_center_coordinates, sizeof(__pyx_k_center_coordinates), 0, 0, 1, 1},
+  {&__pyx_n_s_class, __pyx_k_class, sizeof(__pyx_k_class), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
+  {&__pyx_n_s_cls, __pyx_k_cls, sizeof(__pyx_k_cls), 0, 0, 1, 1},
   {&__pyx_n_s_coordinate_bounds, __pyx_k_coordinate_bounds, sizeof(__pyx_k_coordinate_bounds), 0, 0, 1, 1},
   {&__pyx_n_s_coordinate_component_index, __pyx_k_coordinate_component_index, sizeof(__pyx_k_coordinate_component_index), 0, 0, 1, 1},
   {&__pyx_n_s_coordinates, __pyx_k_coordinates, sizeof(__pyx_k_coordinates), 0, 0, 1, 1},
   {&__pyx_n_s_coordinates_transpose, __pyx_k_coordinates_transpose, sizeof(__pyx_k_coordinates_transpose), 0, 0, 1, 1},
   {&__pyx_n_s_coords, __pyx_k_coords, sizeof(__pyx_k_coords), 0, 0, 1, 1},
   {&__pyx_n_s_cross, __pyx_k_cross, sizeof(__pyx_k_cross), 0, 0, 1, 1},
+  {&__pyx_n_s_cube_bounds, __pyx_k_cube_bounds, sizeof(__pyx_k_cube_bounds), 0, 0, 1, 1},
   {&__pyx_n_s_cube_dict, __pyx_k_cube_dict, sizeof(__pyx_k_cube_dict), 0, 0, 1, 1},
+  {&__pyx_n_s_cube_index, __pyx_k_cube_index, sizeof(__pyx_k_cube_index), 0, 0, 1, 1},
   {&__pyx_n_s_cubic, __pyx_k_cubic, sizeof(__pyx_k_cubic), 0, 0, 1, 1},
   {&__pyx_n_s_cubic_partition, __pyx_k_cubic_partition, sizeof(__pyx_k_cubic_partition), 0, 0, 1, 1},
-  {&__pyx_n_s_cubic_partition_bounds, __pyx_k_cubic_partition_bounds, sizeof(__pyx_k_cubic_partition_bounds), 0, 0, 1, 1},
   {&__pyx_n_s_cutoff, __pyx_k_cutoff, sizeof(__pyx_k_cutoff), 0, 0, 1, 1},
   {&__pyx_n_s_delta, __pyx_k_delta, sizeof(__pyx_k_delta), 0, 0, 1, 1},
-  {&__pyx_n_s_dimensions, __pyx_k_dimensions, sizeof(__pyx_k_dimensions), 0, 0, 1, 1},
   {&__pyx_n_s_doc, __pyx_k_doc, sizeof(__pyx_k_doc), 0, 0, 1, 1},
   {&__pyx_n_s_dot, __pyx_k_dot, sizeof(__pyx_k_dot), 0, 0, 1, 1},
   {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
   {&__pyx_n_s_empty, __pyx_k_empty, sizeof(__pyx_k_empty), 0, 0, 1, 1},
+  {&__pyx_n_s_empty_cubes, __pyx_k_empty_cubes, sizeof(__pyx_k_empty_cubes), 0, 0, 1, 1},
+  {&__pyx_n_s_empty_cubes_2, __pyx_k_empty_cubes_2, sizeof(__pyx_k_empty_cubes_2), 0, 0, 1, 1},
   {&__pyx_n_s_float64, __pyx_k_float64, sizeof(__pyx_k_float64), 0, 0, 1, 1},
   {&__pyx_n_s_floor, __pyx_k_floor, sizeof(__pyx_k_floor), 0, 0, 1, 1},
+  {&__pyx_n_s_get_box_dimensions, __pyx_k_get_box_dimensions, sizeof(__pyx_k_get_box_dimensions), 0, 0, 1, 1},
   {&__pyx_n_s_get_box_type, __pyx_k_get_box_type, sizeof(__pyx_k_get_box_type), 0, 0, 1, 1},
-  {&__pyx_n_s_get_box_vector_dimensions, __pyx_k_get_box_vector_dimensions, sizeof(__pyx_k_get_box_vector_dimensions), 0, 0, 1, 1},
   {&__pyx_n_s_get_box_vectors, __pyx_k_get_box_vectors, sizeof(__pyx_k_get_box_vectors), 0, 0, 1, 1},
   {&__pyx_n_s_get_coordinates, __pyx_k_get_coordinates, sizeof(__pyx_k_get_coordinates), 0, 0, 1, 1},
+  {&__pyx_n_s_get_cube_bounds, __pyx_k_get_cube_bounds, sizeof(__pyx_k_get_cube_bounds), 0, 0, 1, 1},
+  {&__pyx_n_s_get_cube_bounds_2, __pyx_k_get_cube_bounds_2, sizeof(__pyx_k_get_cube_bounds_2), 0, 0, 1, 1},
   {&__pyx_n_s_get_cubic_partition, __pyx_k_get_cubic_partition, sizeof(__pyx_k_get_cubic_partition), 0, 0, 1, 1},
   {&__pyx_n_s_get_cubic_partition_occupancy, __pyx_k_get_cubic_partition_occupancy, sizeof(__pyx_k_get_cubic_partition_occupancy), 0, 0, 1, 1},
+  {&__pyx_n_s_get_empty_cubes, __pyx_k_get_empty_cubes, sizeof(__pyx_k_get_empty_cubes), 0, 0, 1, 1},
+  {&__pyx_n_s_get_mesh, __pyx_k_get_mesh, sizeof(__pyx_k_get_mesh), 0, 0, 1, 1},
   {&__pyx_n_s_get_num_subintervals, __pyx_k_get_num_subintervals, sizeof(__pyx_k_get_num_subintervals), 0, 0, 1, 1},
   {&__pyx_n_s_get_periodic_box_volume, __pyx_k_get_periodic_box_volume, sizeof(__pyx_k_get_periodic_box_volume), 0, 0, 1, 1},
   {&__pyx_n_s_hash_widths, __pyx_k_hash_widths, sizeof(__pyx_k_hash_widths), 0, 0, 1, 1},
   {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
   {&__pyx_n_s_init, __pyx_k_init, sizeof(__pyx_k_init), 0, 0, 1, 1},
+  {&__pyx_n_u_int, __pyx_k_int, sizeof(__pyx_k_int), 0, 1, 0, 1},
+  {&__pyx_n_s_items, __pyx_k_items, sizeof(__pyx_k_items), 0, 0, 1, 1},
   {&__pyx_n_s_j, __pyx_k_j, sizeof(__pyx_k_j), 0, 0, 1, 1},
   {&__pyx_n_s_k, __pyx_k_k, sizeof(__pyx_k_k), 0, 0, 1, 1},
+  {&__pyx_n_s_kwargs, __pyx_k_kwargs, sizeof(__pyx_k_kwargs), 0, 0, 1, 1},
   {&__pyx_n_s_load, __pyx_k_load, sizeof(__pyx_k_load), 0, 0, 1, 1},
   {&__pyx_n_s_load_mdtraj_trajectory, __pyx_k_load_mdtraj_trajectory, sizeof(__pyx_k_load_mdtraj_trajectory), 0, 0, 1, 1},
   {&__pyx_n_s_lower_bound, __pyx_k_lower_bound, sizeof(__pyx_k_lower_bound), 0, 0, 1, 1},
@@ -7680,13 +9959,13 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_n_atoms, __pyx_k_n_atoms, sizeof(__pyx_k_n_atoms), 0, 0, 1, 1},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
   {&__pyx_n_s_ndarray, __pyx_k_ndarray, sizeof(__pyx_k_ndarray), 0, 0, 1, 1},
+  {&__pyx_n_s_new, __pyx_k_new, sizeof(__pyx_k_new), 0, 0, 1, 1},
   {&__pyx_n_s_np, __pyx_k_np, sizeof(__pyx_k_np), 0, 0, 1, 1},
   {&__pyx_n_s_npacoords, __pyx_k_npacoords, sizeof(__pyx_k_npacoords), 0, 0, 1, 1},
   {&__pyx_n_s_num_subintervals, __pyx_k_num_subintervals, sizeof(__pyx_k_num_subintervals), 0, 0, 1, 1},
   {&__pyx_n_s_num_x_subintervals, __pyx_k_num_x_subintervals, sizeof(__pyx_k_num_x_subintervals), 0, 0, 1, 1},
   {&__pyx_n_s_num_y_subintervals, __pyx_k_num_y_subintervals, sizeof(__pyx_k_num_y_subintervals), 0, 0, 1, 1},
   {&__pyx_n_s_num_z_subintervals, __pyx_k_num_z_subintervals, sizeof(__pyx_k_num_z_subintervals), 0, 0, 1, 1},
-  {&__pyx_n_s_number_of_atoms, __pyx_k_number_of_atoms, sizeof(__pyx_k_number_of_atoms), 0, 0, 1, 1},
   {&__pyx_n_s_numpy, __pyx_k_numpy, sizeof(__pyx_k_numpy), 0, 0, 1, 1},
   {&__pyx_n_s_nx, __pyx_k_nx, sizeof(__pyx_k_nx), 0, 0, 1, 1},
   {&__pyx_n_s_ny, __pyx_k_ny, sizeof(__pyx_k_ny), 0, 0, 1, 1},
@@ -7694,8 +9973,9 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_object, __pyx_k_object, sizeof(__pyx_k_object), 0, 0, 1, 1},
   {&__pyx_n_s_off_diagonals, __pyx_k_off_diagonals, sizeof(__pyx_k_off_diagonals), 0, 0, 1, 1},
   {&__pyx_n_s_pbc_scale_factor, __pyx_k_pbc_scale_factor, sizeof(__pyx_k_pbc_scale_factor), 0, 0, 1, 1},
-  {&__pyx_n_s_periodic_box_properties, __pyx_k_periodic_box_properties, sizeof(__pyx_k_periodic_box_properties), 0, 0, 1, 1},
   {&__pyx_n_s_prepare, __pyx_k_prepare, sizeof(__pyx_k_prepare), 0, 0, 1, 1},
+  {&__pyx_n_s_properties, __pyx_k_properties, sizeof(__pyx_k_properties), 0, 0, 1, 1},
+  {&__pyx_n_s_property, __pyx_k_property, sizeof(__pyx_k_property), 0, 0, 1, 1},
   {&__pyx_n_s_qualname, __pyx_k_qualname, sizeof(__pyx_k_qualname), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
   {&__pyx_n_s_return, __pyx_k_return, sizeof(__pyx_k_return), 0, 0, 1, 1},
@@ -7704,8 +9984,13 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_save_pdb, __pyx_k_save_pdb, sizeof(__pyx_k_save_pdb), 0, 0, 1, 1},
   {&__pyx_n_s_scale_factor, __pyx_k_scale_factor, sizeof(__pyx_k_scale_factor), 0, 0, 1, 1},
   {&__pyx_n_s_self, __pyx_k_self, sizeof(__pyx_k_self), 0, 0, 1, 1},
+  {&__pyx_n_s_setattr, __pyx_k_setattr, sizeof(__pyx_k_setattr), 0, 0, 1, 1},
+  {&__pyx_n_s_setattr_calls, __pyx_k_setattr_calls, sizeof(__pyx_k_setattr_calls), 0, 0, 1, 1},
+  {&__pyx_n_s_setter, __pyx_k_setter, sizeof(__pyx_k_setter), 0, 0, 1, 1},
+  {&__pyx_n_s_slots, __pyx_k_slots, sizeof(__pyx_k_slots), 0, 0, 1, 1},
   {&__pyx_n_s_structure_file, __pyx_k_structure_file, sizeof(__pyx_k_structure_file), 0, 0, 1, 1},
   {&__pyx_n_s_sum, __pyx_k_sum, sizeof(__pyx_k_sum), 0, 0, 1, 1},
+  {&__pyx_n_s_super, __pyx_k_super, sizeof(__pyx_k_super), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_n_s_top, __pyx_k_top, sizeof(__pyx_k_top), 0, 0, 1, 1},
   {&__pyx_n_s_topology, __pyx_k_topology, sizeof(__pyx_k_topology), 0, 0, 1, 1},
@@ -7717,25 +10002,35 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_unwrapped_coordinates, __pyx_k_unwrapped_coordinates, sizeof(__pyx_k_unwrapped_coordinates), 0, 0, 1, 1},
   {&__pyx_n_s_upper_bound, __pyx_k_upper_bound, sizeof(__pyx_k_upper_bound), 0, 0, 1, 1},
   {&__pyx_n_s_utils, __pyx_k_utils, sizeof(__pyx_k_utils), 0, 0, 1, 1},
-  {&__pyx_n_s_volume, __pyx_k_volume, sizeof(__pyx_k_volume), 0, 0, 1, 1},
+  {&__pyx_n_s_v, __pyx_k_v, sizeof(__pyx_k_v), 0, 0, 1, 1},
+  {&__pyx_n_s_val, __pyx_k_val, sizeof(__pyx_k_val), 0, 0, 1, 1},
+  {&__pyx_n_s_water_box_properties, __pyx_k_water_box_properties, sizeof(__pyx_k_water_box_properties), 0, 0, 1, 1},
   {&__pyx_n_s_wrap_structure, __pyx_k_wrap_structure, sizeof(__pyx_k_wrap_structure), 0, 0, 1, 1},
   {&__pyx_n_s_wrapped_coordinates, __pyx_k_wrapped_coordinates, sizeof(__pyx_k_wrapped_coordinates), 0, 0, 1, 1},
   {&__pyx_n_s_wrapped_structure_filename, __pyx_k_wrapped_structure_filename, sizeof(__pyx_k_wrapped_structure_filename), 0, 0, 1, 1},
+  {&__pyx_n_s_wx, __pyx_k_wx, sizeof(__pyx_k_wx), 0, 0, 1, 1},
+  {&__pyx_n_s_wy, __pyx_k_wy, sizeof(__pyx_k_wy), 0, 0, 1, 1},
+  {&__pyx_n_s_wz, __pyx_k_wz, sizeof(__pyx_k_wz), 0, 0, 1, 1},
   {&__pyx_n_s_x, __pyx_k_x, sizeof(__pyx_k_x), 0, 0, 1, 1},
+  {&__pyx_n_s_x_lb, __pyx_k_x_lb, sizeof(__pyx_k_x_lb), 0, 0, 1, 1},
   {&__pyx_n_s_xyz, __pyx_k_xyz, sizeof(__pyx_k_xyz), 0, 0, 1, 1},
   {&__pyx_n_s_y, __pyx_k_y, sizeof(__pyx_k_y), 0, 0, 1, 1},
+  {&__pyx_n_s_y_lb, __pyx_k_y_lb, sizeof(__pyx_k_y_lb), 0, 0, 1, 1},
   {&__pyx_n_s_z, __pyx_k_z, sizeof(__pyx_k_z), 0, 0, 1, 1},
+  {&__pyx_n_s_z_lb, __pyx_k_z_lb, sizeof(__pyx_k_z_lb), 0, 0, 1, 1},
   {&__pyx_n_s_zeros, __pyx_k_zeros, sizeof(__pyx_k_zeros), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_object = __Pyx_GetBuiltinName(__pyx_n_s_object); if (!__pyx_builtin_object) __PYX_ERR(0, 37, __pyx_L1_error)
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 226, __pyx_L1_error)
-  __pyx_builtin_reversed = __Pyx_GetBuiltinName(__pyx_n_s_reversed); if (!__pyx_builtin_reversed) __PYX_ERR(0, 315, __pyx_L1_error)
-  __pyx_builtin_round = __Pyx_GetBuiltinName(__pyx_n_s_round); if (!__pyx_builtin_round) __PYX_ERR(0, 488, __pyx_L1_error)
-  __pyx_builtin_min = __Pyx_GetBuiltinName(__pyx_n_s_min); if (!__pyx_builtin_min) __PYX_ERR(0, 520, __pyx_L1_error)
-  __pyx_builtin_max = __Pyx_GetBuiltinName(__pyx_n_s_max); if (!__pyx_builtin_max) __PYX_ERR(0, 521, __pyx_L1_error)
-  __pyx_builtin_sum = __Pyx_GetBuiltinName(__pyx_n_s_sum); if (!__pyx_builtin_sum) __PYX_ERR(0, 668, __pyx_L1_error)
+  __pyx_builtin_object = __Pyx_GetBuiltinName(__pyx_n_s_object); if (!__pyx_builtin_object) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_builtin_property = __Pyx_GetBuiltinName(__pyx_n_s_property); if (!__pyx_builtin_property) __PYX_ERR(0, 101, __pyx_L1_error)
+  __pyx_builtin_super = __Pyx_GetBuiltinName(__pyx_n_s_super); if (!__pyx_builtin_super) __PYX_ERR(0, 55, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_builtin_reversed = __Pyx_GetBuiltinName(__pyx_n_s_reversed); if (!__pyx_builtin_reversed) __PYX_ERR(0, 164, __pyx_L1_error)
+  __pyx_builtin_round = __Pyx_GetBuiltinName(__pyx_n_s_round); if (!__pyx_builtin_round) __PYX_ERR(0, 233, __pyx_L1_error)
+  __pyx_builtin_min = __Pyx_GetBuiltinName(__pyx_n_s_min); if (!__pyx_builtin_min) __PYX_ERR(0, 246, __pyx_L1_error)
+  __pyx_builtin_max = __Pyx_GetBuiltinName(__pyx_n_s_max); if (!__pyx_builtin_max) __PYX_ERR(0, 247, __pyx_L1_error)
+  __pyx_builtin_sum = __Pyx_GetBuiltinName(__pyx_n_s_sum); if (!__pyx_builtin_sum) __PYX_ERR(0, 350, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -7745,366 +10040,459 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "bubblebuster/bubblebuster.pyx":202
+  /* "bubblebuster/bubblebuster.pyx":88
+ *     ) -> np.ndarray:
+ *         i, j, k = list(self.cubic_partition)[cube_index]
+ *         cube_bounds = np.zeros((3, 2), dtype=np.float64)             # <<<<<<<<<<<<<<
+ *         wx, wy, wz = self.mesh
+ *         x_lb = self.bounds[0, 0]
+ */
+  __pyx_tuple_ = PyTuple_Pack(2, __pyx_int_3, __pyx_int_2); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple_);
+  __Pyx_GIVEREF(__pyx_tuple_);
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_tuple_); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__2);
+  __Pyx_GIVEREF(__pyx_tuple__2);
+
+  /* "bubblebuster/bubblebuster.pyx":90
+ *         cube_bounds = np.zeros((3, 2), dtype=np.float64)
+ *         wx, wy, wz = self.mesh
+ *         x_lb = self.bounds[0, 0]             # <<<<<<<<<<<<<<
+ *         y_lb = self.bounds[1, 0]
+ *         z_lb = self.bounds[2, 0]
+ */
+  __pyx_tuple__3 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_0); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 90, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__3);
+  __Pyx_GIVEREF(__pyx_tuple__3);
+
+  /* "bubblebuster/bubblebuster.pyx":91
+ *         wx, wy, wz = self.mesh
+ *         x_lb = self.bounds[0, 0]
+ *         y_lb = self.bounds[1, 0]             # <<<<<<<<<<<<<<
+ *         z_lb = self.bounds[2, 0]
+ *         cube_bounds[0, 0] = (i * wx) + x_lb
+ */
+  __pyx_tuple__4 = PyTuple_Pack(2, __pyx_int_1, __pyx_int_0); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 91, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__4);
+  __Pyx_GIVEREF(__pyx_tuple__4);
+
+  /* "bubblebuster/bubblebuster.pyx":92
+ *         x_lb = self.bounds[0, 0]
+ *         y_lb = self.bounds[1, 0]
+ *         z_lb = self.bounds[2, 0]             # <<<<<<<<<<<<<<
+ *         cube_bounds[0, 0] = (i * wx) + x_lb
+ *         cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ */
+  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_int_2, __pyx_int_0); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 92, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__5);
+  __Pyx_GIVEREF(__pyx_tuple__5);
+
+  /* "bubblebuster/bubblebuster.pyx":94
+ *         z_lb = self.bounds[2, 0]
+ *         cube_bounds[0, 0] = (i * wx) + x_lb
+ *         cube_bounds[0, 1] = (i * wx) + x_lb + wx             # <<<<<<<<<<<<<<
+ *         cube_bounds[1, 0] = (j * wy) + y_lb
+ *         cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ */
+  __pyx_tuple__6 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_1); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 94, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__6);
+  __Pyx_GIVEREF(__pyx_tuple__6);
+
+  /* "bubblebuster/bubblebuster.pyx":96
+ *         cube_bounds[0, 1] = (i * wx) + x_lb + wx
+ *         cube_bounds[1, 0] = (j * wy) + y_lb
+ *         cube_bounds[1, 1] = (j * wy) + y_lb + wy             # <<<<<<<<<<<<<<
+ *         cube_bounds[2, 0] = (k * wz) + z_lb
+ *         cube_bounds[2, 1] = (k * wz) + z_lb + wz
+ */
+  __pyx_tuple__7 = PyTuple_Pack(2, __pyx_int_1, __pyx_int_1); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 96, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__7);
+  __Pyx_GIVEREF(__pyx_tuple__7);
+
+  /* "bubblebuster/bubblebuster.pyx":98
+ *         cube_bounds[1, 1] = (j * wy) + y_lb + wy
+ *         cube_bounds[2, 0] = (k * wz) + z_lb
+ *         cube_bounds[2, 1] = (k * wz) + z_lb + wz             # <<<<<<<<<<<<<<
+ *         return cube_bounds
+ * 
+ */
+  __pyx_tuple__8 = PyTuple_Pack(2, __pyx_int_2, __pyx_int_1); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 98, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__8);
+  __Pyx_GIVEREF(__pyx_tuple__8);
+
+  /* "bubblebuster/bubblebuster.pyx":131
  *     a, b, c = md.utils.box_vectors_to_lengths_and_angles(
  *         *box_vectors
  *     )[:3]             # <<<<<<<<<<<<<<
  *     return np.array([a, b, c])
  * 
  */
-  __pyx_slice_ = PySlice_New(Py_None, __pyx_int_3, Py_None); if (unlikely(!__pyx_slice_)) __PYX_ERR(0, 202, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_slice_);
-  __Pyx_GIVEREF(__pyx_slice_);
+  __pyx_slice__9 = PySlice_New(Py_None, __pyx_int_3, Py_None); if (unlikely(!__pyx_slice__9)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_slice__9);
+  __Pyx_GIVEREF(__pyx_slice__9);
 
-  /* "bubblebuster/bubblebuster.pyx":488
- *     apply_pbc(coordinates, box_info)
- *     bounds = coordinate_bounds(coordinates)
- *     if (round(bounds[0, 0], 2) == 0.0             # <<<<<<<<<<<<<<
- *             and round(bounds[1, 0], 2) == 0.0
- *             and round(bounds[2, 0], 2) == 0.0
- */
-  __pyx_tuple__2 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_0); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 488, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__2);
-  __Pyx_GIVEREF(__pyx_tuple__2);
-
-  /* "bubblebuster/bubblebuster.pyx":489
- *     bounds = coordinate_bounds(coordinates)
- *     if (round(bounds[0, 0], 2) == 0.0
- *             and round(bounds[1, 0], 2) == 0.0             # <<<<<<<<<<<<<<
- *             and round(bounds[2, 0], 2) == 0.0
- *     ):
- */
-  __pyx_tuple__3 = PyTuple_Pack(2, __pyx_int_1, __pyx_int_0); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 489, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__3);
-  __Pyx_GIVEREF(__pyx_tuple__3);
-
-  /* "bubblebuster/bubblebuster.pyx":490
- *     if (round(bounds[0, 0], 2) == 0.0
- *             and round(bounds[1, 0], 2) == 0.0
- *             and round(bounds[2, 0], 2) == 0.0             # <<<<<<<<<<<<<<
- *     ):
- *         return coordinates
- */
-  __pyx_tuple__4 = PyTuple_Pack(2, __pyx_int_2, __pyx_int_0); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 490, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__4);
-  __Pyx_GIVEREF(__pyx_tuple__4);
-
-  /* "bubblebuster/bubblebuster.pyx":518
- *     """
- *     coordinates_transpose = np.array(coordinates).T
- *     bounds = np.zeros((3, 2), dtype=np.float64)             # <<<<<<<<<<<<<<
- *     for i in range(3):
- *         bounds[i, 0] = min(coordinates_transpose[i])
- */
-  __pyx_tuple__5 = PyTuple_Pack(2, __pyx_int_3, __pyx_int_2); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 518, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__5);
-  __Pyx_GIVEREF(__pyx_tuple__5);
-  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_tuple__5); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 518, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__6);
-  __Pyx_GIVEREF(__pyx_tuple__6);
-
-  /* "bubblebuster/bubblebuster.pyx":619
- *     """
- *     return (
- *         (bounds[0, 1] - bounds[0, 0]) + delta,             # <<<<<<<<<<<<<<
- *         (bounds[1, 1] - bounds[1, 0]) + delta,
- *         (bounds[2, 1] - bounds[2, 0]) + delta
- */
-  __pyx_tuple__7 = PyTuple_Pack(2, __pyx_int_0, __pyx_int_1); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 619, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__7);
-  __Pyx_GIVEREF(__pyx_tuple__7);
-
-  /* "bubblebuster/bubblebuster.pyx":620
- *     return (
- *         (bounds[0, 1] - bounds[0, 0]) + delta,
- *         (bounds[1, 1] - bounds[1, 0]) + delta,             # <<<<<<<<<<<<<<
- *         (bounds[2, 1] - bounds[2, 0]) + delta
+  /* "bubblebuster/bubblebuster.pyx":393
+ *         box_type
  *     )
- */
-  __pyx_tuple__8 = PyTuple_Pack(2, __pyx_int_1, __pyx_int_1); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 620, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__8);
-  __Pyx_GIVEREF(__pyx_tuple__8);
-
-  /* "bubblebuster/bubblebuster.pyx":621
- *         (bounds[0, 1] - bounds[0, 0]) + delta,
- *         (bounds[1, 1] - bounds[1, 0]) + delta,
- *         (bounds[2, 1] - bounds[2, 0]) + delta             # <<<<<<<<<<<<<<
- *     )
- * 
- */
-  __pyx_tuple__9 = PyTuple_Pack(2, __pyx_int_2, __pyx_int_1); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 621, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__9);
-  __Pyx_GIVEREF(__pyx_tuple__9);
-
-  /* "bubblebuster/bubblebuster.pyx":683
- *         structure_file: str,
- *         box_vectors: Optional[np.ndarray] = None,
- *         mesh: Optional[Tuple[float]] = (1.5, 1.5, 1.5),             # <<<<<<<<<<<<<<
- *         cutoff: Optional[float] = 0.5,
- *         topology_file: Optional[str] = '',
- */
-  __pyx_tuple__11 = PyTuple_Pack(3, __pyx_float_1_5, __pyx_float_1_5, __pyx_float_1_5); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 683, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__11);
-  __Pyx_GIVEREF(__pyx_tuple__11);
-
-  /* "bubblebuster/bubblebuster.pyx":772
- *     wrapped_coordinates = wrap_structure(unwrapped_coordinates,
- *                                          box_info)
  *     trajectory.xyz[0, :, :] = wrapped_coordinates[:, :]             # <<<<<<<<<<<<<<
  *     topology = trajectory.topology
  *     coordinates = get_coordinates(trajectory)
  */
-  __pyx_slice__12 = PySlice_New(Py_None, Py_None, Py_None); if (unlikely(!__pyx_slice__12)) __PYX_ERR(0, 772, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_slice__12);
-  __Pyx_GIVEREF(__pyx_slice__12);
-  __pyx_tuple__13 = PyTuple_Pack(2, __pyx_slice__12, __pyx_slice__12); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 772, __pyx_L1_error)
+  __pyx_slice__11 = PySlice_New(Py_None, Py_None, Py_None); if (unlikely(!__pyx_slice__11)) __PYX_ERR(0, 393, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_slice__11);
+  __Pyx_GIVEREF(__pyx_slice__11);
+  __pyx_tuple__12 = PyTuple_Pack(2, __pyx_slice__11, __pyx_slice__11); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 393, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__12);
+  __Pyx_GIVEREF(__pyx_tuple__12);
+  __pyx_tuple__13 = PyTuple_Pack(3, __pyx_int_0, __pyx_slice__11, __pyx_slice__11); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 393, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__13);
   __Pyx_GIVEREF(__pyx_tuple__13);
-  __pyx_tuple__14 = PyTuple_Pack(3, __pyx_int_0, __pyx_slice__12, __pyx_slice__12); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 772, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":42
+ * 
+ * 
+ * class WaterBoxProperties(object):             # <<<<<<<<<<<<<<
+ *     __slots__ = (
+ *         'box_vectors', 'box_dimensions',
+ */
+  __pyx_tuple__14 = PyTuple_Pack(1, __pyx_builtin_object); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(0, 42, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__14);
   __Pyx_GIVEREF(__pyx_tuple__14);
 
-  /* "bubblebuster/bubblebuster.pyx":37
- * 
- * 
- * class BoxInfo(object):             # <<<<<<<<<<<<<<
- *     """Holds the water box properties pertinent to checking
- *     the box for bubbles.
+  /* "bubblebuster/bubblebuster.pyx":44
+ * class WaterBoxProperties(object):
+ *     __slots__ = (
+ *         'box_vectors', 'box_dimensions',             # <<<<<<<<<<<<<<
+ *         'mesh', 'cubic_partition',
+ *         '_empty_cubes', 'bounds'
  */
-  __pyx_tuple__15 = PyTuple_Pack(1, __pyx_builtin_object); if (unlikely(!__pyx_tuple__15)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_tuple__15 = PyTuple_Pack(6, __pyx_n_s_box_vectors, __pyx_n_s_box_dimensions, __pyx_n_s_mesh, __pyx_n_s_cubic_partition, __pyx_n_s_empty_cubes_2, __pyx_n_s_bounds); if (unlikely(!__pyx_tuple__15)) __PYX_ERR(0, 44, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__15);
   __Pyx_GIVEREF(__pyx_tuple__15);
 
-  /* "bubblebuster/bubblebuster.pyx":118
- * 
- *     """
- *     def __init__(             # <<<<<<<<<<<<<<
- *             self,
- *             box_type: Optional[str] = None,
+  /* "bubblebuster/bubblebuster.pyx":49
+ *     )
+ *     __setattr_calls__ = 0
+ *     def __new__(             # <<<<<<<<<<<<<<
+ *             cls,
+ *             *args,
  */
-  __pyx_tuple__16 = PyTuple_Pack(10, __pyx_n_s_self, __pyx_n_s_box_type, __pyx_n_s_box_vectors, __pyx_n_s_dimensions, __pyx_n_s_volume, __pyx_n_s_atom_density, __pyx_n_s_number_of_atoms, __pyx_n_s_cubic_partition, __pyx_n_s_cubic_partition_bounds, __pyx_n_s_mesh); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(0, 118, __pyx_L1_error)
+  __pyx_tuple__16 = PyTuple_Pack(3, __pyx_n_s_cls, __pyx_n_s_args, __pyx_n_s_kwargs); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(0, 49, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__16);
   __Pyx_GIVEREF(__pyx_tuple__16);
-  __pyx_codeobj__17 = (PyObject*)__Pyx_PyCode_New(10, 0, 10, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__16, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_init, 118, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__17)) __PYX_ERR(0, 118, __pyx_L1_error)
-  __pyx_tuple__18 = PyTuple_Pack(9, ((PyObject *)Py_None), ((PyObject *)Py_None), ((PyObject *)Py_None), ((PyObject *)Py_None), ((PyObject *)Py_None), ((PyObject *)Py_None), ((PyObject *)Py_None), ((PyObject *)Py_None), ((PyObject*)__pyx_float_1_0)); if (unlikely(!__pyx_tuple__18)) __PYX_ERR(0, 118, __pyx_L1_error)
+  __pyx_codeobj__17 = (PyObject*)__Pyx_PyCode_New(1, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS|CO_VARARGS|CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__16, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_new, 49, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__17)) __PYX_ERR(0, 49, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":57
+ *         return super(WaterBoxProperties, cls).__new__(cls)
+ * 
+ *     def __init__(             # <<<<<<<<<<<<<<
+ *             self,
+ *             box_vectors: np.ndarray,
+ */
+  __pyx_tuple__18 = PyTuple_Pack(7, __pyx_n_s_self, __pyx_n_s_box_vectors, __pyx_n_s_box_dimensions, __pyx_n_s_mesh, __pyx_n_s_cubic_partition, __pyx_n_s_empty_cubes, __pyx_n_s_bounds); if (unlikely(!__pyx_tuple__18)) __PYX_ERR(0, 57, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__18);
   __Pyx_GIVEREF(__pyx_tuple__18);
+  __pyx_codeobj__19 = (PyObject*)__Pyx_PyCode_New(7, 0, 7, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__18, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_init, 57, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__19)) __PYX_ERR(0, 57, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":142
+  /* "bubblebuster/bubblebuster.pyx":73
+ *         self.bounds = bounds
+ * 
+ *     def __setattr__(             # <<<<<<<<<<<<<<
+ *             self,
+ *             attr,
+ */
+  __pyx_tuple__20 = PyTuple_Pack(3, __pyx_n_s_self, __pyx_n_s_attr, __pyx_n_s_val); if (unlikely(!__pyx_tuple__20)) __PYX_ERR(0, 73, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__20);
+  __Pyx_GIVEREF(__pyx_tuple__20);
+  __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__20, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_setattr, 73, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) __PYX_ERR(0, 73, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":83
+ *         self.__class__.__setattr_calls__ += 1
+ * 
+ *     def __get_cube_bounds(             # <<<<<<<<<<<<<<
+ *             self,
+ *             cube_index: int,
+ */
+  __pyx_tuple__22 = PyTuple_Pack(12, __pyx_n_s_self, __pyx_n_s_cube_index, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_cube_bounds, __pyx_n_s_wx, __pyx_n_s_wy, __pyx_n_s_wz, __pyx_n_s_x_lb, __pyx_n_s_y_lb, __pyx_n_s_z_lb); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(0, 83, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__22);
+  __Pyx_GIVEREF(__pyx_tuple__22);
+  __pyx_codeobj__23 = (PyObject*)__Pyx_PyCode_New(2, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__22, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_cube_bounds_2, 83, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__23)) __PYX_ERR(0, 83, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":102
+ * 
+ *     @property
+ *     def empty_cubes(             # <<<<<<<<<<<<<<
+ *             self
+ *     ):
+ */
+  __pyx_tuple__24 = PyTuple_Pack(2, __pyx_n_s_self, __pyx_n_s_i); if (unlikely(!__pyx_tuple__24)) __PYX_ERR(0, 102, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__24);
+  __Pyx_GIVEREF(__pyx_tuple__24);
+  __pyx_codeobj__25 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__24, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_empty_cubes, 102, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__25)) __PYX_ERR(0, 102, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":108
+ * 
+ *     @empty_cubes.setter
+ *     def empty_cubes(             # <<<<<<<<<<<<<<
+ *             self,
+ *             empty_cubes
+ */
+  __pyx_tuple__26 = PyTuple_Pack(2, __pyx_n_s_self, __pyx_n_s_empty_cubes); if (unlikely(!__pyx_tuple__26)) __PYX_ERR(0, 108, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__26);
+  __Pyx_GIVEREF(__pyx_tuple__26);
+  __pyx_codeobj__27 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__26, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_empty_cubes, 108, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__27)) __PYX_ERR(0, 108, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":115
  * 
  * 
  * def get_box_vectors(             # <<<<<<<<<<<<<<
  *         trajectory: Trajectory,
  * ) -> np.ndarray:
  */
-  __pyx_tuple__19 = PyTuple_Pack(1, __pyx_n_s_trajectory); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(0, 142, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__19);
-  __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_box_vectors, 142, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) __PYX_ERR(0, 142, __pyx_L1_error)
+  __pyx_tuple__28 = PyTuple_Pack(1, __pyx_n_s_trajectory); if (unlikely(!__pyx_tuple__28)) __PYX_ERR(0, 115, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__28);
+  __Pyx_GIVEREF(__pyx_tuple__28);
+  __pyx_codeobj__29 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__28, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_box_vectors, 115, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__29)) __PYX_ERR(0, 115, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":162
+  /* "bubblebuster/bubblebuster.pyx":120
  *     return trajectory.unitcell_vectors[0]
  * 
  * def get_periodic_box_volume(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray
  * ) -> np.ndarray:
  */
-  __pyx_tuple__21 = PyTuple_Pack(4, __pyx_n_s_box_vectors, __pyx_n_s_a, __pyx_n_s_b, __pyx_n_s_c); if (unlikely(!__pyx_tuple__21)) __PYX_ERR(0, 162, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__21);
-  __Pyx_GIVEREF(__pyx_tuple__21);
-  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__21, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_periodic_box_volume, 162, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) __PYX_ERR(0, 162, __pyx_L1_error)
+  __pyx_tuple__30 = PyTuple_Pack(4, __pyx_n_s_box_vectors, __pyx_n_s_a, __pyx_n_s_b, __pyx_n_s_c); if (unlikely(!__pyx_tuple__30)) __PYX_ERR(0, 120, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__30);
+  __Pyx_GIVEREF(__pyx_tuple__30);
+  __pyx_codeobj__31 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__30, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_periodic_box_volume, 120, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__31)) __PYX_ERR(0, 120, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":181
+  /* "bubblebuster/bubblebuster.pyx":126
  *     return abs(np.dot(a, np.cross(b, c)))
  * 
- * def get_box_vector_dimensions(             # <<<<<<<<<<<<<<
+ * def get_box_dimensions(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray,
  * ) -> np.ndarray:
  */
-  __pyx_tuple__23 = PyTuple_Pack(4, __pyx_n_s_box_vectors, __pyx_n_s_a, __pyx_n_s_b, __pyx_n_s_c); if (unlikely(!__pyx_tuple__23)) __PYX_ERR(0, 181, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__23);
-  __Pyx_GIVEREF(__pyx_tuple__23);
-  __pyx_codeobj__24 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__23, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_box_vector_dimensions, 181, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__24)) __PYX_ERR(0, 181, __pyx_L1_error)
+  __pyx_tuple__32 = PyTuple_Pack(4, __pyx_n_s_box_vectors, __pyx_n_s_a, __pyx_n_s_b, __pyx_n_s_c); if (unlikely(!__pyx_tuple__32)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__32);
+  __Pyx_GIVEREF(__pyx_tuple__32);
+  __pyx_codeobj__33 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__32, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_box_dimensions, 126, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__33)) __PYX_ERR(0, 126, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":205
+  /* "bubblebuster/bubblebuster.pyx":134
  *     return np.array([a, b, c])
  * 
  * def get_coordinates(             # <<<<<<<<<<<<<<
  *         trajectory: Trajectory,
  * ) -> ndarray:
  */
-  __pyx_tuple__25 = PyTuple_Pack(5, __pyx_n_s_trajectory, __pyx_n_s_npacoords, __pyx_n_s_i, __pyx_n_s_coords, __pyx_n_s_atom_coordinates); if (unlikely(!__pyx_tuple__25)) __PYX_ERR(0, 205, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__25);
-  __Pyx_GIVEREF(__pyx_tuple__25);
-  __pyx_codeobj__26 = (PyObject*)__Pyx_PyCode_New(1, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__25, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_coordinates, 205, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__26)) __PYX_ERR(0, 205, __pyx_L1_error)
+  __pyx_tuple__34 = PyTuple_Pack(5, __pyx_n_s_trajectory, __pyx_n_s_npacoords, __pyx_n_s_i, __pyx_n_s_coords, __pyx_n_s_atom_coordinates); if (unlikely(!__pyx_tuple__34)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__34);
+  __Pyx_GIVEREF(__pyx_tuple__34);
+  __pyx_codeobj__35 = (PyObject*)__Pyx_PyCode_New(1, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__34, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_coordinates, 134, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__35)) __PYX_ERR(0, 134, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":238
+  /* "bubblebuster/bubblebuster.pyx":149
  *     return coords
  * 
  * def pbc_scale_factor(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
-  __pyx_tuple__27 = PyTuple_Pack(3, __pyx_n_s_box_vector_dimensions, __pyx_n_s_atom_coordinates, __pyx_n_s_coordinate_component_index); if (unlikely(!__pyx_tuple__27)) __PYX_ERR(0, 238, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__27);
-  __Pyx_GIVEREF(__pyx_tuple__27);
-  __pyx_codeobj__28 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__27, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_pbc_scale_factor, 238, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__28)) __PYX_ERR(0, 238, __pyx_L1_error)
+  __pyx_tuple__36 = PyTuple_Pack(3, __pyx_n_s_box_dimensions, __pyx_n_s_atom_coordinates, __pyx_n_s_coordinate_component_index); if (unlikely(!__pyx_tuple__36)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__36);
+  __Pyx_GIVEREF(__pyx_tuple__36);
+  __pyx_codeobj__37 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__36, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_pbc_scale_factor, 149, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__37)) __PYX_ERR(0, 149, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":281
+  /* "bubblebuster/bubblebuster.pyx":159
  *     )
  * 
  * def apply_pbc_to_triclinic_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
-  __pyx_tuple__29 = PyTuple_Pack(6, __pyx_n_s_box_vector_dimensions, __pyx_n_s_atom_coordinates, __pyx_n_s_box_vectors, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_scale_factor); if (unlikely(!__pyx_tuple__29)) __PYX_ERR(0, 281, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__29);
-  __Pyx_GIVEREF(__pyx_tuple__29);
-  __pyx_codeobj__30 = (PyObject*)__Pyx_PyCode_New(3, 0, 6, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__29, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_apply_pbc_to_triclinic_coordinat, 281, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__30)) __PYX_ERR(0, 281, __pyx_L1_error)
+  __pyx_tuple__38 = PyTuple_Pack(6, __pyx_n_s_box_dimensions, __pyx_n_s_atom_coordinates, __pyx_n_s_box_vectors, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_scale_factor); if (unlikely(!__pyx_tuple__38)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__38);
+  __Pyx_GIVEREF(__pyx_tuple__38);
+  __pyx_codeobj__39 = (PyObject*)__Pyx_PyCode_New(3, 0, 6, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__38, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_apply_pbc_to_triclinic_coordinat, 159, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__39)) __PYX_ERR(0, 159, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":325
+  /* "bubblebuster/bubblebuster.pyx":174
  *     return atom_coordinates
  * 
  * def apply_pbc_to_cubic_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
-  __pyx_tuple__31 = PyTuple_Pack(5, __pyx_n_s_box_vector_dimensions, __pyx_n_s_atom_coordinates, __pyx_n_s_box_vectors, __pyx_n_s_i, __pyx_n_s_scale_factor); if (unlikely(!__pyx_tuple__31)) __PYX_ERR(0, 325, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__31);
-  __Pyx_GIVEREF(__pyx_tuple__31);
-  __pyx_codeobj__32 = (PyObject*)__Pyx_PyCode_New(3, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__31, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_apply_pbc_to_cubic_coordinates, 325, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__32)) __PYX_ERR(0, 325, __pyx_L1_error)
+  __pyx_tuple__40 = PyTuple_Pack(5, __pyx_n_s_box_dimensions, __pyx_n_s_atom_coordinates, __pyx_n_s_box_vectors, __pyx_n_s_i, __pyx_n_s_scale_factor); if (unlikely(!__pyx_tuple__40)) __PYX_ERR(0, 174, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__40);
+  __Pyx_GIVEREF(__pyx_tuple__40);
+  __pyx_codeobj__41 = (PyObject*)__Pyx_PyCode_New(3, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__40, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_apply_pbc_to_cubic_coordinates, 174, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__41)) __PYX_ERR(0, 174, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":368
+  /* "bubblebuster/bubblebuster.pyx":188
  *     return atom_coordinates
  * 
  * def apply_pbc_to_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
-  __pyx_tuple__33 = PyTuple_Pack(4, __pyx_n_s_box_vector_dimensions, __pyx_n_s_atom_coordinates, __pyx_n_s_box_vectors, __pyx_n_s_box_type); if (unlikely(!__pyx_tuple__33)) __PYX_ERR(0, 368, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__33);
-  __Pyx_GIVEREF(__pyx_tuple__33);
-  __pyx_codeobj__34 = (PyObject*)__Pyx_PyCode_New(4, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__33, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_apply_pbc_to_coordinates, 368, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__34)) __PYX_ERR(0, 368, __pyx_L1_error)
+  __pyx_tuple__42 = PyTuple_Pack(4, __pyx_n_s_box_dimensions, __pyx_n_s_atom_coordinates, __pyx_n_s_box_vectors, __pyx_n_s_box_type); if (unlikely(!__pyx_tuple__42)) __PYX_ERR(0, 188, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__42);
+  __Pyx_GIVEREF(__pyx_tuple__42);
+  __pyx_codeobj__43 = (PyObject*)__Pyx_PyCode_New(4, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__42, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_apply_pbc_to_coordinates, 188, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__43)) __PYX_ERR(0, 188, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":410
+  /* "bubblebuster/bubblebuster.pyx":207
  *         )
  * 
  * def apply_pbc(             # <<<<<<<<<<<<<<
- *         coordinates: ndarray,
- *         box_info: BoxInfo,
+ *         coordinates: np.ndarray,
+ *         box_vectors: np.ndarray,
  */
-  __pyx_tuple__35 = PyTuple_Pack(5, __pyx_n_s_coordinates, __pyx_n_s_box_info, __pyx_n_s_box_vectors, __pyx_n_s_box_vector_dimensions, __pyx_n_s_atom_coordinates); if (unlikely(!__pyx_tuple__35)) __PYX_ERR(0, 410, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__35);
-  __Pyx_GIVEREF(__pyx_tuple__35);
-  __pyx_codeobj__36 = (PyObject*)__Pyx_PyCode_New(2, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__35, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_apply_pbc, 410, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__36)) __PYX_ERR(0, 410, __pyx_L1_error)
+  __pyx_tuple__44 = PyTuple_Pack(5, __pyx_n_s_coordinates, __pyx_n_s_box_vectors, __pyx_n_s_box_dimensions, __pyx_n_s_box_type, __pyx_n_s_coords); if (unlikely(!__pyx_tuple__44)) __PYX_ERR(0, 207, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__44);
+  __Pyx_GIVEREF(__pyx_tuple__44);
+  __pyx_codeobj__45 = (PyObject*)__Pyx_PyCode_New(4, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__44, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_apply_pbc, 207, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__45)) __PYX_ERR(0, 207, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":451
+  /* "bubblebuster/bubblebuster.pyx":225
  *     return coordinates
  * 
  * def wrap_structure(             # <<<<<<<<<<<<<<
- *         coordinates: ndarray,
- *         box_info: BoxInfo,
+ *         coordinates: np.ndarray,
+ *         box_vectors: np.ndarray,
  */
-  __pyx_tuple__37 = PyTuple_Pack(3, __pyx_n_s_coordinates, __pyx_n_s_box_info, __pyx_n_s_bounds); if (unlikely(!__pyx_tuple__37)) __PYX_ERR(0, 451, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__37);
-  __Pyx_GIVEREF(__pyx_tuple__37);
-  __pyx_codeobj__38 = (PyObject*)__Pyx_PyCode_New(2, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__37, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_wrap_structure, 451, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__38)) __PYX_ERR(0, 451, __pyx_L1_error)
+  __pyx_tuple__46 = PyTuple_Pack(5, __pyx_n_s_coordinates, __pyx_n_s_box_vectors, __pyx_n_s_box_dimensions, __pyx_n_s_box_type, __pyx_n_s_bounds); if (unlikely(!__pyx_tuple__46)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__46);
+  __Pyx_GIVEREF(__pyx_tuple__46);
+  __pyx_codeobj__47 = (PyObject*)__Pyx_PyCode_New(4, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__46, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_wrap_structure, 225, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__47)) __PYX_ERR(0, 225, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":495
- *     return wrap_structure(coordinates, box_info)
+  /* "bubblebuster/bubblebuster.pyx":240
+ *     return wrap_structure(coordinates, box_type)
  * 
  * def coordinate_bounds(             # <<<<<<<<<<<<<<
  *         coordinates: np.ndarray,
  * ) -> np.ndarray:
  */
-  __pyx_tuple__39 = PyTuple_Pack(4, __pyx_n_s_coordinates, __pyx_n_s_coordinates_transpose, __pyx_n_s_bounds, __pyx_n_s_i); if (unlikely(!__pyx_tuple__39)) __PYX_ERR(0, 495, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__39);
-  __Pyx_GIVEREF(__pyx_tuple__39);
-  __pyx_codeobj__40 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__39, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_coordinate_bounds, 495, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__40)) __PYX_ERR(0, 495, __pyx_L1_error)
+  __pyx_tuple__48 = PyTuple_Pack(4, __pyx_n_s_coordinates, __pyx_n_s_coordinates_transpose, __pyx_n_s_bounds, __pyx_n_s_i); if (unlikely(!__pyx_tuple__48)) __PYX_ERR(0, 240, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__48);
+  __Pyx_GIVEREF(__pyx_tuple__48);
+  __pyx_codeobj__49 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__48, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_coordinate_bounds, 240, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__49)) __PYX_ERR(0, 240, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":524
+  /* "bubblebuster/bubblebuster.pyx":250
  *     return bounds
  * 
  * def get_num_subintervals(             # <<<<<<<<<<<<<<
- *         box_info: BoxInfo(),
  *         lower_bound: float,
+ *         upper_bound: float,
  */
-  __pyx_tuple__41 = PyTuple_Pack(4, __pyx_n_s_box_info, __pyx_n_s_lower_bound, __pyx_n_s_upper_bound, __pyx_n_s_num_subintervals); if (unlikely(!__pyx_tuple__41)) __PYX_ERR(0, 524, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__41);
-  __Pyx_GIVEREF(__pyx_tuple__41);
-  __pyx_codeobj__42 = (PyObject*)__Pyx_PyCode_New(3, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__41, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_num_subintervals, 524, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__42)) __PYX_ERR(0, 524, __pyx_L1_error)
+  __pyx_tuple__50 = PyTuple_Pack(4, __pyx_n_s_lower_bound, __pyx_n_s_upper_bound, __pyx_n_s_mesh, __pyx_n_s_num_subintervals); if (unlikely(!__pyx_tuple__50)) __PYX_ERR(0, 250, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__50);
+  __Pyx_GIVEREF(__pyx_tuple__50);
+  __pyx_codeobj__51 = (PyObject*)__Pyx_PyCode_New(3, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__50, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_num_subintervals, 250, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__51)) __PYX_ERR(0, 250, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":559
+  /* "bubblebuster/bubblebuster.pyx":260
  *     return num_subintervals
+ * 
+ * def get_mesh(             # <<<<<<<<<<<<<<
+ *         bounds: np.ndarray,
+ *         num_subintervals: Tuple,
+ */
+  __pyx_tuple__52 = PyTuple_Pack(4, __pyx_n_s_bounds, __pyx_n_s_num_subintervals, __pyx_n_s_mesh, __pyx_n_s_i); if (unlikely(!__pyx_tuple__52)) __PYX_ERR(0, 260, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__52);
+  __Pyx_GIVEREF(__pyx_tuple__52);
+  __pyx_codeobj__53 = (PyObject*)__Pyx_PyCode_New(2, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__52, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_mesh, 260, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__53)) __PYX_ERR(0, 260, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":269
+ *     return mesh
  * 
  * def get_cubic_partition(             # <<<<<<<<<<<<<<
  *         coordinate_bounds: np.ndarray,
  *         num_x_subintervals: int,
  */
-  __pyx_tuple__43 = PyTuple_Pack(9, __pyx_n_s_coordinate_bounds, __pyx_n_s_num_x_subintervals, __pyx_n_s_num_y_subintervals, __pyx_n_s_num_z_subintervals, __pyx_n_s_box_info, __pyx_n_s_cube_dict, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k); if (unlikely(!__pyx_tuple__43)) __PYX_ERR(0, 559, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__43);
-  __Pyx_GIVEREF(__pyx_tuple__43);
-  __pyx_codeobj__44 = (PyObject*)__Pyx_PyCode_New(5, 0, 9, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__43, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_cubic_partition, 559, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__44)) __PYX_ERR(0, 559, __pyx_L1_error)
+  __pyx_tuple__54 = PyTuple_Pack(8, __pyx_n_s_coordinate_bounds, __pyx_n_s_num_x_subintervals, __pyx_n_s_num_y_subintervals, __pyx_n_s_num_z_subintervals, __pyx_n_s_cube_dict, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k); if (unlikely(!__pyx_tuple__54)) __PYX_ERR(0, 269, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__54);
+  __Pyx_GIVEREF(__pyx_tuple__54);
+  __pyx_codeobj__55 = (PyObject*)__Pyx_PyCode_New(4, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__54, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_cubic_partition, 269, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__55)) __PYX_ERR(0, 269, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":603
+  /* "bubblebuster/bubblebuster.pyx":282
  *     return cube_dict
  * 
  * def hash_widths(             # <<<<<<<<<<<<<<
  *         bounds: np.ndarray,
  *         delta: Optional[float] = 1e-7,
  */
-  __pyx_tuple__45 = PyTuple_Pack(2, __pyx_n_s_bounds, __pyx_n_s_delta); if (unlikely(!__pyx_tuple__45)) __PYX_ERR(0, 603, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__45);
-  __Pyx_GIVEREF(__pyx_tuple__45);
-  __pyx_codeobj__46 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__45, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_hash_widths, 603, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__46)) __PYX_ERR(0, 603, __pyx_L1_error)
+  __pyx_tuple__56 = PyTuple_Pack(2, __pyx_n_s_bounds, __pyx_n_s_delta); if (unlikely(!__pyx_tuple__56)) __PYX_ERR(0, 282, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__56);
+  __Pyx_GIVEREF(__pyx_tuple__56);
+  __pyx_codeobj__57 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__56, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_hash_widths, 282, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__57)) __PYX_ERR(0, 282, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":624
+  /* "bubblebuster/bubblebuster.pyx":292
  *     )
  * 
  * def get_cubic_partition_occupancy(             # <<<<<<<<<<<<<<
  *         coordinates: np.ndarray,
  *         num_x_subintervals: int,
  */
-  __pyx_tuple__47 = PyTuple_Pack(13, __pyx_n_s_coordinates, __pyx_n_s_num_x_subintervals, __pyx_n_s_num_y_subintervals, __pyx_n_s_num_z_subintervals, __pyx_n_s_hash_widths, __pyx_n_s_bounds, __pyx_n_s_cubic_partition, __pyx_n_s_x, __pyx_n_s_y, __pyx_n_s_z, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k); if (unlikely(!__pyx_tuple__47)) __PYX_ERR(0, 624, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__47);
-  __Pyx_GIVEREF(__pyx_tuple__47);
-  __pyx_codeobj__48 = (PyObject*)__Pyx_PyCode_New(7, 0, 13, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__47, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_cubic_partition_occupancy, 624, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__48)) __PYX_ERR(0, 624, __pyx_L1_error)
+  __pyx_tuple__58 = PyTuple_Pack(13, __pyx_n_s_coordinates, __pyx_n_s_num_x_subintervals, __pyx_n_s_num_y_subintervals, __pyx_n_s_num_z_subintervals, __pyx_n_s_hash_widths, __pyx_n_s_bounds, __pyx_n_s_cubic_partition, __pyx_n_s_x, __pyx_n_s_y, __pyx_n_s_z, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k); if (unlikely(!__pyx_tuple__58)) __PYX_ERR(0, 292, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__58);
+  __Pyx_GIVEREF(__pyx_tuple__58);
+  __pyx_codeobj__59 = (PyObject*)__Pyx_PyCode_New(7, 0, 13, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__58, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_cubic_partition_occupancy, 292, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__59)) __PYX_ERR(0, 292, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":640
+  /* "bubblebuster/bubblebuster.pyx":314
  *     return cubic_partition
+ * 
+ * def get_empty_cubes(             # <<<<<<<<<<<<<<
+ *         cubic_partition: Dict,
+ * ) -> Tuple:
+ */
+  __pyx_tuple__60 = PyTuple_Pack(5, __pyx_n_s_cubic_partition, __pyx_n_s_empty_cubes, __pyx_n_s_cube_index, __pyx_n_s_k, __pyx_n_s_v); if (unlikely(!__pyx_tuple__60)) __PYX_ERR(0, 314, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__60);
+  __Pyx_GIVEREF(__pyx_tuple__60);
+  __pyx_codeobj__61 = (PyObject*)__Pyx_PyCode_New(1, 0, 5, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__60, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_empty_cubes, 314, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__61)) __PYX_ERR(0, 314, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":325
+ *     return tuple(empty_cubes)
+ * 
+ * def get_cube_bounds(             # <<<<<<<<<<<<<<
+ *         water_box_properties: WaterBoxProperties,
+ *         cube_index: int,
+ */
+  __pyx_tuple__62 = PyTuple_Pack(12, __pyx_n_s_water_box_properties, __pyx_n_s_cube_index, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_cube_bounds, __pyx_n_s_wx, __pyx_n_s_wy, __pyx_n_s_wz, __pyx_n_s_x_lb, __pyx_n_s_y_lb, __pyx_n_s_z_lb); if (unlikely(!__pyx_tuple__62)) __PYX_ERR(0, 325, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__62);
+  __Pyx_GIVEREF(__pyx_tuple__62);
+  __pyx_codeobj__63 = (PyObject*)__Pyx_PyCode_New(2, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__62, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_cube_bounds, 325, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__63)) __PYX_ERR(0, 325, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":343
+ *     return cube_bounds
  * 
  * def get_box_type(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray,
  * ) -> str:
  */
-  __pyx_tuple__49 = PyTuple_Pack(4, __pyx_n_s_box_vectors, __pyx_n_s_off_diagonals, __pyx_n_s_i, __pyx_n_s_j); if (unlikely(!__pyx_tuple__49)) __PYX_ERR(0, 640, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__49);
-  __Pyx_GIVEREF(__pyx_tuple__49);
-  __pyx_codeobj__50 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__49, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_box_type, 640, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__50)) __PYX_ERR(0, 640, __pyx_L1_error)
+  __pyx_tuple__64 = PyTuple_Pack(4, __pyx_n_s_box_vectors, __pyx_n_s_off_diagonals, __pyx_n_s_i, __pyx_n_s_j); if (unlikely(!__pyx_tuple__64)) __PYX_ERR(0, 343, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__64);
+  __Pyx_GIVEREF(__pyx_tuple__64);
+  __pyx_codeobj__65 = (PyObject*)__Pyx_PyCode_New(1, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__64, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_get_box_type, 343, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__65)) __PYX_ERR(0, 343, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":672
+  /* "bubblebuster/bubblebuster.pyx":354
  *     return "triclinic"
  * 
  * def load_mdtraj_trajectory(             # <<<<<<<<<<<<<<
  *         structure_file: str,
  *         topology_file: Optional[str] = '',
  */
-  __pyx_tuple__51 = PyTuple_Pack(2, __pyx_n_s_structure_file, __pyx_n_s_topology_file); if (unlikely(!__pyx_tuple__51)) __PYX_ERR(0, 672, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__51);
-  __Pyx_GIVEREF(__pyx_tuple__51);
-  __pyx_codeobj__52 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__51, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_load_mdtraj_trajectory, 672, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__52)) __PYX_ERR(0, 672, __pyx_L1_error)
+  __pyx_tuple__66 = PyTuple_Pack(2, __pyx_n_s_structure_file, __pyx_n_s_topology_file); if (unlikely(!__pyx_tuple__66)) __PYX_ERR(0, 354, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__66);
+  __Pyx_GIVEREF(__pyx_tuple__66);
+  __pyx_codeobj__67 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__66, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_load_mdtraj_trajectory, 354, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__67)) __PYX_ERR(0, 354, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":680
+  /* "bubblebuster/bubblebuster.pyx":362
  *     return md.load(structure_file, top=topology_file)
  * 
- * def periodic_box_properties(             # <<<<<<<<<<<<<<
+ * def water_box_properties(             # <<<<<<<<<<<<<<
  *         structure_file: str,
- *         box_vectors: Optional[np.ndarray] = None,
+ *         box_vectors: Optional[np.ndarray] = False,
  */
-  __pyx_tuple__53 = PyTuple_Pack(17, __pyx_n_s_structure_file, __pyx_n_s_box_vectors, __pyx_n_s_mesh, __pyx_n_s_cutoff, __pyx_n_s_topology_file, __pyx_n_s_wrapped_structure_filename, __pyx_n_s_box_info, __pyx_n_s_trajectory, __pyx_n_s_unwrapped_coordinates, __pyx_n_s_wrapped_coordinates, __pyx_n_s_topology, __pyx_n_s_coordinates, __pyx_n_s_bounds, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_nz, __pyx_n_s_cubic_partition); if (unlikely(!__pyx_tuple__53)) __PYX_ERR(0, 680, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__53);
-  __Pyx_GIVEREF(__pyx_tuple__53);
-  __pyx_codeobj__54 = (PyObject*)__Pyx_PyCode_New(6, 0, 17, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__53, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_periodic_box_properties, 680, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__54)) __PYX_ERR(0, 680, __pyx_L1_error)
+  __pyx_tuple__68 = PyTuple_Pack(20, __pyx_n_s_structure_file, __pyx_n_s_box_vectors, __pyx_n_s_mesh, __pyx_n_s_cutoff, __pyx_n_s_topology_file, __pyx_n_s_wrapped_structure_filename, __pyx_n_s_trajectory, __pyx_n_s_box_dimensions, __pyx_n_s_box_type, __pyx_n_s_unwrapped_coordinates, __pyx_n_s_wrapped_coordinates, __pyx_n_s_topology, __pyx_n_s_coordinates, __pyx_n_s_bounds, __pyx_n_s_nx, __pyx_n_s_ny, __pyx_n_s_nz, __pyx_n_s_cubic_partition, __pyx_n_s_empty_cubes, __pyx_n_s_properties); if (unlikely(!__pyx_tuple__68)) __PYX_ERR(0, 362, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__68);
+  __Pyx_GIVEREF(__pyx_tuple__68);
+  __pyx_codeobj__69 = (PyObject*)__Pyx_PyCode_New(6, 0, 20, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__68, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_bubblebuster_bubblebuster_pyx, __pyx_n_s_water_box_properties, 362, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__69)) __PYX_ERR(0, 362, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -8116,8 +10504,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitGlobals(void) {
   if (__Pyx_InitStrings(__pyx_string_tab) < 0) __PYX_ERR(0, 1, __pyx_L1_error);
   __pyx_float_0_0 = PyFloat_FromDouble(0.0); if (unlikely(!__pyx_float_0_0)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_float_0_5 = PyFloat_FromDouble(0.5); if (unlikely(!__pyx_float_0_5)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __pyx_float_1_0 = PyFloat_FromDouble(1.0); if (unlikely(!__pyx_float_1_0)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __pyx_float_1_5 = PyFloat_FromDouble(1.5); if (unlikely(!__pyx_float_1_5)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_float_10_0 = PyFloat_FromDouble(10.0); if (unlikely(!__pyx_float_10_0)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_float_1eneg_7 = PyFloat_FromDouble(1e-7); if (unlikely(!__pyx_float_1eneg_7)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_int_0 = PyInt_FromLong(0); if (unlikely(!__pyx_int_0)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_int_1 = PyInt_FromLong(1); if (unlikely(!__pyx_int_1)) __PYX_ERR(0, 1, __pyx_L1_error)
@@ -8292,6 +10679,7 @@ static CYTHON_SMALL_CODE int __pyx_pymod_exec_bubblebuster(PyObject *__pyx_pyini
   PyObject *__pyx_t_4 = NULL;
   PyObject *__pyx_t_5 = NULL;
   PyObject *__pyx_t_6 = NULL;
+  PyObject *__pyx_t_7 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -8397,576 +10785,754 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "bubblebuster/bubblebuster.pyx":27
- * ###############################################################################
+  /* "bubblebuster/bubblebuster.pyx":28
  * 
- * from math import floor, \             # <<<<<<<<<<<<<<
- *     ceil
- * from typing import Dict, Optional, Tuple
+ * 
+ * from math import ceil             # <<<<<<<<<<<<<<
+ * from math import floor
+ * from typing import Dict
  */
-  __pyx_t_1 = PyList_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(__pyx_n_s_floor);
-  __Pyx_GIVEREF(__pyx_n_s_floor);
-  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_floor);
   __Pyx_INCREF(__pyx_n_s_ceil);
   __Pyx_GIVEREF(__pyx_n_s_ceil);
-  PyList_SET_ITEM(__pyx_t_1, 1, __pyx_n_s_ceil);
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_math, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 27, __pyx_L1_error)
+  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_ceil);
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_math, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_floor); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 27, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_floor, __pyx_t_1) < 0) __PYX_ERR(0, 27, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_ceil); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 27, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_ceil); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_ceil, __pyx_t_1) < 0) __PYX_ERR(0, 28, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "bubblebuster/bubblebuster.pyx":29
- * from math import floor, \
- *     ceil
- * from typing import Dict, Optional, Tuple             # <<<<<<<<<<<<<<
  * 
- * import mdtraj as md
+ * from math import ceil
+ * from math import floor             # <<<<<<<<<<<<<<
+ * from typing import Dict
+ * from typing import Optional
  */
-  __pyx_t_2 = PyList_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_INCREF(__pyx_n_s_Dict);
-  __Pyx_GIVEREF(__pyx_n_s_Dict);
-  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_Dict);
-  __Pyx_INCREF(__pyx_n_s_Optional);
-  __Pyx_GIVEREF(__pyx_n_s_Optional);
-  PyList_SET_ITEM(__pyx_t_2, 1, __pyx_n_s_Optional);
-  __Pyx_INCREF(__pyx_n_s_Tuple);
-  __Pyx_GIVEREF(__pyx_n_s_Tuple);
-  PyList_SET_ITEM(__pyx_t_2, 2, __pyx_n_s_Tuple);
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_typing, __pyx_t_2, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 29, __pyx_L1_error)
+  __Pyx_INCREF(__pyx_n_s_floor);
+  __Pyx_GIVEREF(__pyx_n_s_floor);
+  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_floor);
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_math, __pyx_t_2, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 29, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_Dict); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_floor); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Dict, __pyx_t_2) < 0) __PYX_ERR(0, 29, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_Optional); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Optional, __pyx_t_2) < 0) __PYX_ERR(0, 29, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_Tuple); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 29, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Tuple, __pyx_t_2) < 0) __PYX_ERR(0, 29, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_floor, __pyx_t_2) < 0) __PYX_ERR(0, 29, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
+  /* "bubblebuster/bubblebuster.pyx":30
+ * from math import ceil
+ * from math import floor
+ * from typing import Dict             # <<<<<<<<<<<<<<
+ * from typing import Optional
+ * from typing import Tuple
+ */
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(__pyx_n_s_Dict);
+  __Pyx_GIVEREF(__pyx_n_s_Dict);
+  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_Dict);
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_typing, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_Dict); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Dict, __pyx_t_1) < 0) __PYX_ERR(0, 30, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
   /* "bubblebuster/bubblebuster.pyx":31
- * from typing import Dict, Optional, Tuple
+ * from math import floor
+ * from typing import Dict
+ * from typing import Optional             # <<<<<<<<<<<<<<
+ * from typing import Tuple
+ * 
+ */
+  __pyx_t_2 = PyList_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 31, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_INCREF(__pyx_n_s_Optional);
+  __Pyx_GIVEREF(__pyx_n_s_Optional);
+  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_Optional);
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_typing, __pyx_t_2, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 31, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_Optional); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 31, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Optional, __pyx_t_2) < 0) __PYX_ERR(0, 31, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":32
+ * from typing import Dict
+ * from typing import Optional
+ * from typing import Tuple             # <<<<<<<<<<<<<<
+ * 
+ * import mdtraj as md
+ */
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(__pyx_n_s_Tuple);
+  __Pyx_GIVEREF(__pyx_n_s_Tuple);
+  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_Tuple);
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_typing, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_Tuple); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Tuple, __pyx_t_1) < 0) __PYX_ERR(0, 32, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":34
+ * from typing import Tuple
  * 
  * import mdtraj as md             # <<<<<<<<<<<<<<
  * import numpy as np
  * from mdtraj.core.trajectory import Trajectory
  */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_mdtraj, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 31, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_md, __pyx_t_1) < 0) __PYX_ERR(0, 31, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_mdtraj, 0, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_md, __pyx_t_2) < 0) __PYX_ERR(0, 34, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":32
+  /* "bubblebuster/bubblebuster.pyx":35
  * 
  * import mdtraj as md
  * import numpy as np             # <<<<<<<<<<<<<<
  * from mdtraj.core.trajectory import Trajectory
  * from numpy import ndarray
  */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 32, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 32, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_numpy, 0, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 35, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_2) < 0) __PYX_ERR(0, 35, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":33
+  /* "bubblebuster/bubblebuster.pyx":36
  * import mdtraj as md
  * import numpy as np
  * from mdtraj.core.trajectory import Trajectory             # <<<<<<<<<<<<<<
  * from numpy import ndarray
  * 
  */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 33, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = PyList_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_n_s_Trajectory);
   __Pyx_GIVEREF(__pyx_n_s_Trajectory);
-  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_Trajectory);
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_mdtraj_core_trajectory, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 33, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_Trajectory); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 33, __pyx_L1_error)
+  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_Trajectory);
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_mdtraj_core_trajectory, __pyx_t_2, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 36, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Trajectory, __pyx_t_1) < 0) __PYX_ERR(0, 33, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_Trajectory); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Trajectory, __pyx_t_2) < 0) __PYX_ERR(0, 36, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":34
+  /* "bubblebuster/bubblebuster.pyx":37
  * import numpy as np
  * from mdtraj.core.trajectory import Trajectory
  * from numpy import ndarray             # <<<<<<<<<<<<<<
  * 
- * 
+ * __all__ = ['water_box_properties', 'get_cube_bounds']
  */
-  __pyx_t_2 = PyList_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_n_s_ndarray);
   __Pyx_GIVEREF(__pyx_n_s_ndarray);
-  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_ndarray);
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, __pyx_t_2, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 34, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_ndarray); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)
+  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_ndarray);
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_numpy, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_ndarray, __pyx_t_2) < 0) __PYX_ERR(0, 34, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":37
- * 
- * 
- * class BoxInfo(object):             # <<<<<<<<<<<<<<
- *     """Holds the water box properties pertinent to checking
- *     the box for bubbles.
- */
-  __pyx_t_1 = __Pyx_CalculateMetaclass(NULL, __pyx_tuple__15); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_ndarray); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_Py3MetaclassPrepare(__pyx_t_1, __pyx_tuple__15, __pyx_n_s_BoxInfo, __pyx_n_s_BoxInfo, (PyObject *) NULL, __pyx_n_s_bubblebuster_bubblebuster, __pyx_kp_s_Holds_the_water_box_properties_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_ndarray, __pyx_t_1) < 0) __PYX_ERR(0, 37, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":118
+  /* "bubblebuster/bubblebuster.pyx":39
+ * from numpy import ndarray
  * 
- *     """
- *     def __init__(             # <<<<<<<<<<<<<<
- *             self,
- *             box_type: Optional[str] = None,
+ * __all__ = ['water_box_properties', 'get_cube_bounds']             # <<<<<<<<<<<<<<
+ * 
+ * 
  */
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 118, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 39, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_INCREF(__pyx_n_s_water_box_properties);
+  __Pyx_GIVEREF(__pyx_n_s_water_box_properties);
+  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_water_box_properties);
+  __Pyx_INCREF(__pyx_n_s_get_cube_bounds);
+  __Pyx_GIVEREF(__pyx_n_s_get_cube_bounds);
+  PyList_SET_ITEM(__pyx_t_2, 1, __pyx_n_s_get_cube_bounds);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_all, __pyx_t_2) < 0) __PYX_ERR(0, 39, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":42
+ * 
+ * 
+ * class WaterBoxProperties(object):             # <<<<<<<<<<<<<<
+ *     __slots__ = (
+ *         'box_vectors', 'box_dimensions',
+ */
+  __pyx_t_2 = __Pyx_CalculateMetaclass(NULL, __pyx_tuple__14); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_1 = __Pyx_Py3MetaclassPrepare(__pyx_t_2, __pyx_tuple__14, __pyx_n_s_WaterBoxProperties, __pyx_n_s_WaterBoxProperties, (PyObject *) NULL, __pyx_n_s_bubblebuster_bubblebuster, (PyObject *) NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 42, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
 
-  /* "bubblebuster/bubblebuster.pyx":120
- *     def __init__(
- *             self,
- *             box_type: Optional[str] = None,             # <<<<<<<<<<<<<<
- *             box_vectors: Optional[np.ndarray] = None,
- *             dimensions: Optional[np.ndarray] = None,
+  /* "bubblebuster/bubblebuster.pyx":44
+ * class WaterBoxProperties(object):
+ *     __slots__ = (
+ *         'box_vectors', 'box_dimensions',             # <<<<<<<<<<<<<<
+ *         'mesh', 'cubic_partition',
+ *         '_empty_cubes', 'bounds'
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_Optional); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 120, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = __Pyx_PyObject_GetItem(__pyx_t_4, ((PyObject *)(&PyString_Type))); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 120, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_box_type, __pyx_t_5) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (__Pyx_SetNameInClass(__pyx_t_1, __pyx_n_s_slots, __pyx_tuple__15) < 0) __PYX_ERR(0, 43, __pyx_L1_error)
 
-  /* "bubblebuster/bubblebuster.pyx":121
- *             self,
- *             box_type: Optional[str] = None,
- *             box_vectors: Optional[np.ndarray] = None,             # <<<<<<<<<<<<<<
- *             dimensions: Optional[np.ndarray] = None,
- *             volume: Optional[float] = None,
+  /* "bubblebuster/bubblebuster.pyx":48
+ *         '_empty_cubes', 'bounds'
+ *     )
+ *     __setattr_calls__ = 0             # <<<<<<<<<<<<<<
+ *     def __new__(
+ *             cls,
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_Optional); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 121, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 121, __pyx_L1_error)
+  if (__Pyx_SetNameInClass(__pyx_t_1, __pyx_n_s_setattr_calls, __pyx_int_0) < 0) __PYX_ERR(0, 48, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":49
+ *     )
+ *     __setattr_calls__ = 0
+ *     def __new__(             # <<<<<<<<<<<<<<
+ *             cls,
+ *             *args,
+ */
+  __pyx_t_4 = __Pyx_CyFunction_New(&__pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_1__new__, __Pyx_CYFUNCTION_STATICMETHOD, __pyx_n_s_WaterBoxProperties___new, NULL, __pyx_n_s_bubblebuster_bubblebuster, __pyx_d, ((PyObject *)__pyx_codeobj__17)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 49, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_ndarray); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 121, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 121, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_box_vectors, __pyx_t_4) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
+  if (__Pyx_SetNameInClass(__pyx_t_1, __pyx_n_s_new, __pyx_t_4) < 0) __PYX_ERR(0, 49, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":122
- *             box_type: Optional[str] = None,
- *             box_vectors: Optional[np.ndarray] = None,
- *             dimensions: Optional[np.ndarray] = None,             # <<<<<<<<<<<<<<
- *             volume: Optional[float] = None,
- *             atom_density: Optional[float] = None,
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_Optional); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 122, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 122, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_ndarray); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 122, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 122, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dimensions, __pyx_t_6) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":123
- *             box_vectors: Optional[np.ndarray] = None,
- *             dimensions: Optional[np.ndarray] = None,
- *             volume: Optional[float] = None,             # <<<<<<<<<<<<<<
- *             atom_density: Optional[float] = None,
- *             number_of_atoms: Optional[int] = None,
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_Optional); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 123, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_5 = __Pyx_PyObject_GetItem(__pyx_t_6, ((PyObject *)(&PyFloat_Type))); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 123, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_volume, __pyx_t_5) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":124
- *             dimensions: Optional[np.ndarray] = None,
- *             volume: Optional[float] = None,
- *             atom_density: Optional[float] = None,             # <<<<<<<<<<<<<<
- *             number_of_atoms: Optional[int] = None,
- *             cubic_partition: Optional[Dict] = None,
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_Optional); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 124, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_t_5, ((PyObject *)(&PyFloat_Type))); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 124, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_atom_density, __pyx_t_6) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":125
- *             volume: Optional[float] = None,
- *             atom_density: Optional[float] = None,
- *             number_of_atoms: Optional[int] = None,             # <<<<<<<<<<<<<<
- *             cubic_partition: Optional[Dict] = None,
- *             cubic_partition_bounds: Optional[np.ndarray] = None,
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_Optional); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 125, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_5 = __Pyx_PyObject_GetItem(__pyx_t_6, ((PyObject *)(&PyInt_Type))); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 125, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_number_of_atoms, __pyx_t_5) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":126
- *             atom_density: Optional[float] = None,
- *             number_of_atoms: Optional[int] = None,
- *             cubic_partition: Optional[Dict] = None,             # <<<<<<<<<<<<<<
- *             cubic_partition_bounds: Optional[np.ndarray] = None,
- *             mesh: Optional[float] = 1.0,
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_Optional); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 126, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_Dict); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 126, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 126, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_cubic_partition, __pyx_t_4) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":127
- *             number_of_atoms: Optional[int] = None,
- *             cubic_partition: Optional[Dict] = None,
- *             cubic_partition_bounds: Optional[np.ndarray] = None,             # <<<<<<<<<<<<<<
- *             mesh: Optional[float] = 1.0,
- *     ) -> None:
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_Optional); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 127, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 127, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_ndarray); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 127, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 127, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_cubic_partition_bounds, __pyx_t_6) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":128
- *             cubic_partition: Optional[Dict] = None,
- *             cubic_partition_bounds: Optional[np.ndarray] = None,
- *             mesh: Optional[float] = 1.0,             # <<<<<<<<<<<<<<
- *     ) -> None:
- *         self.box_type = box_type
- */
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_Optional); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 128, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_5 = __Pyx_PyObject_GetItem(__pyx_t_6, ((PyObject *)(&PyFloat_Type))); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 128, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_mesh, __pyx_t_5) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":129
- *             cubic_partition_bounds: Optional[np.ndarray] = None,
- *             mesh: Optional[float] = 1.0,
- *     ) -> None:             # <<<<<<<<<<<<<<
- *         self.box_type = box_type
- *         self.box_vectors = box_vectors
- */
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_return, Py_None) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-
-  /* "bubblebuster/bubblebuster.pyx":118
+  /* "bubblebuster/bubblebuster.pyx":57
+ *         return super(WaterBoxProperties, cls).__new__(cls)
  * 
- *     """
  *     def __init__(             # <<<<<<<<<<<<<<
  *             self,
- *             box_type: Optional[str] = None,
+ *             box_vectors: np.ndarray,
  */
-  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_12bubblebuster_12bubblebuster_7BoxInfo_1__init__, 0, __pyx_n_s_BoxInfo___init, NULL, __pyx_n_s_bubblebuster_bubblebuster, __pyx_d, ((PyObject *)__pyx_codeobj__17)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 118, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(7); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+
+  /* "bubblebuster/bubblebuster.pyx":59
+ *     def __init__(
+ *             self,
+ *             box_vectors: np.ndarray,             # <<<<<<<<<<<<<<
+ *             box_dimensions: np.ndarray,
+ *             mesh: Tuple,
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 59, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_5, __pyx_tuple__18);
-  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_5, __pyx_t_3);
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_ndarray); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 59, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_box_vectors, __pyx_t_6) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":60
+ *             self,
+ *             box_vectors: np.ndarray,
+ *             box_dimensions: np.ndarray,             # <<<<<<<<<<<<<<
+ *             mesh: Tuple,
+ *             cubic_partition: Dict,
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 60, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_ndarray); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 60, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_box_dimensions, __pyx_t_5) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":61
+ *             box_vectors: np.ndarray,
+ *             box_dimensions: np.ndarray,
+ *             mesh: Tuple,             # <<<<<<<<<<<<<<
+ *             cubic_partition: Dict,
+ *             empty_cubes: Tuple,
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_Tuple); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 61, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_mesh, __pyx_t_5) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":62
+ *             box_dimensions: np.ndarray,
+ *             mesh: Tuple,
+ *             cubic_partition: Dict,             # <<<<<<<<<<<<<<
+ *             empty_cubes: Tuple,
+ *             bounds: np.ndarray,
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_Dict); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 62, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_cubic_partition, __pyx_t_5) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":63
+ *             mesh: Tuple,
+ *             cubic_partition: Dict,
+ *             empty_cubes: Tuple,             # <<<<<<<<<<<<<<
+ *             bounds: np.ndarray,
+ *     ) -> None:
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_Tuple); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 63, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_empty_cubes, __pyx_t_5) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":64
+ *             cubic_partition: Dict,
+ *             empty_cubes: Tuple,
+ *             bounds: np.ndarray,             # <<<<<<<<<<<<<<
+ *     ) -> None:
+ *         self.box_vectors = box_vectors
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 64, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_ndarray); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 64, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_bounds, __pyx_t_6) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":65
+ *             empty_cubes: Tuple,
+ *             bounds: np.ndarray,
+ *     ) -> None:             # <<<<<<<<<<<<<<
+ *         self.box_vectors = box_vectors
+ *         self.box_dimensions = box_dimensions
+ */
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_return, Py_None) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":57
+ *         return super(WaterBoxProperties, cls).__new__(cls)
+ * 
+ *     def __init__(             # <<<<<<<<<<<<<<
+ *             self,
+ *             box_vectors: np.ndarray,
+ */
+  __pyx_t_6 = __Pyx_CyFunction_New(&__pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_3__init__, 0, __pyx_n_s_WaterBoxProperties___init, NULL, __pyx_n_s_bubblebuster_bubblebuster, __pyx_d, ((PyObject *)__pyx_codeobj__19)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_6, __pyx_t_4);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (__Pyx_SetNameInClass(__pyx_t_1, __pyx_n_s_init, __pyx_t_6) < 0) __PYX_ERR(0, 57, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":73
+ *         self.bounds = bounds
+ * 
+ *     def __setattr__(             # <<<<<<<<<<<<<<
+ *             self,
+ *             attr,
+ */
+  __pyx_t_6 = __Pyx_CyFunction_New(&__pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_5__setattr__, 0, __pyx_n_s_WaterBoxProperties___setattr, NULL, __pyx_n_s_bubblebuster_bubblebuster, __pyx_d, ((PyObject *)__pyx_codeobj__21)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 73, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_INCREF(__pyx_t_6);
+  PyList_Append(__pyx_t_3, __pyx_t_6);
+  __Pyx_GIVEREF(__pyx_t_6);
+  if (__Pyx_SetNameInClass(__pyx_t_1, __pyx_n_s_setattr, __pyx_t_6) < 0) __PYX_ERR(0, 73, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":83
+ *         self.__class__.__setattr_calls__ += 1
+ * 
+ *     def __get_cube_bounds(             # <<<<<<<<<<<<<<
+ *             self,
+ *             cube_index: int,
+ */
+  __pyx_t_6 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 83, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_cube_index, __pyx_n_u_int) < 0) __PYX_ERR(0, 83, __pyx_L1_error)
+
+  /* "bubblebuster/bubblebuster.pyx":86
+ *             self,
+ *             cube_index: int,
+ *     ) -> np.ndarray:             # <<<<<<<<<<<<<<
+ *         i, j, k = list(self.cubic_partition)[cube_index]
+ *         cube_bounds = np.zeros((3, 2), dtype=np.float64)
+ */
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 86, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_ndarray); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 86, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_return, __pyx_t_5) < 0) __PYX_ERR(0, 83, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":83
+ *         self.__class__.__setattr_calls__ += 1
+ * 
+ *     def __get_cube_bounds(             # <<<<<<<<<<<<<<
+ *             self,
+ *             cube_index: int,
+ */
+  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_7__get_cube_bounds, 0, __pyx_n_s_WaterBoxProperties___get_cube_bo, NULL, __pyx_n_s_bubblebuster_bubblebuster, __pyx_d, ((PyObject *)__pyx_codeobj__23)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 83, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_CyFunction_SetAnnotationsDict(__pyx_t_5, __pyx_t_6);
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  if (__Pyx_SetNameInClass(__pyx_t_1, __pyx_n_s_WaterBoxProperties__get_cube_bo, __pyx_t_5) < 0) __PYX_ERR(0, 83, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":102
+ * 
+ *     @property
+ *     def empty_cubes(             # <<<<<<<<<<<<<<
+ *             self
+ *     ):
+ */
+  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_9empty_cubes, 0, __pyx_n_s_WaterBoxProperties_empty_cubes, NULL, __pyx_n_s_bubblebuster_bubblebuster, __pyx_d, ((PyObject *)__pyx_codeobj__25)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 102, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+
+  /* "bubblebuster/bubblebuster.pyx":101
+ *         return cube_bounds
+ * 
+ *     @property             # <<<<<<<<<<<<<<
+ *     def empty_cubes(
+ *             self
+ */
+  __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_builtin_property, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 101, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (__Pyx_SetNameInClass(__pyx_t_1, __pyx_n_s_empty_cubes, __pyx_t_6) < 0) __PYX_ERR(0, 102, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":107
+ *         return {i: self.__get_cube_bounds(i) for i in self._empty_cubes}
+ * 
+ *     @empty_cubes.setter             # <<<<<<<<<<<<<<
+ *     def empty_cubes(
+ *             self,
+ */
+  __pyx_t_5 = PyObject_GetItem(__pyx_t_1, __pyx_n_s_empty_cubes);
+  if (unlikely(!__pyx_t_5)) {
+    PyErr_Clear();
+    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_empty_cubes);
+  }
+  if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_setter); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":108
+ * 
+ *     @empty_cubes.setter
+ *     def empty_cubes(             # <<<<<<<<<<<<<<
+ *             self,
+ *             empty_cubes
+ */
+  __pyx_t_5 = __Pyx_CyFunction_New(&__pyx_mdef_12bubblebuster_12bubblebuster_18WaterBoxProperties_11empty_cubes, 0, __pyx_n_s_WaterBoxProperties_empty_cubes, NULL, __pyx_n_s_bubblebuster_bubblebuster, __pyx_d, ((PyObject *)__pyx_codeobj__27)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 108, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_7 = NULL;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_4))) {
+    __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_4);
+    if (likely(__pyx_t_7)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+      __Pyx_INCREF(__pyx_t_7);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_4, function);
+    }
+  }
+  __pyx_t_6 = (__pyx_t_7) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_7, __pyx_t_5) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 107, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (__Pyx_SetNameInClass(__pyx_t_1, __pyx_n_s_empty_cubes, __pyx_t_6) < 0) __PYX_ERR(0, 108, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":42
+ * 
+ * 
+ * class WaterBoxProperties(object):             # <<<<<<<<<<<<<<
+ *     __slots__ = (
+ *         'box_vectors', 'box_dimensions',
+ */
+  __pyx_t_6 = __Pyx_Py3ClassCreate(__pyx_t_2, __pyx_n_s_WaterBoxProperties, __pyx_tuple__14, __pyx_t_1, NULL, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  if (__Pyx_CyFunction_InitClassCell(__pyx_t_3, __pyx_t_6) < 0) __PYX_ERR(0, 42, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (__Pyx_SetNameInClass(__pyx_t_2, __pyx_n_s_init, __pyx_t_5) < 0) __PYX_ERR(0, 118, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-
-  /* "bubblebuster/bubblebuster.pyx":37
- * 
- * 
- * class BoxInfo(object):             # <<<<<<<<<<<<<<
- *     """Holds the water box properties pertinent to checking
- *     the box for bubbles.
- */
-  __pyx_t_5 = __Pyx_Py3ClassCreate(__pyx_t_1, __pyx_n_s_BoxInfo, __pyx_tuple__15, __pyx_t_2, NULL, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 37, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_BoxInfo, __pyx_t_5) < 0) __PYX_ERR(0, 37, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_WaterBoxProperties, __pyx_t_6) < 0) __PYX_ERR(0, 42, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":142
+  /* "bubblebuster/bubblebuster.pyx":115
  * 
  * 
  * def get_box_vectors(             # <<<<<<<<<<<<<<
  *         trajectory: Trajectory,
  * ) -> np.ndarray:
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_1get_box_vectors, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 142, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_box_vectors, __pyx_t_1) < 0) __PYX_ERR(0, 142, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_1get_box_vectors, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 115, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_box_vectors, __pyx_t_2) < 0) __PYX_ERR(0, 115, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":162
+  /* "bubblebuster/bubblebuster.pyx":120
  *     return trajectory.unitcell_vectors[0]
  * 
  * def get_periodic_box_volume(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray
  * ) -> np.ndarray:
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_3get_periodic_box_volume, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_periodic_box_volume, __pyx_t_1) < 0) __PYX_ERR(0, 162, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_3get_periodic_box_volume, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 120, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_periodic_box_volume, __pyx_t_2) < 0) __PYX_ERR(0, 120, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":181
+  /* "bubblebuster/bubblebuster.pyx":126
  *     return abs(np.dot(a, np.cross(b, c)))
  * 
- * def get_box_vector_dimensions(             # <<<<<<<<<<<<<<
+ * def get_box_dimensions(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray,
  * ) -> np.ndarray:
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_5get_box_vector_dimensions, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 181, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_box_vector_dimensions, __pyx_t_1) < 0) __PYX_ERR(0, 181, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_5get_box_dimensions, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 126, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_box_dimensions, __pyx_t_2) < 0) __PYX_ERR(0, 126, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":205
+  /* "bubblebuster/bubblebuster.pyx":134
  *     return np.array([a, b, c])
  * 
  * def get_coordinates(             # <<<<<<<<<<<<<<
  *         trajectory: Trajectory,
  * ) -> ndarray:
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_7get_coordinates, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 205, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_coordinates, __pyx_t_1) < 0) __PYX_ERR(0, 205, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_7get_coordinates, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 134, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_coordinates, __pyx_t_2) < 0) __PYX_ERR(0, 134, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":238
+  /* "bubblebuster/bubblebuster.pyx":149
  *     return coords
  * 
  * def pbc_scale_factor(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_9pbc_scale_factor, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 238, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_pbc_scale_factor, __pyx_t_1) < 0) __PYX_ERR(0, 238, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_9pbc_scale_factor, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_pbc_scale_factor, __pyx_t_2) < 0) __PYX_ERR(0, 149, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":281
+  /* "bubblebuster/bubblebuster.pyx":159
  *     )
  * 
  * def apply_pbc_to_triclinic_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic_coordinates, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 281, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_apply_pbc_to_triclinic_coordinat, __pyx_t_1) < 0) __PYX_ERR(0, 281, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_11apply_pbc_to_triclinic_coordinates, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_apply_pbc_to_triclinic_coordinat, __pyx_t_2) < 0) __PYX_ERR(0, 159, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":325
+  /* "bubblebuster/bubblebuster.pyx":174
  *     return atom_coordinates
  * 
  * def apply_pbc_to_cubic_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coordinates, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 325, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_apply_pbc_to_cubic_coordinates, __pyx_t_1) < 0) __PYX_ERR(0, 325, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_13apply_pbc_to_cubic_coordinates, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 174, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_apply_pbc_to_cubic_coordinates, __pyx_t_2) < 0) __PYX_ERR(0, 174, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":368
+  /* "bubblebuster/bubblebuster.pyx":188
  *     return atom_coordinates
  * 
  * def apply_pbc_to_coordinates(             # <<<<<<<<<<<<<<
- *         box_vector_dimensions: np.ndarray,
+ *         box_dimensions: np.ndarray,
  *         atom_coordinates: np.ndarray,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinates, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 368, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_apply_pbc_to_coordinates, __pyx_t_1) < 0) __PYX_ERR(0, 368, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_15apply_pbc_to_coordinates, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 188, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_apply_pbc_to_coordinates, __pyx_t_2) < 0) __PYX_ERR(0, 188, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":410
+  /* "bubblebuster/bubblebuster.pyx":207
  *         )
  * 
  * def apply_pbc(             # <<<<<<<<<<<<<<
- *         coordinates: ndarray,
- *         box_info: BoxInfo,
+ *         coordinates: np.ndarray,
+ *         box_vectors: np.ndarray,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_17apply_pbc, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 410, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_apply_pbc, __pyx_t_1) < 0) __PYX_ERR(0, 410, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_17apply_pbc, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 207, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_apply_pbc, __pyx_t_2) < 0) __PYX_ERR(0, 207, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":451
+  /* "bubblebuster/bubblebuster.pyx":225
  *     return coordinates
  * 
  * def wrap_structure(             # <<<<<<<<<<<<<<
- *         coordinates: ndarray,
- *         box_info: BoxInfo,
+ *         coordinates: np.ndarray,
+ *         box_vectors: np.ndarray,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_19wrap_structure, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 451, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_wrap_structure, __pyx_t_1) < 0) __PYX_ERR(0, 451, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_19wrap_structure, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 225, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_wrap_structure, __pyx_t_2) < 0) __PYX_ERR(0, 225, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":495
- *     return wrap_structure(coordinates, box_info)
+  /* "bubblebuster/bubblebuster.pyx":240
+ *     return wrap_structure(coordinates, box_type)
  * 
  * def coordinate_bounds(             # <<<<<<<<<<<<<<
  *         coordinates: np.ndarray,
  * ) -> np.ndarray:
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_21coordinate_bounds, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 495, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_coordinate_bounds, __pyx_t_1) < 0) __PYX_ERR(0, 495, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_21coordinate_bounds, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 240, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_coordinate_bounds, __pyx_t_2) < 0) __PYX_ERR(0, 240, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":524
+  /* "bubblebuster/bubblebuster.pyx":250
  *     return bounds
  * 
  * def get_num_subintervals(             # <<<<<<<<<<<<<<
- *         box_info: BoxInfo(),
  *         lower_bound: float,
+ *         upper_bound: float,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_23get_num_subintervals, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 524, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_num_subintervals, __pyx_t_1) < 0) __PYX_ERR(0, 524, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_23get_num_subintervals, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 250, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_num_subintervals, __pyx_t_2) < 0) __PYX_ERR(0, 250, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":559
+  /* "bubblebuster/bubblebuster.pyx":260
  *     return num_subintervals
+ * 
+ * def get_mesh(             # <<<<<<<<<<<<<<
+ *         bounds: np.ndarray,
+ *         num_subintervals: Tuple,
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_25get_mesh, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 260, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_mesh, __pyx_t_2) < 0) __PYX_ERR(0, 260, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":269
+ *     return mesh
  * 
  * def get_cubic_partition(             # <<<<<<<<<<<<<<
  *         coordinate_bounds: np.ndarray,
  *         num_x_subintervals: int,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_25get_cubic_partition, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 559, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_cubic_partition, __pyx_t_1) < 0) __PYX_ERR(0, 559, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_27get_cubic_partition, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 269, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_cubic_partition, __pyx_t_2) < 0) __PYX_ERR(0, 269, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":603
+  /* "bubblebuster/bubblebuster.pyx":282
  *     return cube_dict
  * 
  * def hash_widths(             # <<<<<<<<<<<<<<
  *         bounds: np.ndarray,
  *         delta: Optional[float] = 1e-7,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_27hash_widths, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 603, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_hash_widths, __pyx_t_1) < 0) __PYX_ERR(0, 603, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_29hash_widths, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 282, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_hash_widths, __pyx_t_2) < 0) __PYX_ERR(0, 282, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":624
+  /* "bubblebuster/bubblebuster.pyx":292
  *     )
  * 
  * def get_cubic_partition_occupancy(             # <<<<<<<<<<<<<<
  *         coordinates: np.ndarray,
  *         num_x_subintervals: int,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_29get_cubic_partition_occupancy, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 624, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_cubic_partition_occupancy, __pyx_t_1) < 0) __PYX_ERR(0, 624, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_31get_cubic_partition_occupancy, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 292, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_cubic_partition_occupancy, __pyx_t_2) < 0) __PYX_ERR(0, 292, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":640
+  /* "bubblebuster/bubblebuster.pyx":314
  *     return cubic_partition
+ * 
+ * def get_empty_cubes(             # <<<<<<<<<<<<<<
+ *         cubic_partition: Dict,
+ * ) -> Tuple:
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_33get_empty_cubes, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 314, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_empty_cubes, __pyx_t_2) < 0) __PYX_ERR(0, 314, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":325
+ *     return tuple(empty_cubes)
+ * 
+ * def get_cube_bounds(             # <<<<<<<<<<<<<<
+ *         water_box_properties: WaterBoxProperties,
+ *         cube_index: int,
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_35get_cube_bounds, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 325, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_cube_bounds, __pyx_t_2) < 0) __PYX_ERR(0, 325, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "bubblebuster/bubblebuster.pyx":343
+ *     return cube_bounds
  * 
  * def get_box_type(             # <<<<<<<<<<<<<<
  *         box_vectors: np.ndarray,
  * ) -> str:
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_31get_box_type, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 640, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_box_type, __pyx_t_1) < 0) __PYX_ERR(0, 640, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_37get_box_type, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 343, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_box_type, __pyx_t_2) < 0) __PYX_ERR(0, 343, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":672
+  /* "bubblebuster/bubblebuster.pyx":354
  *     return "triclinic"
  * 
  * def load_mdtraj_trajectory(             # <<<<<<<<<<<<<<
  *         structure_file: str,
  *         topology_file: Optional[str] = '',
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_33load_mdtraj_trajectory, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 672, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_load_mdtraj_trajectory, __pyx_t_1) < 0) __PYX_ERR(0, 672, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_39load_mdtraj_trajectory, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 354, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_load_mdtraj_trajectory, __pyx_t_2) < 0) __PYX_ERR(0, 354, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "bubblebuster/bubblebuster.pyx":680
+  /* "bubblebuster/bubblebuster.pyx":362
  *     return md.load(structure_file, top=topology_file)
  * 
- * def periodic_box_properties(             # <<<<<<<<<<<<<<
+ * def water_box_properties(             # <<<<<<<<<<<<<<
  *         structure_file: str,
- *         box_vectors: Optional[np.ndarray] = None,
+ *         box_vectors: Optional[np.ndarray] = False,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_35periodic_box_properties, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 680, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_periodic_box_properties, __pyx_t_1) < 0) __PYX_ERR(0, 680, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_12bubblebuster_12bubblebuster_41water_box_properties, NULL, __pyx_n_s_bubblebuster_bubblebuster); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 362, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_water_box_properties, __pyx_t_2) < 0) __PYX_ERR(0, 362, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "bubblebuster/bubblebuster.pyx":1
  * ##############################################################################             # <<<<<<<<<<<<<<
  * # BubbleBuster: A Python Library for detecting water box bubbles in
  * #               structural files used in molecular simulations.
  */
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_2) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /*--- Wrapped vars code ---*/
 
@@ -8978,6 +11544,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_7);
   if (__pyx_m) {
     if (__pyx_d) {
       __Pyx_AddTraceback("init bubblebuster.bubblebuster", __pyx_clineno, __pyx_lineno, __pyx_filename);
@@ -9199,173 +11766,6 @@ static CYTHON_INLINE int __Pyx_PyObject_SetAttrStr(PyObject* obj, PyObject* attr
 }
 #endif
 
-/* GetItemInt */
-static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
-    PyObject *r;
-    if (!j) return NULL;
-    r = PyObject_GetItem(o, j);
-    Py_DECREF(j);
-    return r;
-}
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
-                                                              CYTHON_NCP_UNUSED int wraparound,
-                                                              CYTHON_NCP_UNUSED int boundscheck) {
-#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    Py_ssize_t wrapped_i = i;
-    if (wraparound & unlikely(i < 0)) {
-        wrapped_i += PyList_GET_SIZE(o);
-    }
-    if ((!boundscheck) || likely(__Pyx_is_valid_index(wrapped_i, PyList_GET_SIZE(o)))) {
-        PyObject *r = PyList_GET_ITEM(o, wrapped_i);
-        Py_INCREF(r);
-        return r;
-    }
-    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
-#else
-    return PySequence_GetItem(o, i);
-#endif
-}
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
-                                                              CYTHON_NCP_UNUSED int wraparound,
-                                                              CYTHON_NCP_UNUSED int boundscheck) {
-#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-    Py_ssize_t wrapped_i = i;
-    if (wraparound & unlikely(i < 0)) {
-        wrapped_i += PyTuple_GET_SIZE(o);
-    }
-    if ((!boundscheck) || likely(__Pyx_is_valid_index(wrapped_i, PyTuple_GET_SIZE(o)))) {
-        PyObject *r = PyTuple_GET_ITEM(o, wrapped_i);
-        Py_INCREF(r);
-        return r;
-    }
-    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
-#else
-    return PySequence_GetItem(o, i);
-#endif
-}
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i, int is_list,
-                                                     CYTHON_NCP_UNUSED int wraparound,
-                                                     CYTHON_NCP_UNUSED int boundscheck) {
-#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS && CYTHON_USE_TYPE_SLOTS
-    if (is_list || PyList_CheckExact(o)) {
-        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyList_GET_SIZE(o);
-        if ((!boundscheck) || (likely(__Pyx_is_valid_index(n, PyList_GET_SIZE(o))))) {
-            PyObject *r = PyList_GET_ITEM(o, n);
-            Py_INCREF(r);
-            return r;
-        }
-    }
-    else if (PyTuple_CheckExact(o)) {
-        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyTuple_GET_SIZE(o);
-        if ((!boundscheck) || likely(__Pyx_is_valid_index(n, PyTuple_GET_SIZE(o)))) {
-            PyObject *r = PyTuple_GET_ITEM(o, n);
-            Py_INCREF(r);
-            return r;
-        }
-    } else {
-        PySequenceMethods *m = Py_TYPE(o)->tp_as_sequence;
-        if (likely(m && m->sq_item)) {
-            if (wraparound && unlikely(i < 0) && likely(m->sq_length)) {
-                Py_ssize_t l = m->sq_length(o);
-                if (likely(l >= 0)) {
-                    i += l;
-                } else {
-                    if (!PyErr_ExceptionMatches(PyExc_OverflowError))
-                        return NULL;
-                    PyErr_Clear();
-                }
-            }
-            return m->sq_item(o, i);
-        }
-    }
-#else
-    if (is_list || PySequence_Check(o)) {
-        return PySequence_GetItem(o, i);
-    }
-#endif
-    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
-}
-
-/* RaiseTooManyValuesToUnpack */
-static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected) {
-    PyErr_Format(PyExc_ValueError,
-                 "too many values to unpack (expected %" CYTHON_FORMAT_SSIZE_T "d)", expected);
-}
-
-/* RaiseNeedMoreValuesToUnpack */
-static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index) {
-    PyErr_Format(PyExc_ValueError,
-                 "need more than %" CYTHON_FORMAT_SSIZE_T "d value%.1s to unpack",
-                 index, (index == 1) ? "" : "s");
-}
-
-/* IterFinish */
-static CYTHON_INLINE int __Pyx_IterFinish(void) {
-#if CYTHON_FAST_THREAD_STATE
-    PyThreadState *tstate = __Pyx_PyThreadState_Current;
-    PyObject* exc_type = tstate->curexc_type;
-    if (unlikely(exc_type)) {
-        if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) {
-            PyObject *exc_value, *exc_tb;
-            exc_value = tstate->curexc_value;
-            exc_tb = tstate->curexc_traceback;
-            tstate->curexc_type = 0;
-            tstate->curexc_value = 0;
-            tstate->curexc_traceback = 0;
-            Py_DECREF(exc_type);
-            Py_XDECREF(exc_value);
-            Py_XDECREF(exc_tb);
-            return 0;
-        } else {
-            return -1;
-        }
-    }
-    return 0;
-#else
-    if (unlikely(PyErr_Occurred())) {
-        if (likely(PyErr_ExceptionMatches(PyExc_StopIteration))) {
-            PyErr_Clear();
-            return 0;
-        } else {
-            return -1;
-        }
-    }
-    return 0;
-#endif
-}
-
-/* UnpackItemEndCheck */
-static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected) {
-    if (unlikely(retval)) {
-        Py_DECREF(retval);
-        __Pyx_RaiseTooManyValuesError(expected);
-        return -1;
-    } else {
-        return __Pyx_IterFinish();
-    }
-    return 0;
-}
-
-/* py_abs */
-#if CYTHON_USE_PYLONG_INTERNALS
-static PyObject *__Pyx_PyLong_AbsNeg(PyObject *n) {
-    if (likely(Py_SIZE(n) == -1)) {
-        return PyLong_FromLong(((PyLongObject*)n)->ob_digit[0]);
-    }
-#if CYTHON_COMPILING_IN_CPYTHON
-    {
-        PyObject *copy = _PyLong_Copy((PyLongObject*)n);
-        if (likely(copy)) {
-            __Pyx_SET_SIZE(copy, -Py_SIZE(copy));
-        }
-        return copy;
-    }
-#else
-    return PyNumber_Negative(n);
-#endif
-}
-#endif
-
 /* PyDictVersioning */
 #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_TYPE_SLOTS
 static CYTHON_INLINE PY_UINT64_T __Pyx_get_tp_dict_version(PyObject *obj) {
@@ -9426,6 +11826,49 @@ static CYTHON_INLINE PyObject *__Pyx__GetModuleGlobalName(PyObject *name)
 #endif
     return __Pyx_GetBuiltinName(name);
 }
+
+/* PyObjectCall */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
+    PyObject *result;
+    ternaryfunc call = Py_TYPE(func)->tp_call;
+    if (unlikely(!call))
+        return PyObject_Call(func, arg, kw);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = (*call)(func, arg, kw);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
+/* PyCFunctionFastCall */
+#if CYTHON_FAST_PYCCALL
+static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, PyObject **args, Py_ssize_t nargs) {
+    PyCFunctionObject *func = (PyCFunctionObject*)func_obj;
+    PyCFunction meth = PyCFunction_GET_FUNCTION(func);
+    PyObject *self = PyCFunction_GET_SELF(func);
+    int flags = PyCFunction_GET_FLAGS(func);
+    assert(PyCFunction_Check(func));
+    assert(METH_FASTCALL == (flags & ~(METH_CLASS | METH_STATIC | METH_COEXIST | METH_KEYWORDS | METH_STACKLESS)));
+    assert(nargs >= 0);
+    assert(nargs == 0 || args != NULL);
+    /* _PyCFunction_FastCallDict() must not be called with an exception set,
+       because it may clear it (directly or indirectly) and so the
+       caller loses its exception */
+    assert(!PyErr_Occurred());
+    if ((PY_VERSION_HEX < 0x030700A0) || unlikely(flags & METH_KEYWORDS)) {
+        return (*((__Pyx_PyCFunctionFastWithKeywords)(void*)meth)) (self, args, nargs, NULL);
+    } else {
+        return (*((__Pyx_PyCFunctionFast)(void*)meth)) (self, args, nargs);
+    }
+}
+#endif
 
 /* PyFunctionFastCall */
 #if CYTHON_FAST_PYCALL
@@ -9546,39 +11989,45 @@ done:
 #endif
 #endif
 
-/* PyCFunctionFastCall */
-#if CYTHON_FAST_PYCCALL
-static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, PyObject **args, Py_ssize_t nargs) {
-    PyCFunctionObject *func = (PyCFunctionObject*)func_obj;
-    PyCFunction meth = PyCFunction_GET_FUNCTION(func);
-    PyObject *self = PyCFunction_GET_SELF(func);
-    int flags = PyCFunction_GET_FLAGS(func);
-    assert(PyCFunction_Check(func));
-    assert(METH_FASTCALL == (flags & ~(METH_CLASS | METH_STATIC | METH_COEXIST | METH_KEYWORDS | METH_STACKLESS)));
-    assert(nargs >= 0);
-    assert(nargs == 0 || args != NULL);
-    /* _PyCFunction_FastCallDict() must not be called with an exception set,
-       because it may clear it (directly or indirectly) and so the
-       caller loses its exception */
-    assert(!PyErr_Occurred());
-    if ((PY_VERSION_HEX < 0x030700A0) || unlikely(flags & METH_KEYWORDS)) {
-        return (*((__Pyx_PyCFunctionFastWithKeywords)(void*)meth)) (self, args, nargs, NULL);
-    } else {
-        return (*((__Pyx_PyCFunctionFast)(void*)meth)) (self, args, nargs);
+/* PyObjectCall2Args */
+static CYTHON_UNUSED PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2) {
+    PyObject *args, *result = NULL;
+    #if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(function)) {
+        PyObject *args[2] = {arg1, arg2};
+        return __Pyx_PyFunction_FastCall(function, args, 2);
     }
+    #endif
+    #if CYTHON_FAST_PYCCALL
+    if (__Pyx_PyFastCFunction_Check(function)) {
+        PyObject *args[2] = {arg1, arg2};
+        return __Pyx_PyCFunction_FastCall(function, args, 2);
+    }
+    #endif
+    args = PyTuple_New(2);
+    if (unlikely(!args)) goto done;
+    Py_INCREF(arg1);
+    PyTuple_SET_ITEM(args, 0, arg1);
+    Py_INCREF(arg2);
+    PyTuple_SET_ITEM(args, 1, arg2);
+    Py_INCREF(function);
+    result = __Pyx_PyObject_Call(function, args, NULL);
+    Py_DECREF(args);
+    Py_DECREF(function);
+done:
+    return result;
 }
-#endif
 
-/* PyObjectCall */
+/* PyObjectCallMethO */
 #if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
-    PyObject *result;
-    ternaryfunc call = Py_TYPE(func)->tp_call;
-    if (unlikely(!call))
-        return PyObject_Call(func, arg, kw);
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
+    PyObject *self, *result;
+    PyCFunction cfunc;
+    cfunc = PyCFunction_GET_FUNCTION(func);
+    self = PyCFunction_GET_SELF(func);
     if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
         return NULL;
-    result = (*call)(func, arg, kw);
+    result = cfunc(self, arg);
     Py_LeaveRecursiveCall();
     if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
         PyErr_SetString(
@@ -9586,6 +12035,366 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg
             "NULL result without error in PyObject_Call");
     }
     return result;
+}
+#endif
+
+/* PyObjectCallOneArg */
+#if CYTHON_COMPILING_IN_CPYTHON
+static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_New(1);
+    if (unlikely(!args)) return NULL;
+    Py_INCREF(arg);
+    PyTuple_SET_ITEM(args, 0, arg);
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
+    return result;
+}
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+#if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(func)) {
+        return __Pyx_PyFunction_FastCall(func, &arg, 1);
+    }
+#endif
+    if (likely(PyCFunction_Check(func))) {
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_O)) {
+            return __Pyx_PyObject_CallMethO(func, arg);
+#if CYTHON_FAST_PYCCALL
+        } else if (__Pyx_PyFastCFunction_Check(func)) {
+            return __Pyx_PyCFunction_FastCall(func, &arg, 1);
+#endif
+        }
+    }
+    return __Pyx__PyObject_CallOneArg(func, arg);
+}
+#else
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_Pack(1, arg);
+    if (unlikely(!args)) return NULL;
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
+    return result;
+}
+#endif
+
+/* PyIntBinop */
+#if !CYTHON_COMPILING_IN_PYPY
+static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, int inplace, int zerodivision_check) {
+    (void)inplace;
+    (void)zerodivision_check;
+    #if PY_MAJOR_VERSION < 3
+    if (likely(PyInt_CheckExact(op1))) {
+        const long b = intval;
+        long x;
+        long a = PyInt_AS_LONG(op1);
+            x = (long)((unsigned long)a + b);
+            if (likely((x^a) >= 0 || (x^b) >= 0))
+                return PyInt_FromLong(x);
+            return PyLong_Type.tp_as_number->nb_add(op1, op2);
+    }
+    #endif
+    #if CYTHON_USE_PYLONG_INTERNALS
+    if (likely(PyLong_CheckExact(op1))) {
+        const long b = intval;
+        long a, x;
+#ifdef HAVE_LONG_LONG
+        const PY_LONG_LONG llb = intval;
+        PY_LONG_LONG lla, llx;
+#endif
+        const digit* digits = ((PyLongObject*)op1)->ob_digit;
+        const Py_ssize_t size = Py_SIZE(op1);
+        if (likely(__Pyx_sst_abs(size) <= 1)) {
+            a = likely(size) ? digits[0] : 0;
+            if (size == -1) a = -a;
+        } else {
+            switch (size) {
+                case -2:
+                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
+                        a = -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
+                        lla = -(PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case 2:
+                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
+                        a = (long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
+                        lla = (PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case -3:
+                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
+                        a = -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
+                        lla = -(PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case 3:
+                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
+                        a = (long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
+                        lla = (PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case -4:
+                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
+                        a = -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
+                        lla = -(PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                case 4:
+                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
+                        a = (long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                        break;
+#ifdef HAVE_LONG_LONG
+                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
+                        lla = (PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
+                        goto long_long;
+#endif
+                    }
+                    CYTHON_FALLTHROUGH;
+                default: return PyLong_Type.tp_as_number->nb_add(op1, op2);
+            }
+        }
+                x = a + b;
+            return PyLong_FromLong(x);
+#ifdef HAVE_LONG_LONG
+        long_long:
+                llx = lla + llb;
+            return PyLong_FromLongLong(llx);
+#endif
+        
+        
+    }
+    #endif
+    if (PyFloat_CheckExact(op1)) {
+        const long b = intval;
+        double a = PyFloat_AS_DOUBLE(op1);
+            double result;
+            PyFPE_START_PROTECT("add", return NULL)
+            result = ((double)a) + (double)b;
+            PyFPE_END_PROTECT(result)
+            return PyFloat_FromDouble(result);
+    }
+    return (inplace ? PyNumber_InPlaceAdd : PyNumber_Add)(op1, op2);
+}
+#endif
+
+/* GetItemInt */
+static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
+    PyObject *r;
+    if (!j) return NULL;
+    r = PyObject_GetItem(o, j);
+    Py_DECREF(j);
+    return r;
+}
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
+                                                              CYTHON_NCP_UNUSED int wraparound,
+                                                              CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    Py_ssize_t wrapped_i = i;
+    if (wraparound & unlikely(i < 0)) {
+        wrapped_i += PyList_GET_SIZE(o);
+    }
+    if ((!boundscheck) || likely(__Pyx_is_valid_index(wrapped_i, PyList_GET_SIZE(o)))) {
+        PyObject *r = PyList_GET_ITEM(o, wrapped_i);
+        Py_INCREF(r);
+        return r;
+    }
+    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
+#else
+    return PySequence_GetItem(o, i);
+#endif
+}
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
+                                                              CYTHON_NCP_UNUSED int wraparound,
+                                                              CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    Py_ssize_t wrapped_i = i;
+    if (wraparound & unlikely(i < 0)) {
+        wrapped_i += PyTuple_GET_SIZE(o);
+    }
+    if ((!boundscheck) || likely(__Pyx_is_valid_index(wrapped_i, PyTuple_GET_SIZE(o)))) {
+        PyObject *r = PyTuple_GET_ITEM(o, wrapped_i);
+        Py_INCREF(r);
+        return r;
+    }
+    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
+#else
+    return PySequence_GetItem(o, i);
+#endif
+}
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i, int is_list,
+                                                     CYTHON_NCP_UNUSED int wraparound,
+                                                     CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS && CYTHON_USE_TYPE_SLOTS
+    if (is_list || PyList_CheckExact(o)) {
+        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyList_GET_SIZE(o);
+        if ((!boundscheck) || (likely(__Pyx_is_valid_index(n, PyList_GET_SIZE(o))))) {
+            PyObject *r = PyList_GET_ITEM(o, n);
+            Py_INCREF(r);
+            return r;
+        }
+    }
+    else if (PyTuple_CheckExact(o)) {
+        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyTuple_GET_SIZE(o);
+        if ((!boundscheck) || likely(__Pyx_is_valid_index(n, PyTuple_GET_SIZE(o)))) {
+            PyObject *r = PyTuple_GET_ITEM(o, n);
+            Py_INCREF(r);
+            return r;
+        }
+    } else {
+        PySequenceMethods *m = Py_TYPE(o)->tp_as_sequence;
+        if (likely(m && m->sq_item)) {
+            if (wraparound && unlikely(i < 0) && likely(m->sq_length)) {
+                Py_ssize_t l = m->sq_length(o);
+                if (likely(l >= 0)) {
+                    i += l;
+                } else {
+                    if (!PyErr_ExceptionMatches(PyExc_OverflowError))
+                        return NULL;
+                    PyErr_Clear();
+                }
+            }
+            return m->sq_item(o, i);
+        }
+    }
+#else
+    if (is_list || PySequence_Check(o)) {
+        return PySequence_GetItem(o, i);
+    }
+#endif
+    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
+}
+
+/* ObjectGetItem */
+#if CYTHON_USE_TYPE_SLOTS
+static PyObject *__Pyx_PyObject_GetIndex(PyObject *obj, PyObject* index) {
+    PyObject *runerr;
+    Py_ssize_t key_value;
+    PySequenceMethods *m = Py_TYPE(obj)->tp_as_sequence;
+    if (unlikely(!(m && m->sq_item))) {
+        PyErr_Format(PyExc_TypeError, "'%.200s' object is not subscriptable", Py_TYPE(obj)->tp_name);
+        return NULL;
+    }
+    key_value = __Pyx_PyIndex_AsSsize_t(index);
+    if (likely(key_value != -1 || !(runerr = PyErr_Occurred()))) {
+        return __Pyx_GetItemInt_Fast(obj, key_value, 0, 1, 1);
+    }
+    if (PyErr_GivenExceptionMatches(runerr, PyExc_OverflowError)) {
+        PyErr_Clear();
+        PyErr_Format(PyExc_IndexError, "cannot fit '%.200s' into an index-sized integer", Py_TYPE(index)->tp_name);
+    }
+    return NULL;
+}
+static PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject* key) {
+    PyMappingMethods *m = Py_TYPE(obj)->tp_as_mapping;
+    if (likely(m && m->mp_subscript)) {
+        return m->mp_subscript(obj, key);
+    }
+    return __Pyx_PyObject_GetIndex(obj, key);
+}
+#endif
+
+/* RaiseTooManyValuesToUnpack */
+static CYTHON_INLINE void __Pyx_RaiseTooManyValuesError(Py_ssize_t expected) {
+    PyErr_Format(PyExc_ValueError,
+                 "too many values to unpack (expected %" CYTHON_FORMAT_SSIZE_T "d)", expected);
+}
+
+/* RaiseNeedMoreValuesToUnpack */
+static CYTHON_INLINE void __Pyx_RaiseNeedMoreValuesError(Py_ssize_t index) {
+    PyErr_Format(PyExc_ValueError,
+                 "need more than %" CYTHON_FORMAT_SSIZE_T "d value%.1s to unpack",
+                 index, (index == 1) ? "" : "s");
+}
+
+/* IterFinish */
+static CYTHON_INLINE int __Pyx_IterFinish(void) {
+#if CYTHON_FAST_THREAD_STATE
+    PyThreadState *tstate = __Pyx_PyThreadState_Current;
+    PyObject* exc_type = tstate->curexc_type;
+    if (unlikely(exc_type)) {
+        if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) {
+            PyObject *exc_value, *exc_tb;
+            exc_value = tstate->curexc_value;
+            exc_tb = tstate->curexc_traceback;
+            tstate->curexc_type = 0;
+            tstate->curexc_value = 0;
+            tstate->curexc_traceback = 0;
+            Py_DECREF(exc_type);
+            Py_XDECREF(exc_value);
+            Py_XDECREF(exc_tb);
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+    return 0;
+#else
+    if (unlikely(PyErr_Occurred())) {
+        if (likely(PyErr_ExceptionMatches(PyExc_StopIteration))) {
+            PyErr_Clear();
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+    return 0;
+#endif
+}
+
+/* UnpackItemEndCheck */
+static int __Pyx_IternextUnpackEndCheck(PyObject *retval, Py_ssize_t expected) {
+    if (unlikely(retval)) {
+        Py_DECREF(retval);
+        __Pyx_RaiseTooManyValuesError(expected);
+        return -1;
+    } else {
+        return __Pyx_IterFinish();
+    }
+    return 0;
+}
+
+/* py_abs */
+#if CYTHON_USE_PYLONG_INTERNALS
+static PyObject *__Pyx_PyLong_AbsNeg(PyObject *n) {
+    if (likely(Py_SIZE(n) == -1)) {
+        return PyLong_FromLong(((PyLongObject*)n)->ob_digit[0]);
+    }
+#if CYTHON_COMPILING_IN_CPYTHON
+    {
+        PyObject *copy = _PyLong_Copy((PyLongObject*)n);
+        if (likely(copy)) {
+            __Pyx_SET_SIZE(copy, -Py_SIZE(copy));
+        }
+        return copy;
+    }
+#else
+    return PyNumber_Negative(n);
+#endif
 }
 #endif
 
@@ -9685,124 +12494,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_GetSlice(PyObject* obj,
 bad:
     return NULL;
 }
-
-/* PyObjectCall2Args */
-static CYTHON_UNUSED PyObject* __Pyx_PyObject_Call2Args(PyObject* function, PyObject* arg1, PyObject* arg2) {
-    PyObject *args, *result = NULL;
-    #if CYTHON_FAST_PYCALL
-    if (PyFunction_Check(function)) {
-        PyObject *args[2] = {arg1, arg2};
-        return __Pyx_PyFunction_FastCall(function, args, 2);
-    }
-    #endif
-    #if CYTHON_FAST_PYCCALL
-    if (__Pyx_PyFastCFunction_Check(function)) {
-        PyObject *args[2] = {arg1, arg2};
-        return __Pyx_PyCFunction_FastCall(function, args, 2);
-    }
-    #endif
-    args = PyTuple_New(2);
-    if (unlikely(!args)) goto done;
-    Py_INCREF(arg1);
-    PyTuple_SET_ITEM(args, 0, arg1);
-    Py_INCREF(arg2);
-    PyTuple_SET_ITEM(args, 1, arg2);
-    Py_INCREF(function);
-    result = __Pyx_PyObject_Call(function, args, NULL);
-    Py_DECREF(args);
-    Py_DECREF(function);
-done:
-    return result;
-}
-
-/* PyObjectCallMethO */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
-    PyObject *self, *result;
-    PyCFunction cfunc;
-    cfunc = PyCFunction_GET_FUNCTION(func);
-    self = PyCFunction_GET_SELF(func);
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
-        return NULL;
-    result = cfunc(self, arg);
-    Py_LeaveRecursiveCall();
-    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "NULL result without error in PyObject_Call");
-    }
-    return result;
-}
-#endif
-
-/* PyObjectCallOneArg */
-#if CYTHON_COMPILING_IN_CPYTHON
-static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *result;
-    PyObject *args = PyTuple_New(1);
-    if (unlikely(!args)) return NULL;
-    Py_INCREF(arg);
-    PyTuple_SET_ITEM(args, 0, arg);
-    result = __Pyx_PyObject_Call(func, args, NULL);
-    Py_DECREF(args);
-    return result;
-}
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-#if CYTHON_FAST_PYCALL
-    if (PyFunction_Check(func)) {
-        return __Pyx_PyFunction_FastCall(func, &arg, 1);
-    }
-#endif
-    if (likely(PyCFunction_Check(func))) {
-        if (likely(PyCFunction_GET_FLAGS(func) & METH_O)) {
-            return __Pyx_PyObject_CallMethO(func, arg);
-#if CYTHON_FAST_PYCCALL
-        } else if (__Pyx_PyFastCFunction_Check(func)) {
-            return __Pyx_PyCFunction_FastCall(func, &arg, 1);
-#endif
-        }
-    }
-    return __Pyx__PyObject_CallOneArg(func, arg);
-}
-#else
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *result;
-    PyObject *args = PyTuple_Pack(1, arg);
-    if (unlikely(!args)) return NULL;
-    result = __Pyx_PyObject_Call(func, args, NULL);
-    Py_DECREF(args);
-    return result;
-}
-#endif
-
-/* ObjectGetItem */
-#if CYTHON_USE_TYPE_SLOTS
-static PyObject *__Pyx_PyObject_GetIndex(PyObject *obj, PyObject* index) {
-    PyObject *runerr;
-    Py_ssize_t key_value;
-    PySequenceMethods *m = Py_TYPE(obj)->tp_as_sequence;
-    if (unlikely(!(m && m->sq_item))) {
-        PyErr_Format(PyExc_TypeError, "'%.200s' object is not subscriptable", Py_TYPE(obj)->tp_name);
-        return NULL;
-    }
-    key_value = __Pyx_PyIndex_AsSsize_t(index);
-    if (likely(key_value != -1 || !(runerr = PyErr_Occurred()))) {
-        return __Pyx_GetItemInt_Fast(obj, key_value, 0, 1, 1);
-    }
-    if (PyErr_GivenExceptionMatches(runerr, PyExc_OverflowError)) {
-        PyErr_Clear();
-        PyErr_Format(PyExc_IndexError, "cannot fit '%.200s' into an index-sized integer", Py_TYPE(index)->tp_name);
-    }
-    return NULL;
-}
-static PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject* key) {
-    PyMappingMethods *m = Py_TYPE(obj)->tp_as_mapping;
-    if (likely(m && m->mp_subscript)) {
-        return m->mp_subscript(obj, key);
-    }
-    return __Pyx_PyObject_GetIndex(obj, key);
-}
-#endif
 
 /* SetItemInt */
 static int __Pyx_SetItemInt_Generic(PyObject *o, PyObject *j, PyObject *v) {
@@ -10103,127 +12794,25 @@ static PyObject* __Pyx_PyFloat_EqObjC(PyObject *op1, PyObject *op2, double float
 }
 #endif
 
-/* PyIntBinop */
-  #if !CYTHON_COMPILING_IN_PYPY
-static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED long intval, int inplace, int zerodivision_check) {
-    (void)inplace;
-    (void)zerodivision_check;
-    #if PY_MAJOR_VERSION < 3
-    if (likely(PyInt_CheckExact(op1))) {
-        const long b = intval;
-        long x;
-        long a = PyInt_AS_LONG(op1);
-            x = (long)((unsigned long)a + b);
-            if (likely((x^a) >= 0 || (x^b) >= 0))
-                return PyInt_FromLong(x);
-            return PyLong_Type.tp_as_number->nb_add(op1, op2);
+/* PyObjectCallNoArg */
+  #if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func) {
+#if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(func)) {
+        return __Pyx_PyFunction_FastCall(func, NULL, 0);
     }
-    #endif
-    #if CYTHON_USE_PYLONG_INTERNALS
-    if (likely(PyLong_CheckExact(op1))) {
-        const long b = intval;
-        long a, x;
-#ifdef HAVE_LONG_LONG
-        const PY_LONG_LONG llb = intval;
-        PY_LONG_LONG lla, llx;
 #endif
-        const digit* digits = ((PyLongObject*)op1)->ob_digit;
-        const Py_ssize_t size = Py_SIZE(op1);
-        if (likely(__Pyx_sst_abs(size) <= 1)) {
-            a = likely(size) ? digits[0] : 0;
-            if (size == -1) a = -a;
-        } else {
-            switch (size) {
-                case -2:
-                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
-                        a = -(long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                        break;
-#ifdef HAVE_LONG_LONG
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
-                        lla = -(PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
+#ifdef __Pyx_CyFunction_USED
+    if (likely(PyCFunction_Check(func) || __Pyx_CyFunction_Check(func)))
+#else
+    if (likely(PyCFunction_Check(func)))
 #endif
-                    }
-                    CYTHON_FALLTHROUGH;
-                case 2:
-                    if (8 * sizeof(long) - 1 > 2 * PyLong_SHIFT) {
-                        a = (long) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                        break;
-#ifdef HAVE_LONG_LONG
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 2 * PyLong_SHIFT) {
-                        lla = (PY_LONG_LONG) (((((unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
-#endif
-                    }
-                    CYTHON_FALLTHROUGH;
-                case -3:
-                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
-                        a = -(long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                        break;
-#ifdef HAVE_LONG_LONG
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
-                        lla = -(PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
-#endif
-                    }
-                    CYTHON_FALLTHROUGH;
-                case 3:
-                    if (8 * sizeof(long) - 1 > 3 * PyLong_SHIFT) {
-                        a = (long) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                        break;
-#ifdef HAVE_LONG_LONG
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 3 * PyLong_SHIFT) {
-                        lla = (PY_LONG_LONG) (((((((unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
-#endif
-                    }
-                    CYTHON_FALLTHROUGH;
-                case -4:
-                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
-                        a = -(long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                        break;
-#ifdef HAVE_LONG_LONG
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
-                        lla = -(PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
-#endif
-                    }
-                    CYTHON_FALLTHROUGH;
-                case 4:
-                    if (8 * sizeof(long) - 1 > 4 * PyLong_SHIFT) {
-                        a = (long) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
-                        break;
-#ifdef HAVE_LONG_LONG
-                    } else if (8 * sizeof(PY_LONG_LONG) - 1 > 4 * PyLong_SHIFT) {
-                        lla = (PY_LONG_LONG) (((((((((unsigned PY_LONG_LONG)digits[3]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[2]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[1]) << PyLong_SHIFT) | (unsigned PY_LONG_LONG)digits[0]));
-                        goto long_long;
-#endif
-                    }
-                    CYTHON_FALLTHROUGH;
-                default: return PyLong_Type.tp_as_number->nb_add(op1, op2);
-            }
+    {
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_NOARGS)) {
+            return __Pyx_PyObject_CallMethO(func, NULL);
         }
-                x = a + b;
-            return PyLong_FromLong(x);
-#ifdef HAVE_LONG_LONG
-        long_long:
-                llx = lla + llb;
-            return PyLong_FromLongLong(llx);
-#endif
-        
-        
     }
-    #endif
-    if (PyFloat_CheckExact(op1)) {
-        const long b = intval;
-        double a = PyFloat_AS_DOUBLE(op1);
-            double result;
-            PyFPE_START_PROTECT("add", return NULL)
-            result = ((double)a) + (double)b;
-            PyFPE_END_PROTECT(result)
-            return PyFloat_FromDouble(result);
-    }
-    return (inplace ? PyNumber_InPlaceAdd : PyNumber_Add)(op1, op2);
+    return __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL);
 }
 #endif
 
@@ -10294,30 +12883,85 @@ static PyObject* __Pyx_PyInt_AddObjC(PyObject *op1, PyObject *op2, CYTHON_UNUSED
         PyObject_RichCompare(op1, op2, Py_EQ));
 }
 
-/* PyObjectCallNoArg */
-  #if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func) {
-#if CYTHON_FAST_PYCALL
-    if (PyFunction_Check(func)) {
-        return __Pyx_PyFunction_FastCall(func, NULL, 0);
-    }
-#endif
-#ifdef __Pyx_CyFunction_USED
-    if (likely(PyCFunction_Check(func) || __Pyx_CyFunction_Check(func)))
-#else
-    if (likely(PyCFunction_Check(func)))
-#endif
-    {
-        if (likely(PyCFunction_GET_FLAGS(func) & METH_NOARGS)) {
-            return __Pyx_PyObject_CallMethO(func, NULL);
+/* PyFloatBinop */
+  #if !CYTHON_COMPILING_IN_PYPY
+static PyObject* __Pyx_PyFloat_DivideObjC(PyObject *op1, PyObject *op2, double floatval, int inplace, int zerodivision_check) {
+    const double b = floatval;
+    double a, result;
+    (void)inplace;
+    (void)zerodivision_check;
+    if (likely(PyFloat_CheckExact(op1))) {
+        a = PyFloat_AS_DOUBLE(op1);
+        
+    } else
+    #if PY_MAJOR_VERSION < 3
+    if (likely(PyInt_CheckExact(op1))) {
+        a = (double) PyInt_AS_LONG(op1);
+        
+    } else
+    #endif
+    if (likely(PyLong_CheckExact(op1))) {
+        #if CYTHON_USE_PYLONG_INTERNALS
+        const digit* digits = ((PyLongObject*)op1)->ob_digit;
+        const Py_ssize_t size = Py_SIZE(op1);
+        switch (size) {
+            case  0: a = 0.0; break;
+            case -1: a = -(double) digits[0]; break;
+            case  1: a = (double) digits[0]; break;
+            case -2:
+            case 2:
+                if (8 * sizeof(unsigned long) > 2 * PyLong_SHIFT && ((8 * sizeof(unsigned long) < 53) || (1 * PyLong_SHIFT < 53))) {
+                    a = (double) (((((unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                    if ((8 * sizeof(unsigned long) < 53) || (2 * PyLong_SHIFT < 53) || (a < (double) ((PY_LONG_LONG)1 << 53))) {
+                        if (size == -2)
+                            a = -a;
+                        break;
+                    }
+                }
+                CYTHON_FALLTHROUGH;
+            case -3:
+            case 3:
+                if (8 * sizeof(unsigned long) > 3 * PyLong_SHIFT && ((8 * sizeof(unsigned long) < 53) || (2 * PyLong_SHIFT < 53))) {
+                    a = (double) (((((((unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                    if ((8 * sizeof(unsigned long) < 53) || (3 * PyLong_SHIFT < 53) || (a < (double) ((PY_LONG_LONG)1 << 53))) {
+                        if (size == -3)
+                            a = -a;
+                        break;
+                    }
+                }
+                CYTHON_FALLTHROUGH;
+            case -4:
+            case 4:
+                if (8 * sizeof(unsigned long) > 4 * PyLong_SHIFT && ((8 * sizeof(unsigned long) < 53) || (3 * PyLong_SHIFT < 53))) {
+                    a = (double) (((((((((unsigned long)digits[3]) << PyLong_SHIFT) | (unsigned long)digits[2]) << PyLong_SHIFT) | (unsigned long)digits[1]) << PyLong_SHIFT) | (unsigned long)digits[0]));
+                    if ((8 * sizeof(unsigned long) < 53) || (4 * PyLong_SHIFT < 53) || (a < (double) ((PY_LONG_LONG)1 << 53))) {
+                        if (size == -4)
+                            a = -a;
+                        break;
+                    }
+                }
+                CYTHON_FALLTHROUGH;
+            default:
+        #else
+        {
+        #endif
+            a = PyLong_AsDouble(op1);
+            if (unlikely(a == -1.0 && PyErr_Occurred())) return NULL;
+            
         }
+    } else {
+        return (inplace ? __Pyx_PyNumber_InPlaceDivide(op1, op2) : __Pyx_PyNumber_Divide(op1, op2));
     }
-    return __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL);
+        
+        PyFPE_START_PROTECT("divide", return NULL)
+        result = a / b;
+        PyFPE_END_PROTECT(result)
+        return PyFloat_FromDouble(result);
 }
 #endif
 
 /* Import */
-  static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
+    static PyObject *__Pyx_Import(PyObject *name, PyObject *from_list, int level) {
     PyObject *empty_list = 0;
     PyObject *module = 0;
     PyObject *global_dict = 0;
@@ -10382,7 +13026,7 @@ bad:
 }
 
 /* ImportFrom */
-  static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name) {
+    static PyObject* __Pyx_ImportFrom(PyObject* module, PyObject* name) {
     PyObject* value = __Pyx_PyObject_GetAttrStr(module, name);
     if (unlikely(!value) && PyErr_ExceptionMatches(PyExc_AttributeError)) {
         PyErr_Format(PyExc_ImportError,
@@ -10396,7 +13040,7 @@ bad:
 }
 
 /* CalculateMetaclass */
-  static PyObject *__Pyx_CalculateMetaclass(PyTypeObject *metaclass, PyObject *bases) {
+    static PyObject *__Pyx_CalculateMetaclass(PyTypeObject *metaclass, PyObject *bases) {
     Py_ssize_t i, nbases = PyTuple_GET_SIZE(bases);
     for (i=0; i < nbases; i++) {
         PyTypeObject *tmptype;
@@ -10435,7 +13079,7 @@ bad:
 }
 
 /* FetchCommonType */
-  static PyTypeObject* __Pyx_FetchCommonType(PyTypeObject* type) {
+    static PyTypeObject* __Pyx_FetchCommonType(PyTypeObject* type) {
     PyObject* fake_module;
     PyTypeObject* cached_type = NULL;
     fake_module = PyImport_AddModule((char*) "_cython_" CYTHON_ABI);
@@ -10474,7 +13118,7 @@ bad:
 }
 
 /* CythonFunctionShared */
-  #include <structmember.h>
+    #include <structmember.h>
 static PyObject *
 __Pyx_CyFunction_get_doc(__pyx_CyFunctionObject *op, CYTHON_UNUSED void *closure)
 {
@@ -11082,7 +13726,7 @@ static CYTHON_INLINE void __Pyx_CyFunction_SetAnnotationsDict(PyObject *func, Py
 }
 
 /* CythonFunction */
-  static PyObject *__Pyx_CyFunction_New(PyMethodDef *ml, int flags, PyObject* qualname,
+    static PyObject *__Pyx_CyFunction_New(PyMethodDef *ml, int flags, PyObject* qualname,
                                       PyObject *closure, PyObject *module, PyObject* globals, PyObject* code) {
     PyObject *op = __Pyx_CyFunction_Init(
         PyObject_GC_New(__pyx_CyFunctionObject, __pyx_CyFunctionType),
@@ -11095,7 +13739,7 @@ static CYTHON_INLINE void __Pyx_CyFunction_SetAnnotationsDict(PyObject *func, Py
 }
 
 /* Py3ClassCreate */
-  static PyObject *__Pyx_Py3MetaclassPrepare(PyObject *metaclass, PyObject *bases, PyObject *name,
+    static PyObject *__Pyx_Py3MetaclassPrepare(PyObject *metaclass, PyObject *bases, PyObject *name,
                                            PyObject *qualname, PyObject *mkw, PyObject *modname, PyObject *doc) {
     PyObject *ns;
     if (metaclass) {
@@ -11161,8 +13805,29 @@ static PyObject *__Pyx_Py3ClassCreate(PyObject *metaclass, PyObject *name, PyObj
     return result;
 }
 
+/* CyFunctionClassCell */
+    static int __Pyx_CyFunction_InitClassCell(PyObject *cyfunctions, PyObject *classobj) {
+    Py_ssize_t i, count = PyList_GET_SIZE(cyfunctions);
+    for (i = 0; i < count; i++) {
+        __pyx_CyFunctionObject *m = (__pyx_CyFunctionObject *)
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+            PyList_GET_ITEM(cyfunctions, i);
+#else
+            PySequence_ITEM(cyfunctions, i);
+        if (unlikely(!m))
+            return -1;
+#endif
+        Py_INCREF(classobj);
+        m->func_classobj = classobj;
+#if !(CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS)
+        Py_DECREF((PyObject*)m);
+#endif
+    }
+    return 0;
+}
+
 /* PyErrFetchRestore */
-  #if CYTHON_FAST_THREAD_STATE
+    #if CYTHON_FAST_THREAD_STATE
 static CYTHON_INLINE void __Pyx_ErrRestoreInState(PyThreadState *tstate, PyObject *type, PyObject *value, PyObject *tb) {
     PyObject *tmp_type, *tmp_value, *tmp_tb;
     tmp_type = tstate->curexc_type;
@@ -11186,7 +13851,7 @@ static CYTHON_INLINE void __Pyx_ErrFetchInState(PyThreadState *tstate, PyObject 
 #endif
 
 /* CLineInTraceback */
-  #ifndef CYTHON_CLINE_IN_TRACEBACK
+    #ifndef CYTHON_CLINE_IN_TRACEBACK
 static int __Pyx_CLineForTraceback(CYTHON_NCP_UNUSED PyThreadState *tstate, int c_line) {
     PyObject *use_cline;
     PyObject *ptype, *pvalue, *ptraceback;
@@ -11228,7 +13893,7 @@ static int __Pyx_CLineForTraceback(CYTHON_NCP_UNUSED PyThreadState *tstate, int 
 #endif
 
 /* CodeObjectCache */
-  static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
+    static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
     int start = 0, mid = 0, end = count - 1;
     if (end >= 0 && code_line > entries[end].code_line) {
         return count;
@@ -11308,7 +13973,7 @@ static void __pyx_insert_code_object(int code_line, PyCodeObject* code_object) {
 }
 
 /* AddTraceback */
-  #include "compile.h"
+    #include "compile.h"
 #include "frameobject.h"
 #include "traceback.h"
 static PyCodeObject* __Pyx_CreateCodeObjectForTraceback(
@@ -11399,7 +14064,7 @@ bad:
 }
 
 /* CIntFromPyVerify */
-  #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
+    #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 0)
 #define __PYX_VERIFY_RETURN_INT_EXC(target_type, func_type, func_value)\
     __PYX__VERIFY_RETURN_INT(target_type, func_type, func_value, 1)
@@ -11421,7 +14086,7 @@ bad:
     }
 
 /* CIntToPy */
-  static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
+    static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
 #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -11459,7 +14124,7 @@ bad:
 }
 
 /* CIntFromPy */
-  static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
+    static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *x) {
 #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -11655,7 +14320,7 @@ raise_neg_overflow:
 }
 
 /* CIntFromPy */
-  static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
+    static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
 #ifdef __Pyx_HAS_GCC_DIAGNOSTIC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -11851,7 +14516,7 @@ raise_neg_overflow:
 }
 
 /* FastTypeChecks */
-  #if CYTHON_COMPILING_IN_CPYTHON
+    #if CYTHON_COMPILING_IN_CPYTHON
 static int __Pyx_InBases(PyTypeObject *a, PyTypeObject *b) {
     while (a) {
         a = a->tp_base;
@@ -11951,7 +14616,7 @@ static CYTHON_INLINE int __Pyx_PyErr_GivenExceptionMatches2(PyObject *err, PyObj
 #endif
 
 /* CheckBinaryVersion */
-  static int __Pyx_check_binary_version(void) {
+    static int __Pyx_check_binary_version(void) {
     char ctversion[4], rtversion[4];
     PyOS_snprintf(ctversion, 4, "%d.%d", PY_MAJOR_VERSION, PY_MINOR_VERSION);
     PyOS_snprintf(rtversion, 4, "%s", Py_GetVersion());
@@ -11967,7 +14632,7 @@ static CYTHON_INLINE int __Pyx_PyErr_GivenExceptionMatches2(PyObject *err, PyObj
 }
 
 /* InitStrings */
-  static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
+    static int __Pyx_InitStrings(__Pyx_StringTabEntry *t) {
     while (t->p) {
         #if PY_MAJOR_VERSION < 3
         if (t->is_unicode) {

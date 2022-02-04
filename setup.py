@@ -31,7 +31,7 @@ setup(
     url='https://github.com/astokely/bubblebuster',
     long_description=long_description,
     packages=find_packages(),
-    install_requires=["numpy", "pytest", "nptyping", "mdtraj", "cython"],              
+    install_requires=["numpy", "pytest", "mdtraj", "cython"],
     platforms=['Linux',
                 'Unix',],
     python_requires=">=3.8",          
